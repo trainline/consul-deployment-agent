@@ -1,4 +1,4 @@
-# Copyright (c) Trainline Limited. All rights reserved. See LICENSE.txt in the project root for license information.
+# Copyright (c) Trainline Limited 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import os, platform
 if platform.system().lower() != 'windows':

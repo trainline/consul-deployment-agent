@@ -1,4 +1,4 @@
-# Copyright (c) Trainline Limited. All rights reserved. See LICENSE.txt in the project root for license information.
+# Copyright (c) Trainline Limited 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 
 from grp import getgrnam
 from pwd import getpwnam
