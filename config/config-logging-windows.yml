@@ -1,0 +1,21 @@
+# Copyright (c) Trainline Limited. All rights reserved. See LICENSE.txt in the project root for license information.
+
+version: 1
+formatters:
+  simple:
+    format: '[%(asctime)s] [%(levelname)s] %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: simple
+    stream: ext://sys.stdout
+  rollingFile:
+    class: logging.handlers.TimedRotatingFileHandler
+    level: DEBUG
+    formatter: simple
+    when: midnight
+    filename: 'C:/Logs/consul-deployment-agent.log'
+root:
+  level: DEBUG
+  handlers: [console, rollingFile]
