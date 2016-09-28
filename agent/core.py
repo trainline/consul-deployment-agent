@@ -1,4 +1,4 @@
-# Copyright (c) Trainline Limited 2016. All rights reserved. See LICENSE.txt in the project root for license information.
+# Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import argparse, json, logging, logging.config, os.path, platform, sys, time, yaml
 import key_naming_convention
