@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>ttl-consul-deployment-agent</id>
+    <title>ttl-consul-deployment-agent</title>
+    <version />
+    <authors>Trainline</authors>
+    <owners>Trainline</owners>
+    <summary>ttl-consul-deployment-agent</summary>
+    <description>Agent listening to configuration changes in Consul and deploying services.</description>
+    <projectUrl>https://github.com/PlatformServices/consul-deployment-agent</projectUrl>
+    <tags>ttl-consul-deployment-agent</tags>
+    <copyright />
+    <licenseUrl>https://github.com/trainline/consul-deployment-agent</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <releaseNotes />
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+    <file src="data\**" target="data" />
+  </files>
+</package>
