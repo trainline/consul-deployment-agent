@@ -1,19 +1,19 @@
 # Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import datetime, json, key_naming_convention, logging, os, sys
-from consul_session import ConsulError
+from consul_api import ConsulError
 from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul
 from s3_file_manager import S3FileManager
 
 class Deployment():
-    def __init__(self, config={}, consul_session=None, aws_config={}):
+    def __init__(self, config={}, consul_api=None, aws_config={}):
         if config is None:
             raise ValueError('config must be specified.')
-        if consul_session is None:
-            raise ValueError('consul_session must be specified.')
+        if consul_api is None:
+            raise ValueError('consul_api must be specified.')
         self._validate_config(config)
         self._aws_config = aws_config
-        self.consul_session = consul_session
+        self.consul_api = consul_api
         self._cause = config.get('cause')
         self._environment = config.get('environment')
         self.id = config.get('deployment_id')
@@ -26,12 +26,10 @@ class Deployment():
         self._is_success = self.logger = self._log_filename = self._log_filepath = self._report = self._report_key =  None
         self.number_of_attempts = 0
         if self.platform == 'linux':
-            # TODO: Consider making deployment artefacts path configurable
             self.dir = os.path.join('/opt/consul-deployment-agent/deployments', self.service.id, self.id)
             if self.last_id is not None:
                 self.last_archive_dir = os.path.join('/opt/consul-deployment-agent/deployments', self.service.id, self.last_id, 'archive')
         else:
-            # TODO: Consider making deployment artefacts path configurable
             self.dir = os.path.join('C:\TLDeploy', self.id)
             if self.last_id is not None:
                 self.last_archive_dir = os.path.join('C:\TLDeploy', self.last_id, 'archive')
@@ -98,9 +96,9 @@ class Deployment():
         logging.debug('Initialising deployment report for Consul.')
         self._report_key = key_naming_convention.get_instance_deployment_key(self._environment, self.id)
         existing_report = {}
-        if self.consul_session.key_exists(self._report_key):
+        if self.consul_api.key_exists(self._report_key):
             logging.debug('Loading existing report from Consul.')
-            existing_report = self.consul_session.get_json_value(self._report_key)
+            existing_report = self.consul_api.get_value(self._report_key)
             self.number_of_attempts = existing_report.get('NumberOfAttempts', 0)
         logging.debug('Creating deployment report.')
         self._update_report({
@@ -143,7 +141,7 @@ class Deployment():
         if write_to_consul:
             try:
                 logging.debug('Writing report to Consul.')
-                self.consul_session.write_json_value(self._report_key, self._report)
+                self.consul_api.write_value(self._report_key, self._report)
             except ConsulError as e:
                 logging.error('Failed to write deployment report to Consul.')
                 logging.exception(e)

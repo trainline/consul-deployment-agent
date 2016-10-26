@@ -134,6 +134,12 @@ class ValidateBundle(DeploymentStage):
             for hook_name, definition in deployment.appspec.get('hooks', {}).iteritems():
                 if 'location' not in definition[0] or not definition[0]['location']:
                     raise DeploymentError('Invalid appspec.yml: Contains hook \'{0}\' definition with missing location. Hook definition: {1}'.format(hook_name, definition))
+                if definition[0]['location'].startswith('/'):
+                    location = definition[0]['location'][1:]
+                else:
+                    location = definition[0]['location']
+                if not os.path.isfile(location):
+                    raise DeploymentError('Invalid appspec.yml: Could not find deployment script \'{0}\' make certain it does exist'.format(definition[0]['location']))
         deployment.logger.debug('Loading appspec file from {0}.' .format(os.path.join(deployment.archive_dir, 'appspec.yml')))
         appspec_stream = file(os.path.join(deployment.archive_dir, 'appspec.yml'), 'r')
         deployment.appspec = yaml.load(appspec_stream)
@@ -207,6 +213,15 @@ class RegisterWithConsul(DeploymentStage):
     def __init__(self):
         DeploymentStage.__init__(self, name='RegisterWithConsul')
     def _run(self, deployment):
-        deployment.logger.info('Registering service in Consul catalog.')
-        deployment.consul_session.register(deployment.service)
-        deployment.logger.info('Service registered in Consul catalog.')
+        deployment.logger.info('Registering service in Consul catalogue.')
+        is_success = deployment.consul_api.register_service(
+            id=deployment.service.id,
+            name=deployment.service.name,
+            address=deployment.service.address,
+            port=deployment.service.port,
+            tags=deployment.service.tags
+        )
+        if is_success:
+            deployment.logger.info('Service registered in Consul catalogue.')
+        else:
+            deployment.logger.warning('Failed to register service in Consul catalogue.')

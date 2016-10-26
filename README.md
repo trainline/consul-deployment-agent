@@ -1,5 +1,7 @@
 # consul-deployment-agent
 
+[TeamCity pipeline] (http://infra.teamcity.ci.ttldev/project.html?projectId=PlatformServices_ConsulDeploymentAgent&tab=projectOverview)
+
 #### Command line options
 
 ```bash
@@ -20,8 +22,8 @@ Deployment agent supports multiple configuration files. The agent will look for 
 
 | Filename           | Description                          | Example |
 | ------------------ | ------------------------------------ | ------- |
-| config-logging.yml | (optional) Python logging module configuration. If not specified, logs will be sent to stdout with level set to DEBUG. | [sample-config-logging.yml] (config/sample-config-logging.yml) |
-| config.yml     | (optional) Various configuration settings. See example for supported options. | [sample-config.yml] (config/sample-config.yml) |
+| config-logging.yml | (optional) Python logging module configuration. If not specified, logs will be sent to stdout with level set to DEBUG. | [sample-config-logging.yml] (https://github.thetrainline.com/PlatformServices/consul-deployment-agent/blob/master/config/sample-config-logging.yml) |
+| config.yml     | (optional) Various configuration settings. See example for supported options. | [sample-config.yml] (https://github.thetrainline.com/PlatformServices/consul-deployment-agent/blob/master/config/sample-config.yml) |
 
 #### Development
 
@@ -79,10 +81,10 @@ Running the tests:
 
 Follow these steps to perform a deployment simulation:
 
-1. Upload a deployment package to `s3_bucket_name` S3 bucket in AWS
+1. Upload a deployment package to tl-deployment-sandbox S3 bucket in the Sandbox account
 2. Start Consul agent as per instructions above.
 3. Start Consul deployment agent as per instructions above.
 4. Run the following script to trigger the deployment:
 ```bash
-  ./scripts/deploy_service.py -n <service_name> -p <service_port> -v <version> -s <slice_name> -t <environment_type> -c <cluster_name> -b <s3_bucket_name> -k <s3_object_key>
+  ./scripts/deploy_service.py -n <service_name> -p <service_port> -v <version> -s <slice_name> -t <environment_type> -c <cluster_name> -b tl-deployment-sandbox -k <s3_object_key>
 ```

@@ -2,8 +2,8 @@
 
 import argparse, json, logging, logging.config, os.path, platform, sys, time, yaml
 import key_naming_convention
+from consul_api import ConsulApi, ConsulError
 from consul_data_loader import ConsulDataLoader
-from consul_session import ConsulSession, ConsulError
 from deployment import Deployment
 from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
@@ -69,7 +69,7 @@ def wait_for_instance_readiness(config):
     except RetryError:
         logging.warning('Instance readiness timeout has been reached, will assume instance is ready for deployments.')
 
-def deploy(service, deployment_info, environment, consul_session):
+def deploy(service, deployment_info, environment, consul_api):
     deployment_config = {
         'cause':'Deployment',
         'deployment_id':deployment_info['deployment_id'],
@@ -78,17 +78,17 @@ def deploy(service, deployment_info, environment, consul_session):
         'platform':platform.system().lower(),
         'service':service
     }
-    deployment = Deployment(config=deployment_config, consul_session=consul_session, aws_config=config['aws'])
+    deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])
     return deployment.run()
 
-def converge(consul_session, environment):
+def converge(consul_api, environment):
     try:
-        data_loader = ConsulDataLoader(consul_session)
+        data_loader = ConsulDataLoader(consul_api)
 
         server_role = data_loader.load_server_role(environment)
         logging.info('Server role configuration: {0}'.format(server_role))
 
-        registered_services = data_loader.load_service_catalog()
+        registered_services = data_loader.load_service_catalogue()
         logging.debug('Registered services:')
         for service in registered_services:
             logging.debug(service)
@@ -97,10 +97,10 @@ def converge(consul_session, environment):
         missing_service_info = server_role.find_missing_service(registered_services)
         while missing_service_info is not None:
             service, deployment_info = missing_service_info
-            deployment_report = deploy(service, deployment_info, environment, consul_session)
+            deployment_report = deploy(service, deployment_info, environment, consul_api)
             if not deployment_report['is_success']:
                 server_role.quarantine_deployment(deployment_report['id'])
-            missing_service_info = server_role.find_missing_service(data_loader.load_service_catalog())
+            missing_service_info = server_role.find_missing_service(data_loader.load_service_catalogue())
 
         logging.info('Finished converging to server role configuration.')
         return True
@@ -120,7 +120,8 @@ def main():
         sys.exit(1)
 
     try:
-        consul_session = ConsulSession(config['consul'])
+        consul_api = ConsulApi(config['consul'])
+        consul_api.check_connectivity()
     except ConsulError as e:
         logging.exception(e)
         logging.critical('Exiting with error code 1.')
@@ -129,7 +130,7 @@ def main():
     if config['startup']['wait_for_instance_readiness']:
         wait_for_instance_readiness(config)
 
-    if converge(consul_session, environment):
+    if converge(consul_api, environment):
         logging.info('Initialisation completed.')
     else:
         logging.error('Initialisation failed.')
@@ -137,10 +138,10 @@ def main():
     server_role_key = key_naming_convention.get_server_role_key(environment)
     while True:
         try:
-            consul_session.wait_for_change(server_role_key)
+            consul_api.wait_for_change(server_role_key)
             logging.info('Change detected in Consul {0} key space.'.format(server_role_key))
             logging.info('Start converging to updated server role configuration...')
-            if converge(consul_session, environment):
+            if converge(consul_api, environment):
                 logging.info('Finished converging to updated server role configuration.')
             else:
                 logging.error('Failed to converge to updated server role configuration.')

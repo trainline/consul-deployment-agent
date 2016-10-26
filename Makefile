@@ -1,5 +1,3 @@
-# Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
-
 init:
 	pip install -r requirements.txt
 
@@ -8,3 +6,9 @@ init-test:
 
 test:
 	nosetests --verbosity=2 tests
+
+test-windows-deployment:
+	nosetests --verbosity=2 tests/test_deployment_windows.py
+
+test-linux-deployment:
+	nosetests --verbosity=2 tests/test_deployment_linux.py
