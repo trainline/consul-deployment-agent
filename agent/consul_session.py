@@ -97,7 +97,7 @@ class ConsulSession:
                 logging.exception(e)
                 raise ConsulError(message)
         else:
-            raise Exception('Consul key-value store does not contain a value for key \'key\'.')
+            raise Exception('Consul key-value store does not contain a value for key \'%s\'.' % key)
 
     def key_exists(self, key):
         try:
