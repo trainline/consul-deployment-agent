@@ -14,8 +14,8 @@ parser.add_argument('-config-dir', help='Location of configuration files (e.g. c
 parser.add_argument('-v', '--version', action='version', version=semantic_version)
 
 config = {
-    'aws': { 'access_key_id': None, 'aws_secret_access_key': None, 'deployment_logs': {'bucket_name': None, 'key_prefix': None }},
-    'consul': { 'host': 'localhost', 'port': 8500, 'scheme': 'http', 'acl_token': None, 'version': 'v1'},
+    'aws': {'access_key_id': None, 'aws_secret_access_key': None, 'deployment_logs': {'bucket_name': None, 'key_prefix': None }},
+    'consul': {'host': 'localhost', 'port': 8500, 'scheme': 'http', 'acl_token': None, 'version': 'v1'},
     'logging': {
         'version': 1,
         'handlers': {
