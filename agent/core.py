@@ -8,16 +8,33 @@ from deployment import Deployment
 from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
 
-semantic_version = '0.12.0'
+semantic_version = '0.13.0'
 parser = argparse.ArgumentParser()
 parser.add_argument('-config-dir', help='Location of configuration files (e.g. config.yml and config-logging.yml)')
 parser.add_argument('-v', '--version', action='version', version=semantic_version)
 
 config = {
-    'aws':{'access_key_id':None, 'aws_secret_access_key':None, 'deployment_logs':{'bucket_name':None, 'key_prefix':None}},
-    'consul':{'host':'localhost', 'port':8500, 'scheme':'http', 'acl_token':None, 'version':'v1'},
-    'logging':{'version':1, 'handlers':{'console':{'class':'logging.StreamHandler', 'stream':'ext://sys.stdout'}}, 'root':{'level':'DEBUG', 'handlers':['console']}},
-    'startup':{'delay_in_ms_between_readiness_check':5000, 'max_wait_for_instance_readiness_in_ms':1800000, 'semaphore_filepath':None, 'wait_for_instance_readiness':False}
+    'aws': { 'access_key_id': None, 'aws_secret_access_key': None, 'deployment_logs': {'bucket_name': None, 'key_prefix': None }},
+    'consul': { 'host': 'localhost', 'port': 8500, 'scheme': 'http', 'acl_token': None, 'version': 'v1'},
+    'logging': {
+        'version': 1,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'stream': 'ext://sys.stdout'
+            }
+        },
+        'root': {
+            'level':'DEBUG',
+            'handlers': ['console']
+        }
+    },
+    'startup': {
+        'delay_in_ms_between_readiness_check': 5000,
+        'max_wait_for_instance_readiness_in_ms': 1800000,
+        'semaphore_filepath': None,
+        'wait_for_instance_readiness': False
+    }
 }
 
 def load_configuration(args):
@@ -71,12 +88,12 @@ def wait_for_instance_readiness(config):
 
 def deploy(service, deployment_info, environment, consul_api):
     deployment_config = {
-        'cause':'Deployment',
-        'deployment_id':deployment_info['deployment_id'],
-        'environment':environment,
-        'last_deployment_id':deployment_info['last_deployment_id'],
-        'platform':platform.system().lower(),
-        'service':service
+        'cause': 'Deployment',
+        'deployment_id': deployment_info['deployment_id'],
+        'environment': environment,
+        'last_deployment_id': deployment_info['last_deployment_id'],
+        'platform': platform.system().lower(),
+        'service': service
     }
     deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])
     return deployment.run()
