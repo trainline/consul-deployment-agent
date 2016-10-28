@@ -253,17 +253,14 @@ class RegisterHealthChecks(DeploymentStage):
 
         for check_id, check in healthchecks.iteritems():
             validate_check(check_id, check)
-            print 'yeeee', check_id, check
             if check['type'] == 'script':
                 is_success = deployment.consul_api.register_script_check(check_id, check['name'], check['script'], check['interval'])
             elif check['type'] == 'http':
                 is_success = deployment.consul_api.register_http_check(check_id, check['name'], check['http'], check['interval'])
             else:
                 is_success = False
-                
 
             if is_success:
-                deployment.logger.error('Successfuly registered health check \'{0}\''.format(check_id))
+                deployment.logger.info('Successfuly registered health check \'{0}\''.format(check_id))
             else:
-                deployment.logger.error('Failed to register health check \'{0}\''.format(check_id))
-
+                raise DeploymentError('Failed to register health check \'{0}\''.format(check_id))
