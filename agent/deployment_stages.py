@@ -134,11 +134,11 @@ class ValidateBundle(DeploymentStage):
             for hook_name, definition in deployment.appspec.get('hooks', {}).iteritems():
                 if 'location' not in definition[0] or not definition[0]['location']:
                     raise DeploymentError('Invalid appspec.yml: Contains hook \'{0}\' definition with missing location. Hook definition: {1}'.format(hook_name, definition))
-                if definition[0]['location'].startswith('/'):
-                    location = definition[0]['location'][1:]
-                else:
-                    location = definition[0]['location']
-                if not os.path.isfile(location):
+                location = definition[0]['location']
+                if location.startswith('/'):
+                    location = location[1:]
+                filepath = os.path.join(deployment.archive_dir, location)
+                if not os.path.isfile(filepath):
                     raise DeploymentError('Invalid appspec.yml: Could not find deployment script \'{0}\' make certain it does exist'.format(definition[0]['location']))
         deployment.logger.debug('Loading appspec file from {0}.' .format(os.path.join(deployment.archive_dir, 'appspec.yml')))
         appspec_stream = file(os.path.join(deployment.archive_dir, 'appspec.yml'), 'r')
