@@ -7,6 +7,7 @@ from consul_data_loader import ConsulDataLoader
 from deployment import Deployment
 from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
+from actions import InstallAction, UninstallAction
 
 semantic_version = '0.13.0'
 parser = argparse.ArgumentParser()

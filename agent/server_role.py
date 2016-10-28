@@ -4,31 +4,31 @@ import json, logging
 
 class ServerRole:
     def __init__(self, id):
+        self.actions = []
         self.id = id
         self.quarantine = []
-        self.services = {}
 
     def __str__(self):
         return json.dumps(
             {'id':self.id,
-             'services':[str(s) for s in self.services.values()],
+             'actions':[str(s) for s in self.actions],
              'quarantine':self.quarantine})
 
-    def find_missing_service(self, registered_services):
-        for deployment_id, service in self.services.iteritems():
-            installed_service = next((s for s in registered_services if s.deployment_id == deployment_id), None)
-            if installed_service is None:
-                installed_service = next((s for s in registered_services if s.id == service.id), None)
+    def find_action_to_execute(self, registered_services):
+        for action in self.actions:
+            if action.deployment_id in self.quarantine:
+                logging.warn('Following deployment action is quarantined, skipping deployment.\n{0}'.format(action))
+                continue
+            deployment_id = next((s.deployment_id for s in registered_services if s.deployment_id == deployment_id), None)
+            if deployment_id is None:
+                # Deployment action has not been applied to this instance or was unsuccessful
+                installed_service = next((s for s in registered_services if s.id == action.service.id), None)
                 if installed_service is None:
-                    missing_service_info = (service, {'deployment_id':deployment_id, 'last_deployment_id':None})
+                    # There is no existing deployment of the service on this instance, no need to specify last_deployment_id
+                    return (action, {'last_deployment_id':None})
                 else:
-                    missing_service_info = (service, {'deployment_id':deployment_id, 'last_deployment_id':installed_service.deployment_id})
-                if deployment_id not in self.quarantine:
-                    return missing_service_info
-                else:
-                    logging.warn('Following service deployment is quarantined, skipping deployment.')
-                    logging.warn(service)
-        logging.info('No missing service.')
+                    # There is an existing deployment of the service on this instance, need to specify last_deployment_id
+                    return (action, {'last_deployment_id':installed_service.deployment_id})
         return None
 
     def quarantine_deployment(self, deployment_id):

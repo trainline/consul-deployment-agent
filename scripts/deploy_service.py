@@ -78,6 +78,7 @@ if args.slice is None:
 else:
     deployment_key = 'environments/{0}/roles/{1}/services/{2}/{3}'.format(args.environment, args.role, args.name, args.slice)
 deployment = {}
+deployment['Action'] = 'Install'
 deployment['Name'] = args.name
 deployment['Version'] = args.version
 deployment['DeploymentId'] = args.deploymentid
