@@ -225,3 +225,45 @@ class RegisterWithConsul(DeploymentStage):
             deployment.logger.info('Service registered in Consul catalogue.')
         else:
             deployment.logger.warning('Failed to register service in Consul catalogue.')
+
+class RegisterHealthChecks(DeploymentStage):
+    def __init__(self):
+        DeploymentStage.__init__(self, name='RegisterHealthChecks')
+    def _run(self, deployment):
+        def validate_check(check_id, check):
+            if not 'type' in check or (check['type'] != 'script' and check['type'] != 'http'):
+                raise DeploymentError('Failed to register health check \'{0}\', only \'script\' and \'http\' check types are supported.'.format(check_id))
+            if check['type'] == 'script':
+                required_fields = ['name', 'script', 'interval']
+            elif check['type'] == 'http':
+                required_fields = ['name', 'http', 'interval']
+            for field in required_fields:
+                if not field in check:
+                    raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
+
+        deployment.logger.info('Registering Consul healthchecks.')
+
+        healthchecks_filepath = 'healthchecks/healthchecks.yml'
+        if os.path.exists(healthchecks_filepath):
+            deployment.logger.info('Found healthchecks/healthchecks.yml')
+            healthchecks_stream = file(healthchecks_filepath, 'r')
+            healthchecks = yaml.load(healthchecks_stream)
+        else:
+            healthchecks = deployment.appspec.get('healthchecks')
+
+        for check_id, check in healthchecks.iteritems():
+            validate_check(check_id, check)
+            print 'yeeee', check_id, check
+            if check['type'] == 'script':
+                is_success = deployment.consul_api.register_script_check(check_id, check['name'], check['script'], check['interval'])
+            elif check['type'] == 'http':
+                is_success = deployment.consul_api.register_http_check(check_id, check['name'], check['http'], check['interval'])
+            else:
+                is_success = False
+                
+
+            if is_success:
+                deployment.logger.error('Successfuly registered health check \'{0}\''.format(check_id))
+            else:
+                deployment.logger.error('Failed to register health check \'{0}\''.format(check_id))
+

@@ -2,7 +2,7 @@
 
 import datetime, json, key_naming_convention, logging, os, sys
 from consul_api import ConsulError
-from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul
+from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, RegisterHealthChecks
 from s3_file_manager import S3FileManager
 
 class Deployment():
@@ -163,7 +163,7 @@ class Deployment():
         self.logger.info('Configuration: {0}'.format(self))
         self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
         stages = [ ValidateDeployment(), StopApplication(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
-                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(), RegisterWithConsul() ]
+                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(), RegisterWithConsul(), RegisterHealthChecks() ]
         for stage in stages:
             success = stage.run(self)
             self._update_report({'last_completed_stage':stage.name})
