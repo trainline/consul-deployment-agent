@@ -3,6 +3,12 @@
 import dir_utils, distutils.core, os, sys, yaml, zipfile
 from deployment_scripts import PowershellScript, ShellScript
 
+def find_absolute_path(archive_dir, location):
+    location = location
+    if location.startswith('/'):
+        location = location[1:]
+    return os.path.join(archive_dir, location)
+
 class DeploymentError(RuntimeError):
     pass
 
@@ -254,7 +260,8 @@ class RegisterHealthChecks(DeploymentStage):
         for check_id, check in healthchecks.iteritems():
             validate_check(check_id, check)
             if check['type'] == 'script':
-                is_success = deployment.consul_api.register_script_check(check_id, check['name'], check['script'], check['interval'])
+                file_path = find_absolute_path(deployment.archive_dir, check['script'])
+                is_success = deployment.consul_api.register_script_check(check_id, check['name'], file_path, check['interval'])
             elif check['type'] == 'http':
                 is_success = deployment.consul_api.register_http_check(check_id, check['name'], check['http'], check['interval'])
             else:
