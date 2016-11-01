@@ -10,9 +10,9 @@ class ServerRole:
 
     def __str__(self):
         return json.dumps(
-            {'id':self.id,
-             'actions':[str(s) for s in self.actions],
-             'quarantine':self.quarantine})
+            {'id': self.id,
+             'actions': [str(s) for s in self.actions],
+             'quarantine': self.quarantine })
 
     def find_action_to_execute(self, registered_services):
         for action in self.actions:
@@ -25,12 +25,12 @@ class ServerRole:
                 installed_service = next((s for s in registered_services if s.id == action.service.id), None)
                 if installed_service is None:
                     # There is no existing deployment of the service on this instance, no need to specify last_deployment_id
-                    return (action, {'last_deployment_id':None})
+                    return (action, {'last_deployment_id': None})
                 else:
                     # There is an existing deployment of the service on this instance, need to specify last_deployment_id
-                    return (action, {'last_deployment_id':installed_service.deployment_id})
+                    return (action, {'last_deployment_id': installed_service.deployment_id})
         return None
 
-    def quarantine_deployment(self, deployment_id):
+    def quarantine_action(self, deployment_id):
         logging.info('Quarantining deployment with ID: %s' % deployment_id)
         self.quarantine.append(deployment_id)

@@ -120,8 +120,8 @@ def converge(consul_api, environment):
         while missing_action is not None:
             action, action_info = missing_action
             report = execute(action, action_info, environment, consul_api)
-            if not report['is_success']:
-                server_role.quarantine_deployment(report['id'])
+            # if not report['is_success']:
+            server_role.quarantine_action(report['id'])
             missing_action = server_role.find_action_to_execute(data_loader.load_service_catalogue())
 
         logging.info('Finished converging to server role configuration.')
