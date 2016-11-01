@@ -175,4 +175,4 @@ class Deployment():
             self._is_success = True
         self._finalise_log()
         self._finalise_report()
-        return {'id':self.id, 'is_success':self._is_success}
+        return {'id': self.id, 'is_success': self._is_success}

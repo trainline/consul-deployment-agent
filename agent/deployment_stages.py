@@ -238,7 +238,7 @@ class RegisterHealthChecks(DeploymentStage):
     def _run(self, deployment):
         def validate_check(check_id, check):
             if not 'type' in check or (check['type'] != 'script' and check['type'] != 'http'):
-                raise DeploymentError('Failed to register health check \'{0}\', only \'script\' and \'http\' check types are supported.'.format(check_id))
+                raise DeploymentError('Failed to register health check \'{0}\', only \'script\' and \'http\' check types are supported, found {1} .'.format(check_id, check['type']))
             if check['type'] == 'script':
                 required_fields = ['name', 'script', 'interval']
             elif check['type'] == 'http':
