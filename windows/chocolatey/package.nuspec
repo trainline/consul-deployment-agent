@@ -8,7 +8,7 @@
     <owners>Trainline</owners>
     <summary>ttl-consul-deployment-agent</summary>
     <description>Agent listening to configuration changes in Consul and deploying services.</description>
-    <projectUrl>https://github.com/PlatformServices/consul-deployment-agent</projectUrl>
+    <projectUrl>https://github.com/trainline/consul-deployment-agent</projectUrl>
     <tags>ttl-consul-deployment-agent</tags>
     <copyright />
     <licenseUrl>https://github.com/trainline/consul-deployment-agent</licenseUrl>

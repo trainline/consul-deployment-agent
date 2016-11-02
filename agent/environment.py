@@ -43,7 +43,6 @@ class Environment:
             reservations = ec2conn.get_all_instances(instance_ids=[self.instance_id])
             for reservation in reservations:
                 for instance in reservation.instances:
-                    # Assumes the following tags are set:
                     self.environment_name = str(instance.tags.get('Environment'))
                     self.environment_type = str(instance.tags.get('EnvironmentType'))
                     self.server_role = str(instance.tags.get('Role'))
