@@ -40,6 +40,16 @@ if [ "$(fpm --help 1>/dev/null ; echo $?)" = "1" ]; then
   exit 1
 fi
 
+# Get branch and add it as a variable
+if [ $tcbranch != "" ]
+    then
+    export BUILDBRANCH=$tcbranch
+else
+    export BUILDBRANCH="default"
+fi
+
+echo " ==> Using branch name $BUILDBRANCH"
+
 VERSION_TIMESTAMP=$(date +%Y%m%d_%H%M)
 
 echo "Changing permissions on package content."
@@ -47,10 +57,10 @@ find $PACKAGE_DIR/consul-deployment-agent -type f -exec chmod 755 {} \;
 find $PACKAGE_DIR/*.yml -type f -exec chmod 644 {} \;
 
 echo " ==> Building RPM package"
-fpm -s dir -t rpm -a all -n consul-deployment-agent -v $VERSION --iteration $VERSION_TIMESTAMP --description "Consul Deployment Agent $BUILDBRANCH branch" --rpm-os linux --rpm-user root --rpm-group root --prefix /opt/consul-deployment-agent --package "$MYHOME/globalpackage" -C $PACKAGE_DIR .
+fpm -s dir -t rpm -a all -n consul-deployment-agent-$BUILDBRANCH -v $VERSION --iteration $VERSION_TIMESTAMP --description "Consul Deployment Agent $BUILDBRANCH branch" --rpm-os linux --rpm-user root --rpm-group root --prefix /opt/consul-deployment-agent --package "$MYHOME/globalpackage" -C $PACKAGE_DIR .
 
 DEB_VERSION_TIMESTAMP=`echo $VERSION_TIMESTAMP | tr "_" "."`
 
 # We use FPM to build our package
 echo " ==> Building DEB package"
-fpm -s dir -t deb -a all -n consul-deployment-agent -v $VERSION --iteration $DEB_VERSION_TIMESTAMP --deb-no-default-config-files --description "Consul Deployment Agent $BUILDBRANCH branch" --deb-user root --deb-group root --prefix /opt/consul-deployment-agent --package "$MYHOME/globalpackage" -C $PACKAGE_DIR .
+fpm -s dir -t deb -a all -n consul-deployment-agent-$BUILDBRANCH -v $VERSION --iteration $DEB_VERSION_TIMESTAMP --deb-no-default-config-files --description "Consul Deployment Agent $BUILDBRANCH branch" --deb-user root --deb-group root --prefix /opt/consul-deployment-agent --package "$MYHOME/globalpackage" -C $PACKAGE_DIR .

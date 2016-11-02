@@ -101,7 +101,7 @@ try {
         Remove-Item $TempDirectory -Recurse -Force
     }
 
-    $PackageId = "ttl-consul-deployment-agent"
+    $PackageId = "ttl-consul-deployment-agent-" + $env:tcbranch
     $Version = $env:BUILD_NUMBER
     if ($Version -eq $null) {
         $Version = "0.0.1"
