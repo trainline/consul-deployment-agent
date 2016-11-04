@@ -257,6 +257,10 @@ class RegisterHealthChecks(DeploymentStage):
         else:
             healthchecks = deployment.appspec.get('healthchecks')
 
+        if healthchecks is None:
+            deployment.logger.info('No health checks to register')
+            return
+
         for check_id, check in healthchecks.iteritems():
             validate_check(check_id, check)
             if check['type'] == 'script':
