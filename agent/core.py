@@ -8,7 +8,7 @@ from deployment import Deployment
 from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
 
-semantic_version = '0.12.4'
+semantic_version = '0.15.0'
 parser = argparse.ArgumentParser()
 parser.add_argument('-config-dir', help='Location of configuration files (e.g. config.yml and config-logging.yml)')
 parser.add_argument('-v', '--version', action='version', version=semantic_version)
