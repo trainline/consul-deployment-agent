@@ -15,7 +15,7 @@ handlers:
     level: DEBUG
     formatter: simple
     when: midnight
-    filename: 'C:/Logs/consul-deployment-agent.log'
+    filename: 'C:/TTLLogs/consul-deployment-agent.log'
 root:
   level: DEBUG
   handlers: [console, rollingFile]
