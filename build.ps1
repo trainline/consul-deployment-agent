@@ -43,8 +43,8 @@ function CreateChocolateyPackage {
     Write-Host "Packaging deployment agent code into a single executable..."
     BundleIntoSingleExe "consul-deployment-agent" "$RootDirectory\agent\core.py" "$RootDirectory\agent" $DataDirectory
 
-    Write-Host "Copying configuration file..."
-    Copy-Item $RootDirectory\config\config-logging-windows.yml $DataDirectory\config-logging.yml -Recurse
+    # Write-Host "Copying configuration file..."
+    # Copy-Item $RootDirectory\config\config-logging-windows.yml $DataDirectory\config-logging.yml -Recurse
 
     Write-Host "Adding ignore files to all .exe files in $DataDirectory to avoid Chocolatey shimming..."
     $Files = get-childitem $DataDirectory -include *.exe -recurse
