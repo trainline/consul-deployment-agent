@@ -38,8 +38,8 @@ class ConsulApi:
     @retry(retry_on_exception=retry_if_connection_error, wait_exponential_multiplier=1000, wait_exponential_max=60000)
     def _api_put(self, relative_url, content):
         url = '{0}/{1}'.format(self._base_url, relative_url)
-        logging.debug('Consul HTTP API request URL: {0}'.format(url))
-        logging.debug('Consul HTTP API request content: {0}'.format(content))
+        logging.debug('Consul HTTP API PUT request URL: {0}'.format(url))
+        logging.debug('Consul HTTP API PUT request content: {0}'.format(content))
         response = requests.put(url, data=content, headers={'X-Consul-Token':self._config['acl_token']})
         logging.debug('Response status code: {0}'.format(response.status_code))
         logging.debug('Response content: {0}'.format(response.text))
