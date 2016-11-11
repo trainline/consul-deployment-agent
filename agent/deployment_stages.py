@@ -252,7 +252,7 @@ def find_healthchecks(archive_dir, appspec, logger):
         healthchecks = appspec.get('healthchecks')
 
     if healthchecks is None:
-        logger.info('No health checks to register')
+        logger.info('No health checks found')
         return
     return healthchecks
 
@@ -266,6 +266,8 @@ class DeregisterOldHealthChecks(DeploymentStage):
             deployment.logger.info('Deregistering Consul healthchecks from previous deployment.')
             previous_appspec = get_previous_deployment_appspec(deployment)
             healthchecks = find_healthchecks(deployment.last_archive_dir, previous_appspec, deployment.logger)
+            if healthchecks is None:
+                return
             for check_id, check in healthchecks.iteritems():
                 print deployment.consul_api.deregister_check(check_id)
 
@@ -286,6 +288,8 @@ class RegisterHealthChecks(DeploymentStage):
 
         deployment.logger.info('Registering Consul healthchecks.')
         healthchecks = find_healthchecks(deployment.archive_dir, deployment.appspec, deployment.logger)
+        if healthchecks is None:
+            return
         for check_id, check in healthchecks.iteritems():
             validate_check(check_id, check)
             if check['type'] == 'script':
