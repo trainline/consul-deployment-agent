@@ -27,7 +27,7 @@ class ConsulApi:
     def _api_get(self, relative_url):
         url = '{0}/{1}'.format(self._base_url, relative_url)
         logging.debug('Consul HTTP API request: {0}'.format(url))
-        response = requests.get(url, headers={'X-Consul-Token':self._config['acl_token']})
+        response = requests.get(url, headers={'X-Consul-Token': self._config['acl_token']})
         logging.debug('Response status code: {0}'.format(response.status_code))
         logging.debug('Response content: {0}'.format(response.text))
         if response.status_code == 500:
@@ -40,7 +40,7 @@ class ConsulApi:
         url = '{0}/{1}'.format(self._base_url, relative_url)
         logging.debug('Consul HTTP API PUT request URL: {0}'.format(url))
         logging.debug('Consul HTTP API PUT request content: {0}'.format(content))
-        response = requests.put(url, data=content, headers={'X-Consul-Token':self._config['acl_token']})
+        response = requests.put(url, data=content, headers={'X-Consul-Token': self._config['acl_token']})
         logging.debug('Response status code: {0}'.format(response.status_code))
         logging.debug('Response content: {0}'.format(response.text))
         if response.status_code == 500:
@@ -48,10 +48,14 @@ class ConsulApi:
         return response
 
     @retry(wait_fixed=5000, stop_max_attempt_number=12)
-    def _get_modify_index(self, key):
+    def _get_modify_index(self, key, for_write_operation):
         logging.debug('Retrieving Consul key-value store modify index for key: {0}'.format(key))
         response = self._api_get('kv/{0}?index'.format(key))
-        modify_index = response.headers.get('X-Consul-Index')
+        # For new values modify_index == 0
+        if response.status_code == 404 and for_write_operation == True:
+            modify_index = 0
+        else:
+            modify_index = response.headers.get('X-Consul-Index')
         logging.debug('Consul key-value store modify index for key \'{0}\': {1}'.format(key, modify_index))
         return modify_index
 
@@ -103,7 +107,7 @@ class ConsulApi:
         return response.status_code == 200
 
     def wait_for_change(self, key_prefix):
-        modify_index = self._get_modify_index(key_prefix)
+        modify_index = self._get_modify_index(key_prefix, False)
         if modify_index is None:
             self._last_known_modify_index = modify_index
             #raise ConsulError('Modify index is invalid.')
@@ -117,6 +121,6 @@ class ConsulApi:
         self._api_get('kv/{0}?index={1}'.format(key_prefix, self._last_known_modify_index))
 
     def write_value(self, key, value):
-        modify_index = self._get_modify_index(key)
+        modify_index = self._get_modify_index(key, True)
         response = self._api_put('kv/{0}?cas={1}'.format(key, modify_index), json.dumps(value))
         return response.text == 'true'
