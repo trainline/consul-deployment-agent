@@ -8,7 +8,7 @@ from deployment import Deployment
 from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
 
-semantic_version = '0.16.3'
+semantic_version = '0.16.4'
 parser = argparse.ArgumentParser()
 parser.add_argument('-config-dir', help='Location of configuration files (e.g. config.yml and config-logging.yml)')
 parser.add_argument('-v', '--version', action='version', version=semantic_version)
@@ -127,7 +127,7 @@ def converge(consul_api, environment):
 
 def main():
     logging.config.dictConfig(config['logging'])
-    logging.info('Start initilisation.')
+    logging.info('Start initialisation, consul-deployment-agent version: {0}'.format(semantic_version))
     try:
         environment = Environment()
         logging.info('Environment configuration: {0}'.format(environment))
