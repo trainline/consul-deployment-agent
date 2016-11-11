@@ -248,13 +248,19 @@ class RegisterHealthChecks(DeploymentStage):
                     raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
 
         deployment.logger.info('Registering Consul healthchecks.')
+        healthchecks_filepath = os.path.join(deployment.archive_dir, 'healthchecks/healthchecks.yml')
 
-        healthchecks_filepath = 'healthchecks/healthchecks.yml'
         if os.path.exists(healthchecks_filepath):
             deployment.logger.info('Found healthchecks/healthchecks.yml')
             healthchecks_stream = file(healthchecks_filepath, 'r')
-            healthchecks = yaml.load(healthchecks_stream)
+            healthchecks_object = yaml.load(healthchecks_stream)
+            if type(healthchecks_object) is not dict:
+                deployment.logger.error('healthchecks/healthchecks.yml doesn\'t contain valid definition of healthchecks')
+                healthchecks = None
+            else:
+                healthchecks = healthchecks_object.get('healthchecks')
         else:
+            deployment.logger.info('No healthchecks/healthchecks.yml found, using healtchecks specification from appspec.yml')
             healthchecks = deployment.appspec.get('healthchecks')
 
         if healthchecks is None:
