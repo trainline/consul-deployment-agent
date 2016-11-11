@@ -9,6 +9,12 @@ def find_absolute_path(archive_dir, location):
         location = location[1:]
     return os.path.join(archive_dir, location)
 
+def get_previous_deployment_appspec(deployment):
+    appspec_filepath = os.path.join(deployment.last_archive_dir, 'appspec.yml')
+    deployment.logger.debug('Loading existing deployment appspec file from {0}.' .format(appspec_filepath))
+    appspec_stream = file(appspec_filepath, 'r')
+    return yaml.load(appspec_stream)
+
 class DeploymentError(RuntimeError):
     pass
 
@@ -78,10 +84,7 @@ class StopApplication(LifecycleHookExecutionStage):
         if deployment.last_id is None:
             deployment.logger.info('Skipping {0} stage as there is no previous deployment.'.format(self.name))
         else:
-            appspec_filepath = os.path.join(deployment.last_archive_dir, 'appspec.yml')
-            deployment.logger.debug('Loading existing deployment appspec file from {0}.' .format(appspec_filepath))
-            appspec_stream = file(appspec_filepath, 'r')
-            appspec = yaml.load(appspec_stream)
+            appspec = get_previous_deployment_appspec(deployment)
             hook_definition = appspec['hooks'].get(self.lifecycle_event)
             if hook_definition is None:
                 deployment.logger.info('Skipping {0} stage as there is no hook defined.'.format(self.name))
@@ -232,6 +235,40 @@ class RegisterWithConsul(DeploymentStage):
         else:
             deployment.logger.warning('Failed to register service in Consul catalogue.')
 
+def find_healthchecks(archive_dir, appspec, logger):
+    healthchecks_filepath = os.path.join(archive_dir, 'healthchecks/healthchecks.yml')
+
+    if os.path.exists(healthchecks_filepath):
+        logger.debug('Found healthchecks/healthchecks.yml')
+        healthchecks_stream = file(healthchecks_filepath, 'r')
+        healthchecks_object = yaml.load(healthchecks_stream)
+        if type(healthchecks_object) is not dict:
+            logger.error('healthchecks/healthchecks.yml doesn\'t contain valid definition of healthchecks')
+            healthchecks = None
+        else:
+            healthchecks = healthchecks_object.get('healthchecks')
+    else:
+        logger.debug('No healthchecks/healthchecks.yml found, using healtchecks specification from appspec.yml')
+        healthchecks = appspec.get('healthchecks')
+
+    if healthchecks is None:
+        logger.info('No health checks to register')
+        return
+    return healthchecks
+
+class DeregisterOldHealthChecks(DeploymentStage):
+    def __init__(self):
+        DeploymentStage.__init__(self, name='DeregisterOldHealthChecks')
+    def _run(self, deployment):
+        if deployment.last_id is None:
+            deployment.logger.info('Skipping {0} stage as there is no previous deployment.'.format(self.name))
+        else:
+            deployment.logger.info('Deregistering Consul healthchecks from previous deployment.')
+            previous_appspec = get_previous_deployment_appspec(deployment)
+            healthchecks = find_healthchecks(deployment.last_archive_dir, previous_appspec, deployment.logger)
+            for check_id, check in healthchecks.iteritems():
+                print deployment.consul_api.deregister_check(check_id)
+
 class RegisterHealthChecks(DeploymentStage):
     def __init__(self):
         DeploymentStage.__init__(self, name='RegisterHealthChecks')
@@ -248,25 +285,7 @@ class RegisterHealthChecks(DeploymentStage):
                     raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
 
         deployment.logger.info('Registering Consul healthchecks.')
-        healthchecks_filepath = os.path.join(deployment.archive_dir, 'healthchecks/healthchecks.yml')
-
-        if os.path.exists(healthchecks_filepath):
-            deployment.logger.info('Found healthchecks/healthchecks.yml')
-            healthchecks_stream = file(healthchecks_filepath, 'r')
-            healthchecks_object = yaml.load(healthchecks_stream)
-            if type(healthchecks_object) is not dict:
-                deployment.logger.error('healthchecks/healthchecks.yml doesn\'t contain valid definition of healthchecks')
-                healthchecks = None
-            else:
-                healthchecks = healthchecks_object.get('healthchecks')
-        else:
-            deployment.logger.info('No healthchecks/healthchecks.yml found, using healtchecks specification from appspec.yml')
-            healthchecks = deployment.appspec.get('healthchecks')
-
-        if healthchecks is None:
-            deployment.logger.info('No health checks to register')
-            return
-
+        healthchecks = find_healthchecks(deployment.archive_dir, deployment.appspec, deployment.logger)
         for check_id, check in healthchecks.iteritems():
             validate_check(check_id, check)
             if check['type'] == 'script':

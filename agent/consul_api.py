@@ -94,6 +94,10 @@ class ConsulApi:
     def key_exists(self, key):
         return self.get_value(key) is not None
 
+    def deregister_check(self, id):
+        response = self._api_put('agent/check/deregister/{0}'.format(id), {})
+        return response.status_code == 200
+
     def register_http_check(self, id, name, url, interval):
         response = self._api_put('agent/check/register', json.dumps({ 'ID': id, 'Name': name, 'HTTP': url, 'Interval': interval }))
         return response.status_code == 200
