@@ -31,7 +31,7 @@ class ConsulApi:
         logging.debug('Response status code: {0}'.format(response.status_code))
         logging.debug('Response content: {0}'.format(response.text))
         if response.status_code == 500:
-            raise ConsulError('Consul HTTP API internal error. Response content: {0}'.format(reponse.text))
+            raise ConsulError('Consul HTTP API internal error. Response content: {0}'.format(response.text))
         return response
 
     @handle_connection_error
@@ -44,7 +44,7 @@ class ConsulApi:
         logging.debug('Response status code: {0}'.format(response.status_code))
         logging.debug('Response content: {0}'.format(response.text))
         if response.status_code == 500:
-            raise ConsulError('Consul HTTP API internal error. Response content: {0}'.format(reponse.text))
+            raise ConsulError('Consul HTTP API internal error. Response content: {0}'.format(response.text))
         return response
 
     @retry(wait_fixed=5000, stop_max_attempt_number=12)
