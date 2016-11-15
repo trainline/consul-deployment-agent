@@ -305,3 +305,15 @@ class RegisterConsulHealthChecks(DeploymentStage):
                 deployment.logger.info('Successfuly registered health check \'{0}\''.format(check_id))
             else:
                 raise DeploymentError('Failed to register health check \'{0}\''.format(check_id))
+
+class DeregisterOldSensuHealthChecks(DeploymentStage):
+    def __init__(self):
+        DeploymentStage.__init__(self, name='DeregisterOldSensuHealthChecks')
+    def _run(self, deployment):
+        raise 'not implemented'
+
+class RegisterSensuHealthChecks(DeploymentStage):
+    def __init__(self):
+        DeploymentStage.__init__(self, name='RegisterSensuHealthChecks')
+    def _run(self, deployment):
+        raise 'not implemented'
