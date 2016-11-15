@@ -98,12 +98,12 @@ class ConsulApi:
         response = self._api_put('agent/check/deregister/{0}'.format(id), {})
         return response.status_code == 200
 
-    def register_http_check(self, id, name, url, interval):
-        response = self._api_put('agent/check/register', json.dumps({ 'ID': id, 'Name': name, 'HTTP': url, 'Interval': interval }))
+    def register_http_check(self, service_id, id, name, url, interval):
+        response = self._api_put('agent/check/register', json.dumps({ 'ServiceID': service_id, 'ID': id, 'Name': name, 'HTTP': url, 'Interval': interval }))
         return response.status_code == 200
 
-    def register_script_check(self, id, name, script_path, interval):
-        response = self._api_put('agent/check/register', json.dumps({ 'ID': id, 'Name': name, 'Script': script_path, 'Interval': interval }))
+    def register_script_check(self, service_id, id, name, script_path, interval):
+        response = self._api_put('agent/check/register', json.dumps({ 'ServiceID': service_id, 'ID': id, 'Name': name, 'Script': script_path, 'Interval': interval }))
         return response.status_code == 200
 
     def register_service(self, id, name, address, port, tags):

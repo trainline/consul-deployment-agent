@@ -4,7 +4,6 @@ import dir_utils, distutils.core, os, sys, yaml, zipfile
 from deployment_scripts import PowershellScript, ShellScript
 
 def find_absolute_path(archive_dir, location):
-    location = location
     if location.startswith('/'):
         location = location[1:]
     return os.path.join(archive_dir, location)
@@ -247,7 +246,7 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
             logger.error('{0} doesn\'t contain valid definition of healthchecks'.format(relative_path))
             healthchecks = None
         else:
-            healthchecks = healthchecks_object.get('healthchecks')
+            healthchecks = healthchecks_object.get('{0}_healthchecks'.format(check_type))
     else:
         logger.debug('No {0} found, attempting to find specification in appspec.yml'.format(relative_path))
         healthchecks = appspec.get('{0}_healthchecks'.format(check_type))
@@ -256,6 +255,9 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
         logger.info('No health checks found')
         return
     return healthchecks
+
+def prefix_service_check_id(check_id):
+    return check_id
 
 class DeregisterOldConsulHealthChecks(DeploymentStage):
     def __init__(self):
@@ -293,11 +295,12 @@ class RegisterConsulHealthChecks(DeploymentStage):
             return
         for check_id, check in healthchecks.iteritems():
             validate_check(check_id, check)
+            prefixed_check_id = prefix_service_check_id(check_id)
             if check['type'] == 'script':
                 file_path = find_absolute_path(deployment.archive_dir, check['script'])
-                is_success = deployment.consul_api.register_script_check(check_id, check['name'], file_path, check['interval'])
+                is_success = deployment.consul_api.register_script_check(deployment.service.id, prefixed_check_id, check['name'], file_path, check['interval'])
             elif check['type'] == 'http':
-                is_success = deployment.consul_api.register_http_check(check_id, check['name'], check['http'], check['interval'])
+                is_success = deployment.consul_api.register_http_check(deployment.service.id, prefixed_check_id, check['name'], check['http'], check['interval'])
             else:
                 is_success = False
 
