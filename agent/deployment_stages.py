@@ -235,45 +235,46 @@ class RegisterWithConsul(DeploymentStage):
         else:
             deployment.logger.warning('Failed to register service in Consul catalogue.')
 
-def find_healthchecks(archive_dir, appspec, logger):
-    healthchecks_filepath = os.path.join(archive_dir, 'healthchecks/healthchecks.yml')
+def find_healthchecks(check_type, archive_dir, appspec, logger):
+    relative_path = 'healthchecks/{0}/healthchecks.yml'.format(check_type)
+    absolute_filepath = os.path.join(archive_dir, relative_path)
 
-    if os.path.exists(healthchecks_filepath):
-        logger.debug('Found healthchecks/healthchecks.yml')
-        healthchecks_stream = file(healthchecks_filepath, 'r')
+    if os.path.exists(absolute_filepath):
+        logger.debug('Found {0}'.format(relative_path))
+        healthchecks_stream = file(absolute_filepath, 'r')
         healthchecks_object = yaml.load(healthchecks_stream)
         if type(healthchecks_object) is not dict:
-            logger.error('healthchecks/healthchecks.yml doesn\'t contain valid definition of healthchecks')
+            logger.error('{0} doesn\'t contain valid definition of healthchecks'.format(relative_path))
             healthchecks = None
         else:
             healthchecks = healthchecks_object.get('healthchecks')
     else:
-        logger.debug('No healthchecks/healthchecks.yml found, using healtchecks specification from appspec.yml')
-        healthchecks = appspec.get('healthchecks')
+        logger.debug('No {0} found, attempting to find specification in appspec.yml'.format(relative_path))
+        healthchecks = appspec.get('{0}_healthchecks'.format(check_type))
 
     if healthchecks is None:
         logger.info('No health checks found')
         return
     return healthchecks
 
-class DeregisterOldHealthChecks(DeploymentStage):
+class DeregisterOldConsulHealthChecks(DeploymentStage):
     def __init__(self):
-        DeploymentStage.__init__(self, name='DeregisterOldHealthChecks')
+        DeploymentStage.__init__(self, name='DeregisterOldConsulHealthChecks')
     def _run(self, deployment):
         if deployment.last_id is None:
             deployment.logger.info('Skipping {0} stage as there is no previous deployment.'.format(self.name))
         else:
             deployment.logger.info('Deregistering Consul healthchecks from previous deployment.')
             previous_appspec = get_previous_deployment_appspec(deployment)
-            healthchecks = find_healthchecks(deployment.last_archive_dir, previous_appspec, deployment.logger)
+            healthchecks = find_healthchecks('consul', deployment.last_archive_dir, previous_appspec, deployment.logger)
             if healthchecks is None:
                 return
             for check_id, check in healthchecks.iteritems():
                 print deployment.consul_api.deregister_check(check_id)
 
-class RegisterHealthChecks(DeploymentStage):
+class RegisterConsulHealthChecks(DeploymentStage):
     def __init__(self):
-        DeploymentStage.__init__(self, name='RegisterHealthChecks')
+        DeploymentStage.__init__(self, name='RegisterConsulHealthChecks')
     def _run(self, deployment):
         def validate_check(check_id, check):
             if not 'type' in check or (check['type'] != 'script' and check['type'] != 'http'):
@@ -287,7 +288,7 @@ class RegisterHealthChecks(DeploymentStage):
                     raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
 
         deployment.logger.info('Registering Consul healthchecks.')
-        healthchecks = find_healthchecks(deployment.archive_dir, deployment.appspec, deployment.logger)
+        healthchecks = find_healthchecks('consul', deployment.archive_dir, deployment.appspec, deployment.logger)
         if healthchecks is None:
             return
         for check_id, check in healthchecks.iteritems():
