@@ -69,28 +69,28 @@ class TestConsulApi(unittest.TestCase):
     def test_register_http_check_succeeds(self):
         responses.add(responses.PUT, 'http://localhost:8500/v1/agent/check/register', status=200)
         consul_api = ConsulApi(consul_config)
-        is_success = consul_api.register_http_check(id='http_check', name='Ping', url='http://127.0.0.1:8080/ping', interval='10s')
+        is_success = consul_api.register_http_check('Ping', id='http_check', name='Ping', url='http://127.0.0.1:8080/ping', interval='10s')
         self.assertEqual(is_success, True)
 
     @responses.activate
     def test_register_http_check_fails(self):
         responses.add(responses.PUT, 'http://localhost:8500/v1/agent/check/register', status=400)
         consul_api = ConsulApi(consul_config)
-        is_success = consul_api.register_http_check(id='http_check', name='Ping', url='http://127.0.0.1:8080/ping', interval='10s')
+        is_success = consul_api.register_http_check('Ping', id='http_check', name='Ping', url='http://127.0.0.1:8080/ping', interval='10s')
         self.assertEqual(is_success, False)
 
     @responses.activate
     def test_register_script_check_succeeds(self):
         responses.add(responses.PUT, 'http://localhost:8500/v1/agent/check/register', status=200)
         consul_api = ConsulApi(consul_config)
-        is_success = consul_api.register_script_check(id='script_check', name='Service active', script_path='/opt/service_name/scripts/health_check.py', interval='30s')
+        is_success = consul_api.register_script_check('serviceActive', id='script_check', name='Service active', script_path='/opt/service_name/scripts/health_check.py', interval='30s')
         self.assertEqual(is_success, True)
 
     @responses.activate
     def test_register_check_fails(self):
         responses.add(responses.PUT, 'http://localhost:8500/v1/agent/check/register', status=400)
         consul_api = ConsulApi(consul_config)
-        is_success = consul_api.register_script_check(id='script_check', name='Service active', script_path='/opt/service_name/scripts/health_check.py', interval='30s')
+        is_success = consul_api.register_script_check('serviceActive', id='script_check', name='Service active', script_path='/opt/service_name/scripts/health_check.py', interval='30s')
         self.assertEqual(is_success, False)
 
     @responses.activate
