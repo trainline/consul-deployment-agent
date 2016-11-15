@@ -7,8 +7,8 @@ from consul_data_loader import ConsulDataLoader
 from deployment import Deployment
 from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
+from version import semantic_version
 
-semantic_version = '0.16.7'
 parser = argparse.ArgumentParser()
 parser.add_argument('-config-dir', help='Location of configuration files (e.g. config.yml and config-logging.yml)')
 parser.add_argument('-v', '--version', action='version', version=semantic_version)
