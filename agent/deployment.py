@@ -4,6 +4,7 @@ import datetime, json, key_naming_convention, logging, os, sys
 from consul_api import ConsulError
 from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks
 from s3_file_manager import S3FileManager
+from version import semantic_version
 
 class Deployment():
     def __init__(self, config={}, consul_api=None, aws_config={}):
@@ -159,6 +160,7 @@ class Deployment():
     def run(self):
         self._initialise_report()
         self._initialise_log()
+        self.logger.info('consul-deployment-agent version: {0}'.format(semantic_version))
         self.logger.info('Installing service: {0}'.format(self.service))
         self.logger.info('Configuration: {0}'.format(self))
         self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))

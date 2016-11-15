@@ -255,7 +255,7 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
         healthchecks = appspec.get('{0}_healthchecks'.format(check_type))
 
     if healthchecks is None:
-        logger.info('No health checks found')
+        logger.info('No health checks found.')
     return { 'healthchecks': healthchecks, 'scripts_base_dir': scripts_base_dir }
 
 def prefix_service_check_id(check_id):
@@ -275,7 +275,7 @@ class DeregisterOldConsulHealthChecks(DeploymentStage):
             if healthchecks is None:
                 return
             for check_id, check in healthchecks.iteritems():
-                print deployment.consul_api.deregister_check(check_id)
+                deployment.consul_api.deregister_check(check_id)
 
 class RegisterConsulHealthChecks(DeploymentStage):
     def __init__(self):
