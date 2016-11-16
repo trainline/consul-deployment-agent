@@ -275,7 +275,8 @@ class DeregisterOldConsulHealthChecks(DeploymentStage):
             if healthchecks is None:
                 return
             for check_id, check in healthchecks.iteritems():
-                deployment.consul_api.deregister_check(check_id)
+                service_check_id = create_service_check_id(deployment.service.id, check_id)
+                deployment.consul_api.deregister_check(service_check_id)
 
 class RegisterConsulHealthChecks(DeploymentStage):
     def __init__(self):
