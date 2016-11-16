@@ -235,13 +235,13 @@ class RegisterWithConsul(DeploymentStage):
             deployment.logger.warning('Failed to register service in Consul catalogue.')
 
 def find_healthchecks(check_type, archive_dir, appspec, logger):
-    relative_path = 'healthchecks/{0}/healthchecks.yml'.format(check_type)
+    relative_path = os.path.join('healthchecks', check_type, 'healthchecks.yml')
     absolute_filepath = os.path.join(archive_dir, relative_path)
     scripts_base_dir = None
 
     if os.path.exists(absolute_filepath):
         logger.debug('Found {0}'.format(relative_path))
-        scripts_base_dir = 'healthchecks/{0}'.format(check_type)
+        scripts_base_dir = os.path.join('healthchecks', check_type)
         healthchecks_stream = file(absolute_filepath, 'r')
         healthchecks_object = yaml.load(healthchecks_stream)
         if type(healthchecks_object) is not dict:
