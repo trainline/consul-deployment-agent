@@ -256,7 +256,7 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
 
     if healthchecks is None:
         logger.info('No health checks found.')
-    return { 'healthchecks': healthchecks, 'scripts_base_dir': scripts_base_dir }
+    return ( healthchecks, scripts_base_dir )
 
 def create_service_check_id(service_id, check_id):
     return service_id + ':' + check_id
@@ -270,8 +270,7 @@ class DeregisterOldConsulHealthChecks(DeploymentStage):
         else:
             deployment.logger.info('Deregistering Consul healthchecks from previous deployment.')
             previous_appspec = get_previous_deployment_appspec(deployment)
-            healthchecks_info = find_healthchecks('consul', deployment.last_archive_dir, previous_appspec, deployment.logger)
-            healthchecks = healthchecks_info['healthchecks']
+            (healthchecks, scripts_base_dir) = find_healthchecks('consul', deployment.last_archive_dir, previous_appspec, deployment.logger)
             if healthchecks is None:
                 return
             for check_id, check in healthchecks.iteritems():
@@ -282,6 +281,17 @@ class RegisterConsulHealthChecks(DeploymentStage):
     def __init__(self):
         DeploymentStage.__init__(self, name='RegisterConsulHealthChecks')
     def _run(self, deployment):
+        def validate_checks(healthchecks, scripts_base_dir):
+            for check_id, check in healthchecks.iteritems():
+                validate_check(check_id, check)
+                if check['type'] == 'script':
+                    if check['script'].startswith('/'):
+                        check['script'] = check['script'][1:]
+                        
+                    file_path = os.path.join(deployment.archive_dir, scripts_base_dir, check['script'])
+                    if not os.path.exists(file_path):
+                        raise DeploymentError('Couldn\'t find health check script in package with path: {0}'.format(os.path.join(scripts_base_dir, check['script'])))
+
         def validate_check(check_id, check):
             if not 'type' in check or (check['type'] != 'script' and check['type'] != 'http'):
                 raise DeploymentError('Failed to register health check \'{0}\', only \'script\' and \'http\' check types are supported.'.format(check_id))
@@ -294,22 +304,16 @@ class RegisterConsulHealthChecks(DeploymentStage):
                     raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
 
         deployment.logger.info('Registering Consul healthchecks.')
-        healthchecks_info = find_healthchecks('consul', deployment.archive_dir, deployment.appspec, deployment.logger)
-        healthchecks = healthchecks_info['healthchecks']
+        (healthchecks, scripts_base_dir) = find_healthchecks('consul', deployment.archive_dir, deployment.appspec, deployment.logger)
         if healthchecks is None:
             return
+
+        validate_checks(healthchecks, scripts_base_dir)
         for check_id, check in healthchecks.iteritems():
-            validate_check(check_id, check)
             service_check_id = create_service_check_id(deployment.service.id, check_id)
 
             if check['type'] == 'script':
-                if check['script'].startswith('/'):
-                    check['script'] = check['script'][1:]
-
-                file_path = os.path.join(deployment.archive_dir, healthchecks_info['scripts_base_dir'], check['script'])
-
-                if not os.path.exists(file_path):
-                    raise DeploymentError('Couldn\'t find health check script in package with path: {0}'.format(os.path.join(healthchecks_info['scripts_base_dir'], check['script'])))
+                file_path = os.path.join(deployment.archive_dir, scripts_base_dir, check['script'])
 
                 # Add execution permission to file
                 st = os.stat(file_path)
