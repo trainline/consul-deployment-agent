@@ -1,6 +1,6 @@
 # Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import dir_utils, distutils.core, os, sys, yaml, zipfile
+import dir_utils, distutils.core, os, sys, yaml, zipfile, stat
 from deployment_scripts import PowershellScript, ShellScript
 
 def find_absolute_path(archive_dir, location):
@@ -300,8 +300,20 @@ class RegisterConsulHealthChecks(DeploymentStage):
         for check_id, check in healthchecks.iteritems():
             validate_check(check_id, check)
             service_check_id = create_service_check_id(deployment.service.id, check_id)
+
             if check['type'] == 'script':
-                file_path = find_absolute_path(os.path.join(deployment.archive_dir, healthchecks_info['scripts_base_dir']), check['script'])
+                if check['script'].startswith('/'):
+                    check['script'] = check['script'][1:]
+
+                file_path = os.path.join(deployment.archive_dir, healthchecks_info['scripts_base_dir'], check['script'])
+
+                if not os.path.exists(file_path):
+                    raise DeploymentError('Couldn\'t find health check script in package with path: {0}'.format(os.path.join(healthchecks_info['scripts_base_dir'], check['script'])))
+
+                # Add execution permission to file
+                st = os.stat(file_path)
+                os.chmod(file_path, st.st_mode | stat.S_IEXEC)
+
                 deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, file_path))
                 is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], file_path, check['interval'])
             elif check['type'] == 'http':
