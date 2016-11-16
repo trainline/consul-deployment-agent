@@ -258,8 +258,8 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
         logger.info('No health checks found.')
     return { 'healthchecks': healthchecks, 'scripts_base_dir': scripts_base_dir }
 
-def prefix_service_check_id(check_id):
-    return check_id
+def create_service_check_id(service_id, check_id):
+    return service_id + ':' + check_id
 
 class DeregisterOldConsulHealthChecks(DeploymentStage):
     def __init__(self):
@@ -299,13 +299,13 @@ class RegisterConsulHealthChecks(DeploymentStage):
             return
         for check_id, check in healthchecks.iteritems():
             validate_check(check_id, check)
-            prefixed_check_id = prefix_service_check_id(check_id)
+            service_check_id = create_service_check_id(deployment.service.id, check_id)
             if check['type'] == 'script':
                 file_path = find_absolute_path(os.path.join(deployment.archive_dir, healthchecks_info['scripts_base_dir']), check['script'])
                 deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, file_path))
-                is_success = deployment.consul_api.register_script_check(deployment.service.id, prefixed_check_id, check['name'], file_path, check['interval'])
+                is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], file_path, check['interval'])
             elif check['type'] == 'http':
-                is_success = deployment.consul_api.register_http_check(deployment.service.id, prefixed_check_id, check['name'], check['http'], check['interval'])
+                is_success = deployment.consul_api.register_http_check(deployment.service.id, service_check_id, check['name'], check['http'], check['interval'])
             else:
                 is_success = False
 
