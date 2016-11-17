@@ -48,7 +48,8 @@ class TestHealthChecks(unittest.TestCase):
         
     def test_failing_check(self):
         check = {
-            'type': 'unknown'
+            'type': 'unknown',
+            'name': 'check_name'
         }
         self.deployment.set_check('check_failing', check)
         with self.assertRaisesRegexp(DeploymentError, 'only.*check types are supported'):
@@ -56,7 +57,8 @@ class TestHealthChecks(unittest.TestCase):
 
     def test_missing_name_field(self):
         check = {
-            'type': 'http'
+            'type': 'http',
+            'name': 'check_name'
         }
         self.deployment.set_check('check_failing', check)
         with self.assertRaisesRegexp(DeploymentError, 'is missing field'):
@@ -75,18 +77,33 @@ class TestHealthChecks(unittest.TestCase):
         checks = {
             'check_1': {
                 'type': 'http',
-                'name': 'Missing http'
+                'name': 'Missing http 1'
 
             },
             'cheCK_1': {
                 'type': 'http',
-                'name': 'Missing http'
+                'name': 'Missing http 2'
             }
         }
         self.deployment.set_checks(checks)
         with self.assertRaisesRegexp(DeploymentError, 'health checks require unique ids'):
             self.tested_fn._run(self.deployment)
 
+    def test_case_insensitive_name_conflict(self):
+        checks = {
+            'check_1': {
+                'type': 'http',
+                'name': 'Missing http'
+
+            },
+            'check_2': {
+                'type': 'http',
+                'name': 'Missing http'
+            }
+        }
+        self.deployment.set_checks(checks)
+        with self.assertRaisesRegexp(DeploymentError, 'health checks require unique names'):
+            self.tested_fn._run(self.deployment)
 
 
 

@@ -285,6 +285,11 @@ class RegisterConsulHealthChecks(DeploymentStage):
             ids_list = [id.lower() for id in healthchecks.keys()]
             if len(ids_list) != len(set(ids_list)):
                 raise DeploymentError('Consul health checks require unique ids (case insensitive)')
+
+            names_list = [tmp['name'] for tmp in healthchecks.values()]
+            if len(names_list) != len(set(names_list)):
+                raise DeploymentError('Consul health checks require unique names (case insensitive)')
+
             for check_id, check in healthchecks.iteritems():
                 validate_check(check_id, check)
                 if check['type'] == 'script':
