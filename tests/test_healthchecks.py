@@ -35,6 +35,10 @@ class MockDeployment:
                 check_id: check
             }
         }
+    def set_checks(self, checks):
+        self.appspec = {
+            'consul_healthchecks': checks
+        }
 
 
 class TestHealthChecks(unittest.TestCase):
@@ -66,6 +70,23 @@ class TestHealthChecks(unittest.TestCase):
         self.deployment.set_check('check_failing', check)
         with self.assertRaisesRegexp(DeploymentError, 'is missing field \'http\''):
             self.tested_fn._run(self.deployment)
+
+    def test_case_insensitive_id_conflict(self):
+        checks = {
+            'check_1': {
+                'type': 'http',
+                'name': 'Missing http'
+
+            },
+            'cheCK_1': {
+                'type': 'http',
+                'name': 'Missing http'
+            }
+        }
+        self.deployment.set_checks(checks)
+        with self.assertRaisesRegexp(DeploymentError, 'health checks require unique ids'):
+            self.tested_fn._run(self.deployment)
+
 
 
 

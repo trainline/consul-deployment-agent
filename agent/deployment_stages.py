@@ -282,6 +282,9 @@ class RegisterConsulHealthChecks(DeploymentStage):
         DeploymentStage.__init__(self, name='RegisterConsulHealthChecks')
     def _run(self, deployment):
         def validate_checks(healthchecks, scripts_base_dir):
+            ids_list = [id.lower() for id in healthchecks.keys()]
+            if len(ids_list) != len(set(ids_list)):
+                raise DeploymentError('Consul health checks require unique ids (case insensitive)')
             for check_id, check in healthchecks.iteritems():
                 validate_check(check_id, check)
                 if check['type'] == 'script':
