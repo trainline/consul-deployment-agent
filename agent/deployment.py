@@ -2,7 +2,7 @@
 
 import datetime, json, key_naming_convention, logging, os, sys
 from consul_api import ConsulError
-from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks
+from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeletePreviousDeploymentFiles
 from s3_file_manager import S3FileManager
 from version import semantic_version
 
@@ -103,13 +103,13 @@ class Deployment():
             self.number_of_attempts = existing_report.get('NumberOfAttempts', 0)
         logging.debug('Creating deployment report.')
         self._update_report({
-            'cause':self._cause,
-            'end_time':'',
-            'last_completed_stage':'',
-            'log':'',
-            'number_of_attempts':self.number_of_attempts,
-            'start_time':datetime.datetime.utcnow().isoformat(),
-            'status':'In Progress'
+            'cause': self._cause,
+            'end_time': '',
+            'last_completed_stage': '',
+            'log': '',
+            'number_of_attempts': self.number_of_attempts,
+            'start_time': datetime.datetime.utcnow().isoformat(),
+            'status': 'In Progress'
         }, write_to_consul=True)
 
     def _finalise_report(self):
@@ -165,7 +165,7 @@ class Deployment():
         self.logger.info('Configuration: {0}'.format(self))
         self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
         stages = [ ValidateDeployment(), StopApplication(), DeregisterOldConsulHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
-                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(), RegisterWithConsul(), RegisterConsulHealthChecks() ]
+                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(), RegisterWithConsul(), RegisterConsulHealthChecks(), DeletePreviousDeploymentFiles() ]
         for stage in stages:
             success = stage.run(self)
             self._update_report({'last_completed_stage':stage.name})

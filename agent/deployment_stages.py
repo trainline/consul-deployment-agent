@@ -350,3 +350,14 @@ class RegisterSensuHealthChecks(DeploymentStage):
         DeploymentStage.__init__(self, name='RegisterSensuHealthChecks')
     def _run(self, deployment):
         raise 'not implemented'
+
+class DeletePreviousDeploymentFiles(DeploymentStage):
+    def __init__(self):
+        DeploymentStage.__init__(self, name='DeletePreviousDeploymentFiles')
+    def _run(self, deployment):
+        pass
+        # if deployment.last_archive_dir == None:
+        #     deployment.logger.info('Skipping {0} stage as there is no previous deployment.'.format(self.name))
+        # if os.path.isdir(deployment.last_archive_dir):
+        #     deployment.logger.info('Deleting directory of previous deployment {0}.'.format(deployment.last_archive_dir))
+        #     distutils.dir_util.remove_tree(deployment.last_archive_dir)
