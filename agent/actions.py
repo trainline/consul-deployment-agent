@@ -14,3 +14,7 @@ class InstallAction(Action):
 class UninstallAction(Action):
     def __init__(self, deployment_id, service):
         Action.__init__(self, deployment_id, service)
+
+class IgnoreAction(Action):
+    def __init__(self, deployment_id, service):
+        Action.__init__(self, deployment_id, service)

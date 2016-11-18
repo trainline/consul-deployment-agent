@@ -4,7 +4,7 @@ import key_naming_convention
 import logging
 from consul_api import ConsulError
 from server_role import ServerRole
-from actions import InstallAction, UninstallAction
+from actions import InstallAction, UninstallAction, IgnoreAction
 from service import Service
 
 class ConsulDataLoader:
@@ -28,24 +28,21 @@ class ConsulDataLoader:
                 name = definition.get('Name')
                 version = definition.get('Version')
                 deployment_id = definition.get('DeploymentId')
-                deployment_slice = definition.get('Slice','none')
+                deployment_slice = definition.get('Slice', 'none')
+
+                # If Action isn't specified, we assume it's Install for backward compatibility for now
                 deployment_action = definition.get('Action', 'Install')
 
-                if deployment_action not in ['Install', 'Uninstall']:
-                    logging.warning('Unknown deployment action \'{0}\', will ignore it.'.format(deployment_action))
-
                 service = self._load_service(environment, deployment_id, name, version)
-
-                # service.deployment_id = deployment_id
-                # service.tag('deployment_id:', deployment_id)
-                # service.tag('server_role:', environment.server_role)
-                # service.tag('slice:', deployment_slice)
-                # server_role.services[deployment_id] = service
 
                 if deployment_action == 'Install':
                     server_role.actions.append(InstallAction(deployment_id, service))
                 elif deployment_action == 'Uninstall':
                     server_role.actions.append(UninstallAction(deployment_id, service))
+                elif deployment_action == 'Ignore':
+                    server_role.actions.append(IgnoreAction(deployment_id, service))
+                else:
+                    logging.warning('Unknown deployment action \'{0}\', will ignore it.'.format(deployment_action))
 
             except (ConsulError, ValueError) as e:
                 logging.exception(e)

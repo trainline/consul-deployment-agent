@@ -7,7 +7,7 @@ from consul_data_loader import ConsulDataLoader
 from deployment import Deployment
 from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
-from actions import InstallAction, UninstallAction
+from actions import InstallAction, IgnoreAction, UninstallAction
 
 from version import semantic_version
 
@@ -95,11 +95,14 @@ def execute(action, action_info, environment, consul_api):
             'deployment_id': action.deployment_id,
             'environment': environment,
             'last_deployment_id': action_info['last_deployment_id'],
-            'platform': platform.system().lower(),
+            'platform': 'linux',
             'service': action.service
         }
         deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])
         return deployment.run()
+    elif isinstance(action, IgnoreAction):
+        logging.info('Found Ignore action, not installing \'{0}\''.format(action.service.id))
+        return {'id': action.deployment_id, 'is_success': True}
     elif isinstance(action, UninstallAction):
         logging.info('Uninstall action not yet supported!')
         return {'id': action.deployment_id, 'is_success': True}
