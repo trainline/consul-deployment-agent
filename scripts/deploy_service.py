@@ -16,6 +16,7 @@ parser.add_argument('-n', '--name', required=True, help='service name')
 parser.add_argument('-p', '--port', required=True, help='port number')
 parser.add_argument('-v', '--version', required=True, help='version to deploy')
 parser.add_argument('-r', '--role', default='test', help='server role name')
+parser.add_argument('-a', '--action', default='Install', help='deployment Action name')
 parser.add_argument('-e', '--environment', default='local', help='environment name')
 parser.add_argument('-t', '--environmenttype', required=True, help='environment type')
 parser.add_argument('-c', '--cluster', required=True, help='owning cluster')
@@ -40,6 +41,7 @@ print('  Service: %s' % args.name)
 print('  Port: %s' % args.port)
 print('  Version: %s' % args.version)
 print('  Role: %s' % args.role)
+print('  Action: %s' % args.action)
 print('  Environment: %s' % args.environment)
 print('  EnvironmentType: %s' % args.environmenttype)
 print('  OwningCluster: %s' % args.cluster)
@@ -78,7 +80,7 @@ if args.slice is None:
 else:
     deployment_key = 'environments/{0}/roles/{1}/services/{2}/{3}'.format(args.environment, args.role, args.name, args.slice)
 deployment = {}
-deployment['Action'] = 'Install'
+deployment['Action'] = args.action
 deployment['Name'] = args.name
 deployment['Version'] = args.version
 deployment['DeploymentId'] = args.deploymentid
