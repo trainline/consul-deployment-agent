@@ -19,7 +19,7 @@ class ServerRole:
             if action.deployment_id in self.quarantine:
                 logging.warn('Following deployment action is quarantined, skipping deployment.\n{0}'.format(action))
                 continue
-            deployment_id = next((s.deployment_id for s in registered_services if s.deployment_id == deployment_id), None)
+            deployment_id = next((s.deployment_id for s in registered_services if s.deployment_id == action.deployment_id), None)
             if deployment_id is None:
                 # Deployment action has not been applied to this instance or was unsuccessful
                 installed_service = next((s for s in registered_services if s.id == action.service.id), None)
