@@ -30,9 +30,9 @@ def change_mode_recursive(directory, mode):
     if not os.path.isdir(directory):
         raise Exception(' {0} is not a directory.'.format(object))
     if mode is None:
-       raise Exception('Invalid mode: {0}'.format(mode))
+        raise Exception('Invalid mode: {0}'.format(mode))
     if not isinstance(mode, (int, long)):
-       raise ValueError('Mode should be provided as a base-10 integer.')
+        raise ValueError('Mode should be provided as a base-10 integer.')
     mode = int('0{0}'.format(str(mode)), base=8)
     os.chmod(directory, mode)
     for root, dirs, files in os.walk(directory):
