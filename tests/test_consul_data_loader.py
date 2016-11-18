@@ -21,7 +21,7 @@ class MockConsulApi:
         # Consul KV store
         self.kv = {
             self.correctly_defined_service_key:{ 'Name':'Service1', 'Version':'1.0.0', 'Slice':'blue', 'DeploymentId':'2419483e-6aef-4dd9-a46e-dc00966ba2b2' },
-            self.correctly_defined_service_definition_key:{ 'Service':{'Name':'Service1', 'ID':'Service1', 'Address':'', 'Port':20200, 'Tags':['version:1.0.0']} },
+            self.correctly_defined_service_definition_key:{ 'Service': {'Name':'Service1', 'ID':'Service1', 'Address':'', 'Port':20200, 'Tags':['version:1.0.0', 'slice:blue']} },
             self.correctly_defined_service_installation_key:{ 'PackagePath':'http://some-location/2419483e-6aef-4dd9-a46e-dc00966ba2b2', 'InstallationTimeout':15 },
             self.incorrectly_defined_service_key:{ 'Name':'Service2', 'Version':'1.0.0', 'Slice':'none', 'DeploymentId':'8269ec14-1063-4e27-9e29-38e7454cdd98' },
             self.incorrectly_defined_service_definition_key:{ 'Service':{'Name':'Service2', 'Address':'', 'Port':20202, 'Tags':['version:1.0.0']} },
@@ -30,7 +30,7 @@ class MockConsulApi:
 
     def get_keys(self, services_key):
         if services_key == self.server_role_services_key:
-            return [self.correctly_defined_service_key, self.incorrectly_defined_service_key]
+            return [self.incorrectly_defined_service_key, self.correctly_defined_service_key]
         return []
 
     def get_value(self, key):
@@ -40,8 +40,8 @@ class MockConsulApi:
 
     def get_service_catalogue(self):
         return {
-            'consul':{'Service':'consul', 'ID':'consul', 'Address':'', 'Port':8300, 'Tags':[]},
-            'Service1':{'Service':'Service1', 'ID':'Service1', 'Address':'127.0.0.1', 'Port':20200, 'Tags':['version:1.0.0', 'slice:none', 'deployment_id:2419483e-6aef-4dd9-a46e-dc00966ba2b2'] }
+            'consul': {'Service':'consul', 'ID':'consul', 'Address':'', 'Port':8300, 'Tags':[]},
+            'Service1': {'Service': 'Service1', 'ID': 'Service1', 'Address':'127.0.0.1', 'Port':20200, 'Tags':['version:1.0.0', 'slice:none', 'deployment_id:2419483e-6aef-4dd9-a46e-dc00966ba2b2'] }
         }
 
 class MockEnvironment:
@@ -57,9 +57,10 @@ class TestConsulDataLoader(unittest.TestCase):
         consul_data_loader = ConsulDataLoader(MockConsulApi(environment))
         server_role = consul_data_loader.load_server_role(environment)
         self.assertEqual(server_role.id, 'role')
-        self.assertEqual(len(server_role.services), 1)
-        self.assertEqual(server_role.services['2419483e-6aef-4dd9-a46e-dc00966ba2b2'].id, 'Service1')
-        self.assertEqual(server_role.services['2419483e-6aef-4dd9-a46e-dc00966ba2b2'].slice, 'blue')
+        self.assertEqual(len(server_role.actions), 1)
+        print server_role.actions[0]
+        self.assertEqual(server_role.actions[0].service.name, 'Service1')
+        self.assertEqual(server_role.actions[0].service.slice, 'blue')
 
     def test_load_service_catalog(self):
         consul_data_loader = ConsulDataLoader(MockConsulApi(MockEnvironment('env', 'role',)))
