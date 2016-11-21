@@ -61,7 +61,7 @@ service_definition['Service'] = {}
 service_definition['Service']['ID'] = service_id
 service_definition['Service']['Name'] = args.name
 service_definition['Service']['Port'] = int(args.port)
-service_definition['Service']['Tags'] = [ 'environment_type:%s' % args.environmenttype, 'environment:%s' % args.environment, 'owning_cluster:%s' % args.cluster, 'version:%s' % args.version ]
+service_definition['Service']['Tags'] = [ 'environment_type:%s' % args.environmenttype, 'environment:%s' % args.environment, 'owning_cluster:%s' % args.cluster, 'version:%s' % args.version, 'deployment_id:%s' % args.deploymentid, 'slice:%s' % args.slice, 'server_role:%s' % args.role ]
 print('Writing service definition: %s' % json.dumps(service_definition))
 print('To key: %s' % service_definition_key)
 consul_session.kv[service_definition_key] = service_definition
