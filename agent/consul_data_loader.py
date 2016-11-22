@@ -2,20 +2,20 @@
 
 import key_naming_convention
 import logging
-from consul_session import ConsulError
+from consul_api import ConsulError
 from server_role import ServerRole
 from service import Service
 
 class ConsulDataLoader:
-    def __init__(self, consul_session):
-        self._consul_session = consul_session
+    def __init__(self, consul_api):
+        self._consul_api = consul_api
 
     def load_server_role(self, environment):
         server_role = ServerRole(environment.server_role)
         services_key = key_naming_convention.get_server_role_services_key(environment)
-        for key in self._consul_session.find_keys(services_key):
+        for key in self._consul_api.get_keys(services_key):
             try:
-                service_target_state = self._consul_session.get_json_value(key)
+                service_target_state = self._consul_api.get_value(key)
                 service_name = service_target_state.get('Name')
                 service_version = service_target_state.get('Version')
                 deployment_id = service_target_state.get('DeploymentId')
@@ -23,9 +23,9 @@ class ConsulDataLoader:
 
                 service_definition_key = key_naming_convention.get_service_definition_key(environment, service_name, service_version)
                 service_installation_key = key_naming_convention.get_service_installation_key(environment, service_name, service_version)
-                service_definition = self._consul_session.get_json_value(service_definition_key).get('Service', {})
+                service_definition = self._consul_api.get_value(service_definition_key).get('Service', {})
                 service_definition['Address'] = environment.ip_address
-                service_installation = self._consul_session.get_json_value(service_installation_key)
+                service_installation = self._consul_api.get_value(service_installation_key)
 
                 service = Service(service_definition, service_installation)
                 service.deployment_id = deployment_id
@@ -39,8 +39,8 @@ class ConsulDataLoader:
                 logging.warning('Failed to read service from Consul, will ignore. [name: %s version: %s deployment_id: %s]', service_name, service_version, deployment_id)
         return server_role
 
-    def load_service_catalog(self):
-        registered_services = self._consul_session.registered_services()
+    def load_service_catalogue(self):
+        registered_services = self._consul_api.get_service_catalogue()
         services = []
         for name, definition in registered_services.iteritems():
             for tag in definition['Tags']:

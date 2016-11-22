@@ -27,7 +27,7 @@ cp $PWD/config/config-logging-linux.yml $PACKAGE_DIR/config-logging.yml
 if [ -s $TCHOME ]; then
     MYHOME="${TCHOME}/.."
 else
-    MYHOME="$HOME"
+    MYHOME="$TEMP_DIR"
 fi
 # Get build directory
 if [ ! -d "$MYHOME/globalpackage" ]; then
