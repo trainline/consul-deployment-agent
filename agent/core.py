@@ -95,7 +95,7 @@ def execute(action, action_info, environment, consul_api):
             'deployment_id': action.deployment_id,
             'environment': environment,
             'last_deployment_id': action_info['last_deployment_id'],
-            'platform': 'linux',
+            'platform': platform.system().lower(),
             'service': action.service
         }
         deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])
