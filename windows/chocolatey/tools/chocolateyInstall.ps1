@@ -29,37 +29,6 @@ try {
           Sleep 5
           $Service = Get-WmiObject -Class Win32_Service -Filter "Name='$ServiceName'"
         }
-$PackageName = $env:chocolateyPackageName
-$PackageVersion = $env:chocolateyPackageVersion
-$PackageDirectory = $env:chocolateyPackageFolder
-$ServiceName = "consul-deployment-agent"
-$InstallDirectory = "C:\TTLApps\consul-deployment-agent"
-$LogFile = "C:\TTLLogs\consul-deployment-agent-install.log"
-$Start = Get-Date
-
-Add-Content $LogFile "---- Consul Deployment Agent Install ----"
-Add-Content $LogFile "Process started at $Start"
-
-try {
-    Write-Host "Checking if $ServiceName Windows service is already running..."
-    Add-Content $LogFile "Checking if $ServiceName Windows service is already running..."
-    $Service = Get-WmiObject -Class Win32_Service -Filter "Name='$ServiceName'"
-    if ($Service) {
-        Write-Host "$ServiceName Windows service is running, attempting to stop..."
-        Add-Content $LogFile "$ServiceName Windows service is running, attempting to stop..."
-        $Attempts = 0
-        while ($Service.Started) {
-          if ($Attempts -gt 5) {
-            throw "Failed to stop $ServiceName Windows service after $Attempts attempts."
-            Add-Content $LogFile "Failed to stop $ServiceName Windows service after $Attempts attempts."
-          }
-          $Service.StopService() | Out-Null
-          ++$Attempts
-          Write-Host "Waiting for existing $ServiceName Windows service to stop `#$($Attempts)..."
-          Add-Content $LogFile "Waiting for existing $ServiceName Windows service to stop `#$($Attempts)..."
-          Sleep 5
-          $Service = Get-WmiObject -Class Win32_Service -Filter "Name='$ServiceName'"
-        }
     }
 
     Write-Host "Checking if install directory $InstallDirectory exists..."
