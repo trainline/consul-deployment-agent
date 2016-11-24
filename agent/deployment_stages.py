@@ -334,7 +334,7 @@ class RegisterConsulHealthChecks(DeploymentStage):
 
                 # Add execution permission to file
                 st = os.stat(file_path)
-                os.chmod(file_path, st.st_mode | stat.S_IEXEC)
+                os.chmod(file_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
 
                 deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, file_path))
                 is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], file_path, check['interval'])
