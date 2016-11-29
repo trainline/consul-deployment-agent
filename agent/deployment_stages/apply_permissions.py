@@ -1,6 +1,8 @@
 # Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 from common import *
 
+import dir_utils
+
 class ApplyPermissions(DeploymentStage):
     def __init__(self):
         DeploymentStage.__init__(self, name='ApplyPermissions')

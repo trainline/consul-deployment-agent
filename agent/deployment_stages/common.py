@@ -1,6 +1,6 @@
 # Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import dir_utils, distutils.core, os, sys, yaml, zipfile, stat
+import distutils.core, os, sys, yaml, zipfile, stat
 from deployment_scripts import PowershellScript, ShellScript
 
 class DeploymentError(RuntimeError):
@@ -21,7 +21,6 @@ class DeploymentStage():
             deployment.logger.exception(sys.exc_info()[1])
         deployment.logger.debug('End {0} stage execution.'.format(self.name))
         return is_success
-
 
 class LifecycleHookExecutionStage(DeploymentStage):
     def __init__(self, name, lifecycle_event):
@@ -72,7 +71,6 @@ class StartApplication(LifecycleHookExecutionStage):
 class ValidateService(LifecycleHookExecutionStage):
     def __init__(self):
         LifecycleHookExecutionStage.__init__(self, name='ValidateService', lifecycle_event='ValidateService')
-
 
 def find_absolute_path(archive_dir, location):
     if location.startswith('/'):

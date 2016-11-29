@@ -2,7 +2,7 @@
 
 import datetime, json, key_naming_convention, logging, os, sys
 from consul_api import ConsulError
-from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeletePreviousDeploymentFiles
+from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeregisterOldSensuHealthChecks, RegisterSensuHealthChecks, DeletePreviousDeploymentFiles
 from s3_file_manager import S3FileManager
 from version import semantic_version
 
@@ -164,8 +164,10 @@ class Deployment():
         self.logger.info('Installing service: {0}'.format(self.service))
         self.logger.info('Configuration: {0}'.format(self))
         self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
-        stages = [ ValidateDeployment(), StopApplication(), DeregisterOldConsulHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
-                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(), RegisterWithConsul(), RegisterConsulHealthChecks(), DeletePreviousDeploymentFiles() ]
+        stages = [ ValidateDeployment(), StopApplication(), DeregisterOldConsulHealthChecks(),
+                   DeregisterOldSensuHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
+                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
+                   RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(), DeletePreviousDeploymentFiles() ]
         for stage in stages:
             success = stage.run(self)
             self._update_report({'last_completed_stage':stage.name})
