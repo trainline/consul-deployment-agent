@@ -11,8 +11,11 @@ def find_absolute_path(archive_dir, location):
 def get_previous_deployment_appspec(deployment):
     appspec_filepath = os.path.join(deployment.last_archive_dir, 'appspec.yml')
     deployment.logger.debug('Loading existing deployment appspec file from {0}.' .format(appspec_filepath))
-    appspec_stream = file(appspec_filepath, 'r')
-    return yaml.load(appspec_stream)
+    if os.path.exists(appspec_filepath):
+        appspec_stream = file(appspec_filepath, 'r')
+        return yaml.load(appspec_stream)
+    else:
+        return None
 
 class DeploymentError(RuntimeError):
     pass
@@ -84,20 +87,23 @@ class StopApplication(LifecycleHookExecutionStage):
             deployment.logger.info('Skipping {0} stage as there is no previous deployment.'.format(self.name))
         else:
             appspec = get_previous_deployment_appspec(deployment)
-            hook_definition = appspec['hooks'].get(self.lifecycle_event)
-            if hook_definition is None:
-                deployment.logger.info('Skipping {0} stage as there is no hook defined.'.format(self.name))
-                return
-            location = hook_definition[0]['location']
-            if location.startswith('/'):
-                location = location[1:]
-            script_filepath = os.path.join(deployment.last_archive_dir, location)
-            env = {'APPLICATION_ID':str(deployment.service.id),
-                'DEPLOYMENT_BASE_DIR':str(deployment.last_archive_dir),
-                'DEPLOYMENT_ID':str(deployment.last_id),
-                'LIFECYCLE_EVENT':str(self.lifecycle_event)}
-            self._init_script(hook_definition[0], script_filepath, env, appspec['os'].lower(), deployment.timeout)
-            self._run_script(deployment.logger)
+            if appspec is None:
+                deployment.logger.warning('Previous deployment directory not found, id: {0}'.format(deployment.last_id))
+            else:
+                hook_definition = appspec['hooks'].get(self.lifecycle_event)
+                if hook_definition is None:
+                    deployment.logger.info('Skipping {0} stage as there is no hook defined.'.format(self.name))
+                    return
+                location = hook_definition[0]['location']
+                if location.startswith('/'):
+                    location = location[1:]
+                script_filepath = os.path.join(deployment.last_archive_dir, location)
+                env = {'APPLICATION_ID':str(deployment.service.id),
+                    'DEPLOYMENT_BASE_DIR':str(deployment.last_archive_dir),
+                    'DEPLOYMENT_ID':str(deployment.last_id),
+                    'LIFECYCLE_EVENT':str(self.lifecycle_event)}
+                self._init_script(hook_definition[0], script_filepath, env, appspec['os'].lower(), deployment.timeout)
+                self._run_script(deployment.logger)
 
 class DownloadBundleFromS3(DeploymentStage):
     def __init__(self):
@@ -270,12 +276,15 @@ class DeregisterOldConsulHealthChecks(DeploymentStage):
         else:
             deployment.logger.info('Deregistering Consul healthchecks from previous deployment.')
             previous_appspec = get_previous_deployment_appspec(deployment)
-            (healthchecks, scripts_base_dir) = find_healthchecks('consul', deployment.last_archive_dir, previous_appspec, deployment.logger)
-            if healthchecks is None:
-                return
-            for check_id, check in healthchecks.iteritems():
-                service_check_id = create_service_check_id(deployment.service.id, check_id)
-                deployment.consul_api.deregister_check(service_check_id)
+            if previous_appspec is None:
+                deployment.logger.warning('Previous deployment directory not found, id: {0}'.format(deployment.last_id))
+            else:
+                (healthchecks, scripts_base_dir) = find_healthchecks('consul', deployment.last_archive_dir, previous_appspec, deployment.logger)
+                if healthchecks is None:
+                    return
+                for check_id, check in healthchecks.iteritems():
+                    service_check_id = create_service_check_id(deployment.service.id, check_id)
+                    deployment.consul_api.deregister_check(service_check_id)
 
 class RegisterConsulHealthChecks(DeploymentStage):
     def __init__(self):
@@ -302,7 +311,7 @@ class RegisterConsulHealthChecks(DeploymentStage):
 
         def validate_check(check_id, check):
             if not 'type' in check or (check['type'] != 'script' and check['type'] != 'http'):
-                raise DeploymentError('Failed to register health check \'{0}\', only \'script\' and \'http\' check types are supported.'.format(check_id))
+                raise DeploymentError('Failed to register health check \'{0}\', only \'script\' and \'http\' check types are supported, found {1} .'.format(check_id, check['type']))
             if check['type'] == 'script':
                 required_fields = ['name', 'script', 'interval']
             elif check['type'] == 'http':
@@ -350,3 +359,17 @@ class RegisterSensuHealthChecks(DeploymentStage):
         DeploymentStage.__init__(self, name='RegisterSensuHealthChecks')
     def _run(self, deployment):
         raise 'not implemented'
+
+class DeletePreviousDeploymentFiles(DeploymentStage):
+    def __init__(self):
+        DeploymentStage.__init__(self, name='DeletePreviousDeploymentFiles')
+    def _run(self, deployment):
+        if deployment.last_id is None:
+            deployment.logger.info('Skipping {0} stage as there is no previous deployment.'.format(self.name))
+        else:
+            if os.path.isdir(deployment.last_archive_dir):
+                deployment.logger.info('Deleting directory of previous deployment {0}.'.format(deployment.last_archive_dir))
+                distutils.dir_util.remove_tree(deployment.last_archive_dir)
+            else:
+                deployment.logger.warning('The directory of last deployment doesn\'t exist {0}.'.format(deployment.last_archive_dir))
+

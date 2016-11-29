@@ -7,6 +7,8 @@ from consul_data_loader import ConsulDataLoader
 from deployment import Deployment
 from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
+from actions import InstallAction, IgnoreAction, UninstallAction
+
 from version import semantic_version
 
 parser = argparse.ArgumentParser()
@@ -25,7 +27,7 @@ config = {
             }
         },
         'root': {
-            'level':'DEBUG',
+            'level': 'DEBUG',
             'handlers': ['console']
         }
     },
@@ -86,17 +88,24 @@ def wait_for_instance_readiness(config):
     except RetryError:
         logging.warning('Instance readiness timeout has been reached, will assume instance is ready for deployments.')
 
-def deploy(service, deployment_info, environment, consul_api):
-    deployment_config = {
-        'cause': 'Deployment',
-        'deployment_id': deployment_info['deployment_id'],
-        'environment': environment,
-        'last_deployment_id': deployment_info['last_deployment_id'],
-        'platform': platform.system().lower(),
-        'service': service
-    }
-    deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])
-    return deployment.run()
+def execute(action, action_info, environment, consul_api):
+    if isinstance(action, InstallAction):
+        deployment_config = {
+            'cause': 'Deployment',
+            'deployment_id': action.deployment_id,
+            'environment': environment,
+            'last_deployment_id': action_info['last_deployment_id'],
+            'platform': platform.system().lower(),
+            'service': action.service
+        }
+        deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])
+        return deployment.run()
+    elif isinstance(action, IgnoreAction):
+        logging.info('Found Ignore action, not installing \'{0}\''.format(action.service.id))
+        return {'id': action.deployment_id, 'is_success': True}
+    elif isinstance(action, UninstallAction):
+        logging.info('Uninstall action not yet supported!')
+        return {'id': action.deployment_id, 'is_success': True}
 
 def converge(consul_api, environment):
     try:
@@ -111,13 +120,13 @@ def converge(consul_api, environment):
             logging.debug(service)
 
         logging.info('Start converging to server role configuration.')
-        missing_service_info = server_role.find_missing_service(registered_services)
-        while missing_service_info is not None:
-            service, deployment_info = missing_service_info
-            deployment_report = deploy(service, deployment_info, environment, consul_api)
-            if not deployment_report['is_success']:
-                server_role.quarantine_deployment(deployment_report['id'])
-            missing_service_info = server_role.find_missing_service(data_loader.load_service_catalogue())
+        missing_action = server_role.find_action_to_execute(registered_services)
+        while missing_action is not None:
+            action, action_info = missing_action
+            report = execute(action, action_info, environment, consul_api)
+            # if not report['is_success']:
+            server_role.quarantine_action(report['id'])
+            missing_action = server_role.find_action_to_execute(data_loader.load_service_catalogue())
 
         logging.info('Finished converging to server role configuration.')
         return True
