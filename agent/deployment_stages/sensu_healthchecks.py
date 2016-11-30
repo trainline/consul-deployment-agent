@@ -1,6 +1,6 @@
 # Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 from common import *
-import generate_sensu_check
+from generate_sensu_check import generate_sensu_check
 
 def create_service_check_filename(service_id, check_id):
     return service_id + '-' + check_id
@@ -78,20 +78,16 @@ class RegisterSensuHealthChecks(DeploymentStage):
                 # Add execution permission to file
                 st = os.stat(script_absolute_path)
                 os.chmod(script_absolute_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-                deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, script_absolute_path))
-
-                is_success = create_and_copy_check(deployment.sensu['sensu_check_path'], script_absolute_path, check)
             elif 'server_script' in check:
                 script_absolute_path = find_server_script(deployment.sensu['healthcheck_search_paths'], check['server_script'])
             else:
                 raise DeploymentError('That should never happen - neither \'local_script\' nor \'server_script\' defined in health check')
-
-            service_check_filename = create_service_check_filename(deployment.service.id, check_id)
-            definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], service_check_filename)
-            is_success = create_and_copy_check(definition_absolute_path, script_absolute_path, check)
+            
+            deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, script_absolute_path))
+            is_success = create_and_copy_check(deployment, script_absolute_path, check_id, check)
 
             if is_success:
-                deployment.logger.info('Copying Sensu health check \'{0}\' to checks directory'.format(check_id))
+                deployment.logger.info('Copied Sensu health check \'{0}\' to checks directory'.format(check_id))
             else:
                 raise DeploymentError('Failed to register Sensu health check \'{0}\''.format(check_id))
 
@@ -102,13 +98,25 @@ def find_server_script(paths, server_script):
             return script_path
     return None
 
-def create_and_copy_check(definition_path, script_path, check):
+def create_and_copy_check(deployment, script_path, check_id, check):
+    service_check_filename = create_service_check_filename(deployment.service.id, check_id)
+    definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], service_check_filename)
+    
+    if 'team' in check:
+        team = check['team']
+    else:
+        team = deployment.cluster
+    deployment.logger.debug('Setting team of Sensu check \'{0}\' to: \'{1}\''.format(check_id, team))
+
     file_content = generate_sensu_check(check_name=check['name'],
                          command=script_path,
                          interval=check.get('interval'),
-                         alert_after=check.get('alert_after'))
-    with open(definition_path, 'w') as check_definition_file:
+                         alert_after=check.get('alert_after'),
+                         realert_every=check.get('realert_every'),
+                         team=team)
+    with open(definition_absolute_path, 'w') as check_definition_file:
       check_definition_file.write(file_content)
+    return True
 
 
 

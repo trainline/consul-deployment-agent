@@ -1,4 +1,5 @@
 # Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
+import json
 
 def generate_sensu_check(check_name=None,
                          command=None,
@@ -54,4 +55,4 @@ def generate_sensu_check(check_name=None,
                                      'tags': tags}}}
     for key, value in kwargs.iteritems():
         content.update({key: value})
-    return json_encode(content)
+    return json.dumps(content)
