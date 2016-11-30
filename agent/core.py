@@ -18,6 +18,10 @@ parser.add_argument('-v', '--version', action='version', version=semantic_versio
 config = {
     'aws': {'access_key_id': None, 'aws_secret_access_key': None, 'deployment_logs': {'bucket_name': None, 'key_prefix': None }},
     'consul': {'host': 'localhost', 'port': 8500, 'scheme': 'http', 'acl_token': None, 'version': 'v1'},
+    'sensu': {
+        'healthcheck_search_paths': ['/etc/some_fake_path', '/opt/sensu_server_scripts'],
+        'sensu_check_path': '/etc/sensu/conf.d'
+    },
     'logging': {
         'version': 1,
         'handlers': {
@@ -96,6 +100,7 @@ def execute(action, action_info, environment, consul_api):
             'environment': environment,
             'last_deployment_id': action_info['last_deployment_id'],
             'platform': platform.system().lower(),
+            'sensu': config['sensu'],
             'service': action.service
         }
         deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])

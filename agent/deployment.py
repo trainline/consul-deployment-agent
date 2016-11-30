@@ -21,6 +21,7 @@ class Deployment():
         self.last_id = config.get('last_deployment_id')
         self.max_number_of_attempts = config.get('max_number_of_attempts', 1)
         self.platform = config.get('platform')
+        self.sensu = config.get('sensu')
         self.s3_file_manager = S3FileManager(self._aws_config)
         self.service = config.get('service')
         self.timeout = self.service.installation['timeout']
@@ -156,6 +157,7 @@ class Deployment():
         check_not_none('environment', config)
         check_not_none('platform', config)
         check_not_none('service', config)
+        check_not_none('sensu', config)
 
     def run(self):
         self._initialise_report()
