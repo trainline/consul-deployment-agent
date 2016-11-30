@@ -81,6 +81,6 @@ class RegisterConsulHealthChecks(DeploymentStage):
                 is_success = False
 
             if is_success:
-                deployment.logger.info('Successfuly registered health check \'{0}\''.format(check_id))
+                deployment.logger.info('Successfuly registered Consul health check \'{0}\''.format(check_id))
             else:
-                raise DeploymentError('Failed to register health check \'{0}\''.format(check_id))
+                raise DeploymentError('Failed to register Consul health check \'{0}\''.format(check_id))

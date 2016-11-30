@@ -46,24 +46,24 @@ class RegisterSensuHealthChecks(DeploymentStage):
                     if check['local_script'].startswith('/'):
                         check['local_script'] = check['local_script'][1:]
                         
-                    file_path = os.path.join(deployment.archive_dir, scripts_base_dir, check['script'])
+                    file_path = os.path.join(deployment.archive_dir, scripts_base_dir, check['local_script'])
                     if not os.path.exists(file_path):
-                        raise DeploymentError('Couldn\'t find Sensu health check script in package with path: {0}'.format(os.path.join(scripts_base_dir, check['script'])))
+                        raise DeploymentError('Couldn\'t find Sensu health check script in package with path: {0}'.format(os.path.join(scripts_base_dir, check['local_script'])))
                 elif 'server_script' in check:
-                    file_path = find_server_script(check['server_script'])
+                    file_path = find_server_script(deployment.sensu['healthcheck_search_paths'], check['server_script'])
                     if file_path == None:
-                        raise DeploymentError('Couldn\'t find server Sensu health check script: {0}\nPaths searched: {1}'.format(check['server_script']), deployment.sensu['healthcheck_search_paths'])
+                        raise DeploymentError('Couldn\'t find server Sensu health check script: {0}\nPaths searched: {1}'.format(check['server_script'], deployment.sensu['healthcheck_search_paths']))
 
         def validate_check(check_id, check):
-            if 'local_script' in check and 'server_script' in check:
-                raise DeploymentError('Failed to register health check \'{0}\', you can use either \'local_script\' or \'server_script\', but not both.'.format(check_id))
-            if not ('local_script' in check or 'server_script' in check):
-                raise DeploymentError('Failed to register health check \'{0}\', you need at least one of: \'local_script\' or \'server_script\''.format(check_id))
             required_fields = ['name', 'interval']
             for field in required_fields:
                 if not field in check:
                     raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
-
+            if 'local_script' in check and 'server_script' in check:
+                raise DeploymentError('Failed to register health check \'{0}\', you can use either \'local_script\' or \'server_script\', but not both.'.format(check_id))
+            if not ('local_script' in check or 'server_script' in check):
+                raise DeploymentError('Failed to register health check \'{0}\', you need at least one of: \'local_script\' or \'server_script\''.format(check_id))
+            
         deployment.logger.info('Registering Sensu healthchecks.')
         (healthchecks, scripts_base_dir) = find_healthchecks('sensu', deployment.archive_dir, deployment.appspec, deployment.logger)
         if healthchecks is None:
