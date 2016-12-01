@@ -1,6 +1,7 @@
 # Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 from common import *
 from generate_sensu_check import generate_sensu_check
+import json
 
 def create_service_check_filename(service_id, check_id):
     return service_id + '-' + check_id
@@ -98,24 +99,27 @@ def find_server_script(paths, server_script):
             return script_path
     return None
 
-def create_and_copy_check(deployment, script_path, check_id, check):
-    service_check_filename = create_service_check_filename(deployment.service.id, check_id)
-    definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], service_check_filename)
-    
+def create_check_definition(deployment, script_path, check_id, check):
     if 'team' in check:
         team = check['team']
     else:
         team = deployment.cluster
     deployment.logger.debug('Setting team of Sensu check \'{0}\' to: \'{1}\''.format(check_id, team))
 
-    file_content = generate_sensu_check(check_name=check['name'],
-                         command=script_path,
-                         interval=check.get('interval'),
-                         alert_after=check.get('alert_after'),
-                         realert_every=check.get('realert_every'),
-                         team=team)
-    with open(definition_absolute_path, 'w') as check_definition_file:
-      check_definition_file.write(file_content)
+    return generate_sensu_check(check_name=check['name'],
+                                 command=script_path,
+                                 interval=check.get('interval'),
+                                 alert_after=check.get('alert_after', 600),
+                                 realert_every=check.get('realert_every', 30),
+                                 team=team)
+
+def create_and_copy_check(deployment, script_path, check_id, check):
+    check_definition = create_check_definition(deployment, script_path, check_id, check)
+    service_check_filename = create_service_check_filename(deployment.service.id, check_id)
+    definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], service_check_filename)
+    
+    with open(definition_absolute_path, 'w') as check_definition_file_descriptor:
+      check_definition_file_descriptor.write(json.dumps(check_definition))
     return True
 
 
