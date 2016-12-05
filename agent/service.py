@@ -26,8 +26,8 @@ class Service:
 
     def __str__(self):
         return json.dumps(
-            {'id':self.id, 'name':self.name, 'port':self.port,
-             'slice': self.slice, 'version':self.version, 'tags':self.tags})
+            {'id': self.id, 'name': self.name, 'port': self.port,
+             'slice': self.slice, 'version': self.version, 'tags': self.tags})
 
     def _extract_tag_with_prefix(self, prefix):
         tag = next((tag for tag in self.tags if tag.startswith(prefix)), None)
