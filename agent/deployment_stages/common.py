@@ -47,10 +47,9 @@ class LifecycleHookExecutionStage(DeploymentStage):
         self._init_script(hook_definition[0], filepath, env, deployment.platform, deployment.timeout)
         self._run_script(deployment.logger)
     def _run_script(self, logger):
-        return_code, stdout, stderr = self.script.execute(logger)
+        return_code, stdout = self.script.execute(logger)
         logger.debug('Return code: {0}'.format(return_code))
-        logger.debug('Standard output : {0}'.format(stdout))
-        logger.debug('Standard error : {0}'.format(stderr))
+        logger.debug("Standard output: {0}\n".format(stdout))
         if return_code == 0:
             logger.info('Lifecycle hook {0} script execution succeeded.'.format(self.lifecycle_event))
         else:
