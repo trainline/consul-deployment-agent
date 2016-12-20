@@ -21,7 +21,12 @@ class DeregisterOldConsulHealthChecks(DeploymentStage):
                     return
                 for check_id, check in healthchecks.iteritems():
                     service_check_id = create_service_check_id(deployment.service.id, check_id)
-                    deployment.consul_api.deregister_check(service_check_id)
+                    is_success = deployment.consul_api.deregister_check(service_check_id)
+                    if is_success:
+                        deployment.logger.info('Successfuly deregistered Consul health check \'{0}\''.format(check_id))
+                    else:
+                        deployment.logger.warning('Failed to deregister Consul health check \'{0}\''.format(check_id))
+
 
 class RegisterConsulHealthChecks(DeploymentStage):
     def __init__(self):

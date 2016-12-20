@@ -97,6 +97,8 @@ def find_server_script(paths, server_script):
         script_path = os.path.join(path, server_script)
         if os.path.exists(script_path):
             return script_path
+        if os.path.exists(script_path + '.json'):
+            return script_path + '.json'
     return None
 
 def create_check_definition(deployment, script_path, check_id, check):
