@@ -87,9 +87,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
             deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, script_absolute_path))
             is_success = create_and_copy_check(deployment, script_absolute_path, check_id, check)
 
-            if is_success:
-                deployment.logger.info('Copied Sensu health check \'{0}\' to checks directory'.format(check_id))
-            else:
+            if not is_success:
                 raise DeploymentError('Failed to register Sensu health check \'{0}\''.format(check_id))
 
 def find_server_script(paths, server_script):
@@ -122,6 +120,7 @@ def create_and_copy_check(deployment, script_path, check_id, check):
     
     with open(definition_absolute_path, 'w') as check_definition_file_descriptor:
       check_definition_file_descriptor.write(json.dumps(check_definition))
+    deployment.logger.info('Copied Sensu health check \'{0}\' to checks directory \'{1}\''.format(check_id, definition_absolute_path))
     return True
 
 
