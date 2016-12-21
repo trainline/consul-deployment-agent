@@ -2,6 +2,7 @@
 from common import *
 from generate_sensu_check import generate_sensu_check
 import json
+import re
 
 def create_service_check_filename(service_id, check_id):
     return service_id + '-' + check_id
@@ -60,12 +61,12 @@ class RegisterSensuHealthChecks(DeploymentStage):
             for field in required_fields:
                 if not field in check:
                     raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
+            if not re.match(r'^[\w\.-]+$', check['name']):
+                raise DeploymentError('Health check name \'{0}\' doesn\'t match required Sensu name expression {1}'.format(check_id, '/^[\w\.-]+$/'))
             if 'local_script' in check and 'server_script' in check:
                 raise DeploymentError('Failed to register health check \'{0}\', you can use either \'local_script\' or \'server_script\', but not both.'.format(check_id))
             if not ('local_script' in check or 'server_script' in check):
                 raise DeploymentError('Failed to register health check \'{0}\', you need at least one of: \'local_script\' or \'server_script\''.format(check_id))
-            if not ('team' in check or 'notification_email' in check):
-                raise DeploymentError('Failed to register health check \'{0}\', you need at least one of: \'team\' or \'notification_email\''.format(check_id))
             
         deployment.logger.info('Registering Sensu healthchecks.')
         (healthchecks, scripts_base_dir) = find_healthchecks('sensu', deployment.archive_dir, deployment.appspec, deployment.logger)
@@ -102,13 +103,20 @@ def find_server_script(paths, server_script):
     return None
 
 def create_check_definition(deployment, script_path, check_id, check):
+    if 'team' in check:
+        team = check['team']
+    else:
+        team = deployment.cluster
+    team = team.lower()
+    deployment.logger.debug('Setting team of Sensu check \'{0}\' to: \'{1}\''.format(check_id, team))
+
     return generate_sensu_check(check_name=check['name'],
                                  command=script_path,
                                  interval=check.get('interval'),
                                  alert_after=check.get('alert_after', 600),
                                  realert_every=check.get('realert_every', 30),
                                  notification_email=check.get('notification_email', False),
-                                 team=check.get('team', None))
+                                 team=team)
 
 def create_and_copy_check(deployment, script_path, check_id, check):
     check_definition = create_check_definition(deployment, script_path, check_id, check)

@@ -32,7 +32,7 @@ class MockDeployment:
         self.logger = MockLogger()
         self.archive_dir = ''
         self.service = MockService()
-        self.cluster = 'default_team'
+        self.cluster = 'DEFAULT_team'
         self.sensu = {
             'sensu_check_path': 'test_sensu_check_path'
         }
@@ -65,7 +65,7 @@ class TestHealthChecks(unittest.TestCase):
 
     def test_missing_interval_field(self):
         check = {
-            'name': 'Missing interval'
+            'name': 'Missing-interval'
         }
         self.deployment.set_check('check_failing', check)
         with self.assertRaisesRegexp(DeploymentError, 'is missing field \'interval\''):
@@ -73,7 +73,7 @@ class TestHealthChecks(unittest.TestCase):
 
     def test_missing_script_field(self):
         check = {
-            'name': 'Missing interval',
+            'name': 'Missing-interval',
             'interval': '10s'
         }
         self.deployment.set_check('check_failing', check)
@@ -82,7 +82,7 @@ class TestHealthChecks(unittest.TestCase):
 
     def test_both_script_fields(self):
         check = {
-            'name': 'Missing interval',
+            'name': 'missing-interval',
             'interval': '10s',
             'local_script': 'a',
             'server_script': 'b',
@@ -94,12 +94,12 @@ class TestHealthChecks(unittest.TestCase):
     def test_case_insensitive_id_conflict(self):
         checks = {
             'check_1': {
-                'name': 'Missing http 1',
+                'name': 'missing-http-1',
                 'local_script': 'a',
                 'interval': '10s'
             },
             'cheCK_1': {
-                'name': 'Missing http 2',
+                'name': 'missing-http-2',
                 'local_script': 'a',
                 'interval': '10s'
             }
@@ -111,12 +111,12 @@ class TestHealthChecks(unittest.TestCase):
     def test_case_insensitive_name_conflict(self):
         checks = {
             'check_1': {
-                'name': 'Missing http',
+                'name': 'missing-http',
                 'local_script': 'a',
                 'interval': '10s'
             },
             'check_2': {
-                'name': 'Missing http',
+                'name': 'missing-http',
                 'local_script': 'a',
                 'interval': '10s'
             }
@@ -124,12 +124,26 @@ class TestHealthChecks(unittest.TestCase):
         self.deployment.set_checks(checks)
         with self.assertRaisesRegexp(DeploymentError, 'health checks require unique names'):
             self.tested_fn._run(self.deployment)
+    
+    def test_name_regexp(self):
+        checks = {
+            'check_1': {
+                'name': 'missing http',
+                'local_script': 'a',
+                'interval': '10s',
+            }
+        }
+
+        self.deployment.set_checks(checks)
+        with self.assertRaisesRegexp(DeploymentError, 'match required Sensu name expression'):
+            self.tested_fn._run(self.deployment)
 
     def test_missing_script(self):
         check = {
-            'name': 'Missing http',
+            'name': 'missing-http',
             'local_script': 'a',
-            'interval': '10s'
+            'interval': '10s',
+            'team': 'some_team'
         }
         checks = {
             'check_1': check
@@ -140,7 +154,7 @@ class TestHealthChecks(unittest.TestCase):
 
     def test_team(self):
         check = {
-            'name': 'sensu check1',
+            'name': 'sensu-check1',
             'local_script': 'foo.py',
             'interval': '10s'
         }
@@ -150,17 +164,18 @@ class TestHealthChecks(unittest.TestCase):
         self.deployment.set_checks(checks)
         
         definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
-        obj = definition['checks']['sensu check1']
+        obj = definition['checks']['sensu-check1']
         self.assertEqual(obj['team'], 'default_team')
         
-        check['team'] = 'test_team1'
+        # Should be transformed to lowercase
+        check['team'] = 'Test_tEAM1'
         definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
-        obj = definition['checks']['sensu check1']
+        obj = definition['checks']['sensu-check1']
         self.assertEqual(obj['team'], 'test_team1')
 
     def test_defaults(self):
         check = {
-            'name': 'sensu check1',
+            'name': 'sensu-check1',
             'local_script': 'foo.py',
             'interval': '10s'
         }
@@ -170,7 +185,7 @@ class TestHealthChecks(unittest.TestCase):
         self.deployment.set_checks(checks)
         
         definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
-        obj = definition['checks']['sensu check1']
+        obj = definition['checks']['sensu-check1']
         self.assertEqual(obj['alert_after'], 600)
         self.assertEqual(obj['realert_every'], 30)
         self.assertEqual(obj['notification_email'], False)
