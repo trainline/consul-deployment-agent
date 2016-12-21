@@ -25,8 +25,10 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
                 for check_id, check in healthchecks.iteritems():
                     service_check_filename = create_service_check_filename(deployment.service.id, check_id)
                     definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], service_check_filename)
+                    if not definition_absolute_path.endswith('.json'):
+                        definition_absolute_path += '.json'
                     if os.path.exists(definition_absolute_path):
-                      os.remove(definition_absolute_path)
+                        os.remove(definition_absolute_path)
 
 class RegisterSensuHealthChecks(DeploymentStage):
     def __init__(self):
@@ -122,9 +124,11 @@ def create_and_copy_check(deployment, script_path, check_id, check):
     check_definition = create_check_definition(deployment, script_path, check_id, check)
     service_check_filename = create_service_check_filename(deployment.service.id, check_id)
     definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], service_check_filename)
-    
+    if not definition_absolute_path.endswith('.json'):
+        definition_absolute_path += '.json'
+
     with open(definition_absolute_path, 'w') as check_definition_file_descriptor:
-      check_definition_file_descriptor.write(json.dumps(check_definition))
+        check_definition_file_descriptor.write(json.dumps(check_definition))
     deployment.logger.info('Copied Sensu health check \'{0}\' to checks directory \'{1}\''.format(check_id, definition_absolute_path))
     return True
 
