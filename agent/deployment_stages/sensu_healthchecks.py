@@ -62,7 +62,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
                 if not field in check:
                     raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
             if not re.match(r'^[\w\.-]+$', check['name']):
-                raise DeploymentError('Health check name \'{0}\' doesn\'t match required Sensu name expression {1}'.format(check_id, '/^[\w\.-]+$/'))
+                raise DeploymentError('Health check name \'{0}\' doesn\'t match required Sensu name expression {1}'.format(check['name'], '/^[\w\.-]+$/'))
             if 'local_script' in check and 'server_script' in check:
                 raise DeploymentError('Failed to register health check \'{0}\', you can use either \'local_script\' or \'server_script\', but not both.'.format(check_id))
             if not ('local_script' in check or 'server_script' in check):
