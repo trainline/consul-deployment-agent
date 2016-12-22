@@ -63,6 +63,11 @@ class RegisterSensuHealthChecks(DeploymentStage):
             for field in required_fields:
                 if not field in check:
                     raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
+            integer_fields = ['interval', 'realert_every', 'timeout', 'occurences', 'refresh']
+            for field in integer_fields:
+                if field in check:
+                    if not isinstance(check[field], ( int, long )):
+                        raise DeploymentError('Health check \'{0}\' param \'{1}\' should be an integer, but is: {2}'.format(check_id, field, check[field]))
             if not re.match(r'^[\w\.-]+$', check['name']):
                 raise DeploymentError('Health check name \'{0}\' doesn\'t match required Sensu name expression {1}'.format(check['name'], '/^[\w\.-]+$/'))
             if 'local_script' in check and 'server_script' in check:
@@ -117,6 +122,9 @@ def create_check_definition(deployment, script_path, check_id, check):
                                  interval=check.get('interval'),
                                  alert_after=check.get('alert_after', 600),
                                  realert_every=check.get('realert_every', 30),
+                                 timeout=check.get('timeout', 120),
+                                 refresh=check.get('refresh', 300),
+                                 occurences=check.get('occurences', 5),
                                  notification_email=check.get('notification_email', False),
                                  team=team)
 

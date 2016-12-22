@@ -74,7 +74,7 @@ class TestHealthChecks(unittest.TestCase):
     def test_missing_script_field(self):
         check = {
             'name': 'Missing-interval',
-            'interval': '10s'
+            'interval': 10
         }
         self.deployment.set_check('check_failing', check)
         with self.assertRaisesRegexp(DeploymentError, 'you need at least one of'):
@@ -83,7 +83,7 @@ class TestHealthChecks(unittest.TestCase):
     def test_both_script_fields(self):
         check = {
             'name': 'missing-interval',
-            'interval': '10s',
+            'interval': 10,
             'local_script': 'a',
             'server_script': 'b',
         }
@@ -96,12 +96,12 @@ class TestHealthChecks(unittest.TestCase):
             'check_1': {
                 'name': 'missing-http-1',
                 'local_script': 'a',
-                'interval': '10s'
+                'interval': 10
             },
             'cheCK_1': {
                 'name': 'missing-http-2',
                 'local_script': 'a',
-                'interval': '10s'
+                'interval': 10
             }
         }
         self.deployment.set_checks(checks)
@@ -113,12 +113,12 @@ class TestHealthChecks(unittest.TestCase):
             'check_1': {
                 'name': 'missing-http',
                 'local_script': 'a',
-                'interval': '10s'
+                'interval': 10
             },
             'check_2': {
                 'name': 'missing-http',
                 'local_script': 'a',
-                'interval': '10s'
+                'interval': 10
             }
         }
         self.deployment.set_checks(checks)
@@ -130,7 +130,7 @@ class TestHealthChecks(unittest.TestCase):
             'check_1': {
                 'name': 'missing http',
                 'local_script': 'a',
-                'interval': '10s',
+                'interval': 10,
             }
         }
 
@@ -142,7 +142,7 @@ class TestHealthChecks(unittest.TestCase):
         check = {
             'name': 'missing-http',
             'local_script': 'a',
-            'interval': '10s',
+            'interval': 10,
             'team': 'some_team'
         }
         checks = {
@@ -152,11 +152,32 @@ class TestHealthChecks(unittest.TestCase):
         with self.assertRaisesRegexp(DeploymentError, "Couldn't find Sensu health check script"):
             self.tested_fn._run(self.deployment)
 
+    def test_integer_type(self):
+        check = {
+            'name': 'missing-http',
+            'local_script': 'a',
+            'team': 'some_team'
+        }
+        checks = {
+            'check_1': check
+        }
+        
+        params = ['interval', 'realert_every', 'timeout', 'occurences', 'refresh']
+        last_param = None
+        for param in params:
+            if last_param is not None:
+                check[last_param] = 10
+            check[param] = '10s'
+            last_param = param
+            self.deployment.set_checks(checks)
+            with self.assertRaisesRegexp(DeploymentError, "param '{0}' should be an integer".format(param)):
+                self.tested_fn._run(self.deployment)
+
     def test_team(self):
         check = {
             'name': 'sensu-check1',
             'local_script': 'foo.py',
-            'interval': '10s'
+            'interval': 10
         }
         checks = {
             'check_1': check
@@ -177,7 +198,7 @@ class TestHealthChecks(unittest.TestCase):
         check = {
             'name': 'sensu-check1',
             'local_script': 'foo.py',
-            'interval': '10s'
+            'interval': 10
         }
         checks = {
             'check_1': check
