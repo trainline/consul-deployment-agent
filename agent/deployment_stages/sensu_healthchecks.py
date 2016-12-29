@@ -1,8 +1,12 @@
 # Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
-from common import *
-from generate_sensu_check import generate_sensu_check
+
 import json
 import re
+from jsonschema import Draft4Validator
+
+from common import *
+from generate_sensu_check import generate_sensu_check
+from schemas import SensuHealthCheckSchema
 
 def create_service_check_filename(service_id, check_id):
     return service_id + '-' + check_id
@@ -59,21 +63,19 @@ class RegisterSensuHealthChecks(DeploymentStage):
                         raise DeploymentError('Couldn\'t find server Sensu health check script: {0}\nPaths searched: {1}'.format(check['server_script'], deployment.sensu['healthcheck_search_paths']))
 
         def validate_check(check_id, check):
-            required_fields = ['name', 'interval']
-            for field in required_fields:
-                if not field in check:
-                    raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
-            integer_fields = ['interval', 'realert_every', 'timeout', 'occurences', 'refresh']
-            for field in integer_fields:
-                if field in check:
-                    if not isinstance(check[field], ( int, long )):
-                        raise DeploymentError('Health check \'{0}\' param \'{1}\' should be an integer, but is: {2}'.format(check_id, field, check[field]))
+            Draft4Validator(SensuHealthCheckSchema).validate(check)
             if not re.match(r'^[\w\.-]+$', check['name']):
                 raise DeploymentError('Health check name \'{0}\' doesn\'t match required Sensu name expression {1}'.format(check['name'], '/^[\w\.-]+$/'))
             if 'local_script' in check and 'server_script' in check:
                 raise DeploymentError('Failed to register health check \'{0}\', you can use either \'local_script\' or \'server_script\', but not both.'.format(check_id))
             if not ('local_script' in check or 'server_script' in check):
                 raise DeploymentError('Failed to register health check \'{0}\', you need at least one of: \'local_script\' or \'server_script\''.format(check_id))
+            if 'standalone' in check and 'aggregate' in check:
+                if check['standalone'] is True and check['aggregate'] is True:
+                    raise SyntaxError('Either standalone or aggregate can be True at the same time')
+                if check['standalone'] is False and check['aggregate'] is False:
+                    raise SyntaxError('Either standalone or aggregate can be False at the same time')
+
             
         deployment.logger.info('Registering Sensu healthchecks.')
         (healthchecks, scripts_base_dir) = find_healthchecks('sensu', deployment.archive_dir, deployment.appspec, deployment.logger)
@@ -126,6 +128,12 @@ def create_check_definition(deployment, script_path, check_id, check):
                                  refresh=check.get('refresh', 300),
                                  occurences=check.get('occurences', 5),
                                  notification_email=check.get('notification_email', False),
+                                 slack=check.get('slack', False),
+                                 ticket=check.get('ticket', False),
+                                 project=check.get('project', False),
+                                 page=check.get('page', False),
+                                 standalone=check.get('standalone', True),
+                                 aggregate=check.get('aggregate', False),
                                  team=team)
 
 def create_and_copy_check(deployment, script_path, check_id, check):
