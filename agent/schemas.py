@@ -9,10 +9,12 @@ SensuHealthCheckSchema = {
         "interval": {"type": "number"},
         "realert_every": {"type": "number"},
         "timeout": {"type": "number"},
-        "ocurrences": {"type": "number"},
+        "occurrences": {"type": "number"},
         "refresh": {"type": "number"},
 
         "team": {"type": ["string", "boolean"]},
+        "tip": {"type": ["string", "boolean"]},
+        "runbook": {"type": ["string", "boolean"]},
         "notification_email": {"type": ["string", "boolean", "array"]},
 
         "standalone": {"type": "boolean"},
@@ -20,8 +22,7 @@ SensuHealthCheckSchema = {
         "ticket": {"type": "boolean"},
         "project": {"type": "boolean"},
         "slack": {"type": "boolean"},
-        "page": {"type": "boolean"},
-
+        "page": {"type": "boolean"}
     },
     "required": ["name", "interval"]
 }

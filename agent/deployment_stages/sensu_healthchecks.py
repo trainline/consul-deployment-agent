@@ -126,7 +126,7 @@ def create_check_definition(deployment, script_path, check_id, check):
                                  realert_every=check.get('realert_every', 30),
                                  timeout=check.get('timeout', 120),
                                  refresh=check.get('refresh', 300),
-                                 occurences=check.get('occurences', 5),
+                                 occurrences=check.get('occurrences', 5),
                                  notification_email=check.get('notification_email', False),
                                  slack=check.get('slack', False),
                                  ticket=check.get('ticket', False),
@@ -134,6 +134,8 @@ def create_check_definition(deployment, script_path, check_id, check):
                                  page=check.get('page', False),
                                  standalone=check.get('standalone', True),
                                  aggregate=check.get('aggregate', False),
+                                 tip=check.get('tip', 'Fill me up with information'),
+                                 runbook=check.get('runbook', 'Needs information'),
                                  team=team)
 
 def create_and_copy_check(deployment, script_path, check_id, check):
