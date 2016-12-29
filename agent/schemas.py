@@ -21,7 +21,7 @@ SensuHealthCheckSchema = {
         "aggregate": {"type": "boolean"},
         "ticket": {"type": "boolean"},
         "project": {"type": "boolean"},
-        "slack": {"type": "boolean"},
+        "slack_channel": {"type": "string"},
         "page": {"type": "boolean"}
     },
     "required": ["name", "interval"]
