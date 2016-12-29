@@ -1,6 +1,7 @@
 # Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import unittest
+from jsonschema import ValidationError
 from mock import MagicMock, Mock
 
 from .context import agent
@@ -60,7 +61,7 @@ class TestHealthChecks(unittest.TestCase):
         check = {
         }
         self.deployment.set_check('check_failing', check)
-        with self.assertRaisesRegexp(DeploymentError, 'is missing field'):
+        with self.assertRaisesRegexp(ValidationError, "'name' is a required property"):
             self.tested_fn._run(self.deployment)
 
     def test_missing_interval_field(self):
@@ -68,7 +69,7 @@ class TestHealthChecks(unittest.TestCase):
             'name': 'Missing-interval'
         }
         self.deployment.set_check('check_failing', check)
-        with self.assertRaisesRegexp(DeploymentError, 'is missing field \'interval\''):
+        with self.assertRaisesRegexp(ValidationError, "'interval' is a required property"):
             self.tested_fn._run(self.deployment)
 
     def test_missing_script_field(self):
@@ -162,7 +163,7 @@ class TestHealthChecks(unittest.TestCase):
             'check_1': check
         }
         
-        params = ['interval', 'realert_every', 'timeout', 'occurences', 'refresh']
+        params = ['interval', 'realert_every', 'timeout', 'ocurrences', 'refresh']
         last_param = None
         for param in params:
             if last_param is not None:
@@ -170,7 +171,8 @@ class TestHealthChecks(unittest.TestCase):
             check[param] = '10s'
             last_param = param
             self.deployment.set_checks(checks)
-            with self.assertRaisesRegexp(DeploymentError, "param '{0}' should be an integer".format(param)):
+            print param
+            with self.assertRaisesRegexp(ValidationError, "'{0}' is not of type 'number'".format(check[param])):
                 self.tested_fn._run(self.deployment)
 
     def test_team(self):
