@@ -34,6 +34,9 @@ class MockDeployment:
         self.archive_dir = ''
         self.service = MockService()
         self.cluster = 'DEFAULT_team'
+        self.instance_tags = {
+            'Environment': 'local'
+        }
         self.sensu = {
             'sensu_check_path': 'test_sensu_check_path'
         }
@@ -163,7 +166,7 @@ class TestHealthChecks(unittest.TestCase):
             'check_1': check
         }
         
-        params = ['interval', 'realert_every', 'timeout', 'ocurrences', 'refresh']
+        params = ['interval', 'realert_every', 'timeout', 'occurrences', 'refresh']
         last_param = None
         for param in params:
             if last_param is not None:
@@ -171,7 +174,6 @@ class TestHealthChecks(unittest.TestCase):
             check[param] = '10s'
             last_param = param
             self.deployment.set_checks(checks)
-            print param
             with self.assertRaisesRegexp(ValidationError, "'{0}' is not of type 'number'".format(check[param])):
                 self.tested_fn._run(self.deployment)
 
@@ -211,5 +213,5 @@ class TestHealthChecks(unittest.TestCase):
         obj = definition['checks']['sensu-check1']
         self.assertEqual(obj['alert_after'], 600)
         self.assertEqual(obj['realert_every'], 30)
-        self.assertEqual(obj['notification_email'], False)
+        self.assertEqual(obj['notification_email'], None)
 
