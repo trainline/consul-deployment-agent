@@ -11,7 +11,7 @@ class Environment:
         logging.debug('Detecting if current instance is running in AWS.')
         if boto.utils.get_instance_metadata(timeout=1, num_retries=1) == {}:
             logging.debug('Not running in AWS, using default environment values.')
-            self.instance_tags = {'Environment': 'local', 'EnvironmentType': 'local'}
+            self.instance_tags = {'Environment': 'local', 'EnvironmentType': 'local', 'aws:autoscaling:groupName': 'local_asg_name'}
             self.environment_name = self.environment_type = 'local'
             self.cluster = 'test_cluster'
             self.instance_id = socket.gethostname()

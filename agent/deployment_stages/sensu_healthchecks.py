@@ -155,7 +155,8 @@ def create_check_definition(deployment, script_path, check_id, check):
       'tip': check.get('tip', 'Fill me up with information'),
     }
 
-    for key, value in deployment.instance_tags.iteritems():
+    custom_instance_tags = {k:v for k,v in deployment.instance_tags.iteritems() if not k.startswith('aws:')}
+    for key, value in custom_instance_tags.iteritems():
         check_obj['ttl_' + key.lower()] = value
 
     sensu_check = generate_sensu_check(check['name'], check_obj)
