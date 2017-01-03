@@ -155,6 +155,9 @@ def create_check_definition(deployment, script_path, check_id, check):
       'tip': check.get('tip', 'Fill me up with information'),
     }
 
+    for key, value in deployment.instance_tags.iteritems():
+        check_obj['ttl_' + key.lower()] = value
+
     sensu_check = generate_sensu_check(check['name'], check_obj)
     deployment.logger.debug('Generated Sensu check \'{0}\': \'{1}\''.format(check_id, sensu_check))
     return sensu_check

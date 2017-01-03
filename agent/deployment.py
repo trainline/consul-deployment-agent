@@ -18,6 +18,7 @@ class Deployment():
         self._cause = config.get('cause')
         self._environment = config.get('environment')
         self.cluster = self._environment.cluster
+        self.instance_tags = self._environment.instance_tags
         self.id = config.get('deployment_id')
         self.last_id = config.get('last_deployment_id')
         self.max_number_of_attempts = config.get('max_number_of_attempts', 1)

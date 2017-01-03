@@ -11,6 +11,7 @@ class Environment:
         logging.debug('Detecting if current instance is running in AWS.')
         if boto.utils.get_instance_metadata(timeout=1, num_retries=1) == {}:
             logging.debug('Not running in AWS, using default environment values.')
+            self.instance_tags = {'Environment': 'local', 'EnvironmentType': 'local'}
             self.environment_name = self.environment_type = 'local'
             self.cluster = 'test_cluster'
             self.instance_id = socket.gethostname()
@@ -28,7 +29,8 @@ class Environment:
              'instance_id':self.instance_id,
              'ip_address':self.ip_address,
              'region':self.region,
-             'server_role':self.server_role})
+             'server_role':self.server_role,
+             'instance_tags': self.instance_tags})
 
     def _populate_from_ec2(self):
         instance_metadata = boto.utils.get_instance_metadata()
@@ -44,6 +46,7 @@ class Environment:
             reservations = ec2conn.get_all_instances(instance_ids=[self.instance_id])
             for reservation in reservations:
                 for instance in reservation.instances:
+                    self.instance_tags = instance.tags
                     self.environment_name = str(instance.tags.get('Environment'))
                     self.environment_type = str(instance.tags.get('EnvironmentType'))
                     self.server_role = str(instance.tags.get('Role'))
