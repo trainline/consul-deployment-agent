@@ -72,11 +72,10 @@ class RegisterSensuHealthChecks(DeploymentStage):
                 raise DeploymentError('Failed to register health check \'{0}\', you need at least one of: \'local_script\' or \'server_script\''.format(check_id))
             if 'standalone' in check and 'aggregate' in check:
                 if check['standalone'] is True and check['aggregate'] is True:
-                    raise SyntaxError('Either standalone or aggregate can be True at the same time')
+                    raise DeploymentError('Either standalone or aggregate can be True at the same time')
                 if check['standalone'] is False and check['aggregate'] is False:
-                    raise SyntaxError('Either standalone or aggregate can be False at the same time')
+                    raise DeploymentError('Either standalone or aggregate can be False at the same time')
 
-            
         deployment.logger.info('Registering Sensu healthchecks.')
         (healthchecks, scripts_base_dir) = find_healthchecks('sensu', deployment.archive_dir, deployment.appspec, deployment.logger)
         if healthchecks is None:
@@ -119,24 +118,46 @@ def create_check_definition(deployment, script_path, check_id, check):
     team = team.lower()
     deployment.logger.debug('Setting team of Sensu check \'{0}\' to: \'{1}\''.format(check_id, team))
 
-    return generate_sensu_check(check_name=check['name'],
-                                 command=script_path,
-                                 interval=check.get('interval'),
-                                 alert_after=check.get('alert_after', 600),
-                                 realert_every=check.get('realert_every', 30),
-                                 timeout=check.get('timeout', 120),
-                                 refresh=check.get('refresh', 300),
-                                 occurrences=check.get('occurrences', 5),
-                                 notification_email=check.get('notification_email', None),
-                                 slack_channel=check.get('slack_channel', None),
-                                 ticket=check.get('ticket', False),
-                                 project=check.get('project', False),
-                                 page=check.get('page', False),
-                                 standalone=check.get('standalone', True),
-                                 aggregate=check.get('aggregate', False),
-                                 tip=check.get('tip', 'Fill me up with information'),
-                                 runbook=check.get('runbook', 'Needs information'),
-                                 team=team)
+    standalone = check.get('standalone', None)
+    aggregate = check.get('aggregate', None)
+
+    # If neither is defined, standalone should be true
+    if standalone is None and aggregate is None:
+        standalone = True
+        aggregate = False
+
+    if standalone is not None and aggregate is None:
+        aggregate = not standalone
+    elif aggregate is not None and standalone is None:
+        standalone = not aggregate
+
+    check_obj = {
+      'command': script_path,
+      'interval': check.get('interval'),
+      'occurrences': check.get('occurrences', 5),
+      'timeout': check.get('timeout', 120),
+      'alert_after': check.get('alert_after', 600),
+      'realert_every': check.get('realert_every', 30),
+      
+      'team': team,
+      'notification_email': check.get('notification_email', None),
+      'slack_channel': check.get('slack_channel', None),
+
+      'standalone': standalone,
+      'aggregate': aggregate,
+
+      'ticket': check.get('ticket', False),
+      'project': check.get('project', False),
+      'page': check.get('page', False),
+
+      'sla': check.get('sla', 'No SLA defined'),
+      'runbook': check.get('runbook', 'Needs information'),
+      'tip': check.get('tip', 'Fill me up with information'),
+    }
+
+    sensu_check = generate_sensu_check(check['name'], check_obj)
+    deployment.logger.debug('Generated Sensu check \'{0}\': \'{1}\''.format(check_id, sensu_check))
+    return sensu_check
 
 def create_and_copy_check(deployment, script_path, check_id, check):
     check_definition = create_check_definition(deployment, script_path, check_id, check)
