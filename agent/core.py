@@ -18,6 +18,10 @@ parser.add_argument('-v', '--version', action='version', version=semantic_versio
 config = {
     'aws': {'access_key_id': None, 'aws_secret_access_key': None, 'deployment_logs': {'bucket_name': None, 'key_prefix': None }},
     'consul': {'host': 'localhost', 'port': 8500, 'scheme': 'http', 'acl_token': None, 'version': 'v1'},
+    'sensu': {
+        'healthcheck_search_paths': ['/etc/some_fake_path', '/opt/sensu_server_scripts'],
+        'sensu_check_path': '/etc/sensu/conf.d/checks.local'
+    },
     'logging': {
         'version': 1,
         'handlers': {
@@ -48,6 +52,8 @@ def load_configuration(args):
         config_logging_filepath = os.path.join(args.config_dir, 'config-logging.yml')
     if os.path.isfile(config_filepath):
         config_settings = yaml.load(file(config_filepath, 'r'))
+        if 'sensu' in config_settings and config_settings['sensu'] is not None:
+            config['sensu'] = config_settings['sensu']
         if 'aws' in config_settings and config_settings['aws'] is not None:
             config['aws']['access_key_id'] = config_settings['aws'].get('access_key_id')
             config['aws']['aws_secret_access_key'] = config_settings['aws'].get('aws_secret_access_key')
@@ -96,6 +102,7 @@ def execute(action, action_info, environment, consul_api):
             'environment': environment,
             'last_deployment_id': action_info['last_deployment_id'],
             'platform': platform.system().lower(),
+            'sensu': config['sensu'],
             'service': action.service
         }
         deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])

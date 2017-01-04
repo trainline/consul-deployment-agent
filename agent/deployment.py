@@ -2,7 +2,7 @@
 
 import datetime, json, key_naming_convention, logging, os, sys
 from consul_api import ConsulError
-from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeletePreviousDeploymentFiles
+from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeregisterOldSensuHealthChecks, RegisterSensuHealthChecks, DeletePreviousDeploymentFiles
 from s3_file_manager import S3FileManager
 from version import semantic_version
 
@@ -17,10 +17,13 @@ class Deployment():
         self.consul_api = consul_api
         self._cause = config.get('cause')
         self._environment = config.get('environment')
+        self.cluster = self._environment.cluster
+        self.instance_tags = self._environment.instance_tags
         self.id = config.get('deployment_id')
         self.last_id = config.get('last_deployment_id')
         self.max_number_of_attempts = config.get('max_number_of_attempts', 1)
         self.platform = config.get('platform')
+        self.sensu = config.get('sensu')
         self.s3_file_manager = S3FileManager(self._aws_config)
         self.service = config.get('service')
         self.timeout = self.service.installation['timeout']
@@ -156,6 +159,7 @@ class Deployment():
         check_not_none('environment', config)
         check_not_none('platform', config)
         check_not_none('service', config)
+        check_not_none('sensu', config)
 
     def run(self):
         self._initialise_report()
@@ -164,8 +168,10 @@ class Deployment():
         self.logger.info('Installing service: {0}'.format(self.service))
         self.logger.info('Configuration: {0}'.format(self))
         self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
-        stages = [ ValidateDeployment(), StopApplication(), DeregisterOldConsulHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
-                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(), RegisterWithConsul(), RegisterConsulHealthChecks(), DeletePreviousDeploymentFiles() ]
+        stages = [ ValidateDeployment(), StopApplication(), DeregisterOldConsulHealthChecks(),
+                   DeregisterOldSensuHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
+                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
+                   RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(), DeletePreviousDeploymentFiles() ]
         for stage in stages:
             success = stage.run(self)
             self._update_report({'last_completed_stage':stage.name})
