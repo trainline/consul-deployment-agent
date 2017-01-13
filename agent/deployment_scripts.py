@@ -1,4 +1,4 @@
-# Copyright (c) Trainline Limited, 2016. All rights reserved. See LICENSE.txt in the project root for license information.
+# Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import os, stat, subprocess
 from threading import Thread
@@ -14,11 +14,16 @@ class Script(object):
         self.run_as = run_as
         self.timeout = timeout
     def execute(self, logger):
-        def communicate():
-            self.stdout, self.stderr = self.process.communicate()
+        def run():
+            self.stdout = ''
+            while self.process.poll() is None:
+                output = self.process.stdout.readline()
+                self.stdout += output
+            output = self.process.communicate()[0]
+            self.stdout += output
             self.return_code = self.process.returncode
         logger.info('Starting execution of {0}. Will timeout after {1} seconds if not completed.'.format(self.filepath, self.timeout))
-        process_thread = Thread(target=communicate)
+        process_thread = Thread(target=run)
         process_thread.start()
         process_thread.join(self.timeout)
         if process_thread.is_alive():
@@ -28,8 +33,8 @@ class Script(object):
             except OSError, e:
                 # The process finished between the `is_alive()` and `kill()`
                 self.return_code = self.process.returncode
-            raise SubprocessTimeoutError('Process #%d killed after %f seconds' % (self.process.pid, self.timeout))
-        return (self.return_code, self.stdout, self.stderr)
+            raise SubprocessTimeoutError('Process #%d killed after %d seconds' % (self.process.pid, self.timeout))
+        return (self.return_code, self.stdout)
 
 class ShellScript(Script):
     def __init__(self, filepath, env={}, run_as=None, timeout=3600):
