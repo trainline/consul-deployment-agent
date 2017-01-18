@@ -12,16 +12,30 @@ SensuHealthCheckSchema = {
         "occurrences": {"type": "number"},
         "refresh": {"type": "number"},
 
-        "team": {"type": ["string", "boolean"]},
         "tip": {"type": ["string", "boolean"]},
         "runbook": {"type": ["string", "boolean"]},
-        "notification_email": {"type": ["string", "boolean", "array"]},
-
         "standalone": {"type": "boolean"},
         "aggregate": {"type": "boolean"},
-        "ticket": {"type": "boolean"},
+        "ticketing_enabled": {"type": "boolean"},
+        "paging_enabled": {"type": "boolean"},
         "project": {"type": "boolean"},
-        "slack_channel": {"type": "string"},
+
+        "override_notification_settings": {
+            "type": "array",
+            "items": { "type": "string"}
+        },
+        "override_notification_email": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+            }
+        },
+        "override_chat_channel": {
+            "type": "array",
+            "items": { "type": "string"}
+        },
+
         "page": {"type": "boolean"}
     },
     "required": ["name", "interval"]
