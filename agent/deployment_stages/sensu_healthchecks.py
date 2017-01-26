@@ -124,8 +124,17 @@ def create_check_definition(deployment, script_path, check_id, check):
     elif aggregate is not None and standalone is None:
         standalone = not aggregate
 
+    override_notification_settings = check.get('override_notification_settings', None)
     override_notification_email = check.get('override_notification_email', None)
     override_chat_channel = check.get('override_chat_channel', None)
+
+    if override_notification_settings is None and (check.get('team', None) is not None):
+        deployment.logger.warning('\'team\' property is depracated, please use \'override_notification_settings\' instead')
+        override_notification_settings = check.get('team')
+    if override_notification_email is None and (check.get('notification_email') is not None):
+        deployment.logger.warning('\'notification_email\' property is depracated, please use \'override_notification_email\' instead')
+        override_notification_email = check.get('notification_email')
+
     if override_notification_email is not None:
         override_notification_email = ','.join(override_notification_email)
     if override_chat_channel is not None:
@@ -139,7 +148,7 @@ def create_check_definition(deployment, script_path, check_id, check):
       'alert_after': check.get('alert_after', 600),
       'realert_every': check.get('realert_every', 30),
       
-      'team': check.get('override_notification_settings', None),
+      'team': override_notification_settings,
       'notification_email': override_notification_email,
       'slack_channel': override_chat_channel,
 

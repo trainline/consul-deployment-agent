@@ -23,6 +23,7 @@ class MockLogger:
     self.info = Mock()
     self.error = Mock()
     self.debug = Mock()
+    self.warning = Mock()
 
 class MockService:
   def __init__(self):
@@ -175,6 +176,25 @@ class TestHealthChecks(unittest.TestCase):
             self.deployment.set_checks(checks)
             with self.assertRaisesRegexp(ValidationError, "'{0}' is not of type 'number'".format(check[param])):
                 self.tested_fn._run(self.deployment)
+
+    def test_warn_on_old_property(self):
+        check = {
+            'name': 'sensu-check1',
+            'local_script': 'foo.py',
+            'notification_email': ['foo', 'bar'],
+            'interval': 10
+        }
+        checks = {
+            'check_1': check
+        }
+        self.deployment.set_checks(checks)
+        
+        definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
+        obj = definition['checks']['sensu-check1']
+        with self.assertRaises(DeploymentError):
+            self.tested_fn._run(self.deployment)
+        self.deployment.logger.warning.assert_called_with("'notification_email' property is depracated, please use 'override_notification_email' instead")
+        self.assertEqual(obj['notification_email'], 'foo,bar')
 
     def test_emails(self):
         check = {
