@@ -161,7 +161,7 @@ def create_check_definition(deployment, script_path, check_id, check):
 
       'sla': check.get('sla', 'No SLA defined'),
       'runbook': check.get('runbook', 'Needs information'),
-      'tip': check.get('tip', 'Fill me up with information'),
+      'tip': check.get('tip', 'Fill me up with information')
     }
 
     custom_instance_tags = {k:v for k,v in deployment.instance_tags.iteritems() if not k.startswith('aws:')}

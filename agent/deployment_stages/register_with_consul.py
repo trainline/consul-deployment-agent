@@ -9,7 +9,7 @@ class RegisterWithConsul(DeploymentStage):
         deployment.logger.info('Registering service in Consul catalogue.')
         is_success = deployment.consul_api.register_service(
             id=deployment.service.id,
-            name=deployment.service.name,
+            name=deployment.service.id,
             address=deployment.service.address,
             port=deployment.service.port,
             tags=deployment.service.tags
