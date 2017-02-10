@@ -20,7 +20,7 @@ SensuHealthCheckSchema = {
         "paging_enabled": {"type": "boolean"},
         "project": {"type": "boolean"},
 
-        "team": { "type": "team" },
+        "team": { "type": "string" },
         "override_notification_settings": { "type": "string" },
         "notification_email": {
             "type": "array",
