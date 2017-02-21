@@ -5,7 +5,6 @@ import re
 from jsonschema import Draft4Validator
 
 from common import *
-from generate_sensu_check import generate_sensu_check
 from schemas import SensuHealthCheckSchema
 
 class DeregisterOldSensuHealthChecks(DeploymentStage):
@@ -175,6 +174,10 @@ def create_and_copy_check(deployment, script_path, check_id, check):
     deployment.logger.info('Copied Sensu health check \'{0}\' to checks directory \'{1}\''.format(check_id, definition_absolute_path))
     return True
 
-
-
-
+def generate_sensu_check(check_name, obj):
+    obj['handlers'] = ['default']
+    obj['subscribers'] = ['sensu-base']
+    obj['tags'] = []
+    
+    content = {'checks':{check_name: obj}}
+    return content
