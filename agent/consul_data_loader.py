@@ -11,12 +11,14 @@ class ConsulDataLoader:
     def __init__(self, consul_api):
         self._consul_api = consul_api
 
-    def _load_service(self, environment, deployment_id, name, version):
+    def _load_service(self, environment, deployment_id, name, version, deployment_slice):
         definition_key = key_naming_convention.get_service_definition_key(environment, name, version)
         installation_key = key_naming_convention.get_service_installation_key(environment, name, version)
         definition = self._consul_api.get_value(definition_key).get('Service', {})
         definition['Address'] = environment.ip_address
         installation = self._consul_api.get_value(installation_key)
+        consul_name = environment.environment_name + '-' + name + ('-' + deployment_slice if deployment_slice != 'none' else '')
+        definition['ID'] = consul_name
         return Service(definition, installation)
 
     def load_server_role(self, environment):
@@ -33,7 +35,7 @@ class ConsulDataLoader:
                 # If Action isn't specified, we assume it's Install for backward compatibility for now
                 deployment_action = definition.get('Action', 'Install')
 
-                service = self._load_service(environment, deployment_id, name, version)
+                service = self._load_service(environment, deployment_id, name, version, deployment_slice)
                 service.deployment_id = deployment_id
                 service.slice = deployment_slice
                 service.tag('deployment_id:', deployment_id)
@@ -57,7 +59,7 @@ class ConsulDataLoader:
     def load_service_catalogue(self):
         registered_services = self._consul_api.get_service_catalogue()
         services = []
-        for name, definition in registered_services.iteritems():
+        for consul_name, definition in registered_services.iteritems():
             for tag in definition['Tags']:
                 if tag.startswith('deployment_id'):
                     services.append(Service(definition))

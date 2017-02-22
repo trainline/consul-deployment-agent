@@ -110,13 +110,6 @@ def find_server_script(paths, server_script):
     return None
 
 def create_check_definition(deployment, script_path, check_id, check):
-    if 'team' in check:
-        team = check['team']
-    else:
-        team = deployment.cluster
-    team = team.lower()
-    deployment.logger.debug('Setting team of Sensu check \'{0}\' to: \'{1}\''.format(check_id, team))
-
     standalone = check.get('standalone', None)
     aggregate = check.get('aggregate', None)
 
@@ -130,6 +123,22 @@ def create_check_definition(deployment, script_path, check_id, check):
     elif aggregate is not None and standalone is None:
         standalone = not aggregate
 
+    override_notification_settings = check.get('override_notification_settings', None)
+    override_notification_email = check.get('override_notification_email', None)
+    override_chat_channel = check.get('override_chat_channel', None)
+
+    if override_notification_settings is None and (check.get('team', None) is not None):
+        deployment.logger.warning('\'team\' property is depracated, please use \'override_notification_settings\' instead')
+        override_notification_settings = check.get('team')
+    if override_notification_email is None and (check.get('notification_email') is not None):
+        deployment.logger.warning('\'notification_email\' property is depracated, please use \'override_notification_email\' instead')
+        override_notification_email = check.get('notification_email')
+
+    if override_notification_email is not None:
+        override_notification_email = ','.join(override_notification_email)
+    if override_chat_channel is not None:
+        override_chat_channel = ','.join(override_chat_channel)
+    
     check_obj = {
       'command': '{0} {1}'.format(script_path, check.get('script_arguments', '')).rstrip(),
       'interval': check.get('interval'),
@@ -138,20 +147,20 @@ def create_check_definition(deployment, script_path, check_id, check):
       'alert_after': check.get('alert_after', 600),
       'realert_every': check.get('realert_every', 30),
       
-      'team': team,
-      'notification_email': check.get('notification_email', None),
-      'slack_channel': check.get('slack_channel', None),
+      'team': override_notification_settings,
+      'notification_email': override_notification_email,
+      'slack_channel': override_chat_channel,
 
       'standalone': standalone,
       'aggregate': aggregate,
 
-      'ticket': check.get('ticket', False),
+      'ticket': check.get('ticketing_enabled', False),
+      'page': check.get('paging_enabled', False),
       'project': check.get('project', False),
-      'page': check.get('page', False),
 
       'sla': check.get('sla', 'No SLA defined'),
       'runbook': check.get('runbook', 'Needs information'),
-      'tip': check.get('tip', 'Fill me up with information'),
+      'tip': check.get('tip', 'Fill me up with information')
     }
 
     custom_instance_tags = {k:v for k,v in deployment.instance_tags.iteritems() if not k.startswith('aws:')}

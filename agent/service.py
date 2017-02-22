@@ -6,14 +6,12 @@ class Service:
     def __init__(self, definition, installation_info={}):
         self.address = definition.get('Address')
         self.installation = {
-            'timeout':installation_info.get('InstallationTimeout', 60) * 60,
-            'package_bucket':installation_info.get('PackageBucket'),
-            'package_key':installation_info.get('PackageKey')
+            'timeout': installation_info.get('InstallationTimeout', 60) * 60,
+            'package_bucket': installation_info.get('PackageBucket'),
+            'package_key': installation_info.get('PackageKey')
         }
         self.id = definition.get('ID')
-        self.name = definition.get('Name')
-        if self.name is None:
-            self.name = definition.get('Service')
+        self.name = self.id
         self.port = int(definition.get('Port', 0))
         self.tags = definition.get('Tags', [])
         self.deployment_id = self._extract_tag_with_prefix('deployment_id:')
