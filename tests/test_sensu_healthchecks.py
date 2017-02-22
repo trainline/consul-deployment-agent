@@ -180,7 +180,7 @@ class TestHealthChecks(unittest.TestCase):
         check = {
             'name': 'sensu-check1',
             'local_script': 'foo.py',
-            'notification_email': ['foo', 'bar'],
+            'notification_email': ['foo@bar.com', 'bar@biz.uk'],
             'interval': 10
         }
         checks = {
@@ -193,7 +193,7 @@ class TestHealthChecks(unittest.TestCase):
         with self.assertRaises(DeploymentError):
             self.tested_fn._run(self.deployment)
         self.deployment.logger.warning.assert_called_with("'notification_email' property is depracated, please use 'override_notification_email' instead")
-        self.assertEqual(obj['notification_email'], 'foo,bar')
+        self.assertEqual(obj['notification_email'], 'foo@bar.com,bar@biz.uk')
 
     def test_emails(self):
         check = {
