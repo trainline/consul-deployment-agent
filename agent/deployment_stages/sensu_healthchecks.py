@@ -108,8 +108,8 @@ class RegisterSensuHealthChecks(DeploymentStage):
         if 'local_script' in check:
             script_absolute_path = check['local_script']
             deployment.logger.info('Setting mode on file: {0}'.format(script_absolute_path))
-            st = os.stat(script_path)
-            os.chmod(script_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+            st = os.stat(script_absolute_path)
+            os.chmod(script_absolute_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
         elif 'server_script' in check:
             script_absolute_path = check['server_script']
         else:
