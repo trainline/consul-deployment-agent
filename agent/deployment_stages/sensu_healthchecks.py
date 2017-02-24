@@ -128,7 +128,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
     def validate_checks(checks, scripts_base_dir, deployment):
         for check_id, check in checks.iteritems():
             RegisterSensuHealthChecks.validate_check_properties(check_id, check)
-            RegisterSensuHealthChecks.validate_check_script(check_id, check, scripts_base_dir, deployment.sensu['healthcheck_search_paths'])
+            RegisterSensuHealthChecks.validate_check_script(check_id, check, scripts_base_dir, deployment)
         RegisterSensuHealthChecks.validate_unique_ids(checks)
         RegisterSensuHealthChecks.validate_unique_names(checks)
 
