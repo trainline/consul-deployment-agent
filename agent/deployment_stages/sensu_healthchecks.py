@@ -5,11 +5,7 @@ import re
 from jsonschema import Draft4Validator
 
 from common import *
-from generate_sensu_check import generate_sensu_check
 from schemas import SensuHealthCheckSchema
-
-def create_service_check_filename(service_id, check_id):
-    return service_id + '-' + check_id
 
 class DeregisterOldSensuHealthChecks(DeploymentStage):
     def __init__(self):
@@ -101,6 +97,9 @@ class RegisterSensuHealthChecks(DeploymentStage):
             if not is_success:
                 raise DeploymentError('Failed to register Sensu health check \'{0}\''.format(check_id))
 
+def create_service_check_filename(service_id, check_id):
+    return service_id + '-' + check_id
+
 def find_server_script(paths, server_script):
     for path in paths:
         script_path = os.path.join(path, server_script)
@@ -141,7 +140,7 @@ def create_check_definition(deployment, script_path, check_id, check):
         override_chat_channel = ','.join(override_chat_channel)
     
     check_obj = {
-      'command': script_path,
+      'command': '{0} {1}'.format(script_path, check.get('script_arguments', '')).rstrip(),
       'interval': check.get('interval'),
       'occurrences': check.get('occurrences', 5),
       'timeout': check.get('timeout', 120),
@@ -184,6 +183,10 @@ def create_and_copy_check(deployment, script_path, check_id, check):
     deployment.logger.info('Copied Sensu health check \'{0}\' to checks directory \'{1}\''.format(check_id, definition_absolute_path))
     return True
 
-
-
-
+def generate_sensu_check(check_name, obj):
+    obj['handlers'] = ['default']
+    obj['subscribers'] = ['sensu-base']
+    obj['tags'] = []
+    
+    content = {'checks':{check_name: obj}}
+    return content

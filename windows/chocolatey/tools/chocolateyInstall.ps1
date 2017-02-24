@@ -1,4 +1,4 @@
-﻿$PackageName = $env:chocolateyPackageName
+$PackageName = $env:chocolateyPackageName
 $PackageVersion = $env:chocolateyPackageVersion
 $PackageDirectory = $env:chocolateyPackageFolder
 $ServiceName = "consul-deployment-agent"

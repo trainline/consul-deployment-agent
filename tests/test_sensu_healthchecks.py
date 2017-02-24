@@ -54,7 +54,6 @@ class MockDeployment:
             'sensu_healthchecks': checks
         }
 
-
 class TestHealthChecks(unittest.TestCase):
     def setUp(self):
         self.deployment = MockDeployment()
@@ -181,7 +180,7 @@ class TestHealthChecks(unittest.TestCase):
         check = {
             'name': 'sensu-check1',
             'local_script': 'foo.py',
-            'notification_email': ['foo', 'bar'],
+            'notification_email': ['foo@bar.com', 'bar@biz.uk'],
             'interval': 10
         }
         checks = {
@@ -194,7 +193,7 @@ class TestHealthChecks(unittest.TestCase):
         with self.assertRaises(DeploymentError):
             self.tested_fn._run(self.deployment)
         self.deployment.logger.warning.assert_called_with("'notification_email' property is depracated, please use 'override_notification_email' instead")
-        self.assertEqual(obj['notification_email'], 'foo,bar')
+        self.assertEqual(obj['notification_email'], 'foo@bar.com,bar@biz.uk')
 
     def test_emails(self):
         check = {
@@ -272,3 +271,33 @@ class TestHealthChecks(unittest.TestCase):
         self.assertEqual(obj['realert_every'], 30)
         self.assertEqual(obj['notification_email'], None)
 
+    def test_command_script_with_no_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'server_script': 'foo.py',
+            'interval': 10
+        }
+        checks = {
+            'check_1': check
+        }
+        self.deployment.set_checks(checks)
+        
+        definition = create_check_definition(self.deployment, check['server_script'], 'test_check_id', check)
+        obj = definition['checks']['sensu-check1']
+        self.assertEqual(obj['command'], 'foo.py')
+
+    def test_command_script_with_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'server_script': 'check-windows-service.ps1',
+            'script_arguments': '-ServiceName service_name',
+            'interval': 10
+        }
+        checks = {
+            'check_1': check
+        }
+        self.deployment.set_checks(checks)
+        
+        definition = create_check_definition(self.deployment, check['server_script'], 'test_check_id', check)
+        obj = definition['checks']['sensu-check1']
+        self.assertEqual(obj['command'], 'check-windows-service.ps1 -ServiceName service_name')
