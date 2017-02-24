@@ -23,6 +23,7 @@ class MockLogger:
     self.info = Mock()
     self.error = Mock()
     self.debug = Mock()
+    self.warning = Mock()
 
 class MockService:
   def __init__(self):
@@ -33,7 +34,6 @@ class MockDeployment:
         self.logger = MockLogger()
         self.archive_dir = ''
         self.service = MockService()
-        self.cluster = 'DEFAULT_team'
         self.instance_tags = {
             'Environment': 'local'
         }
@@ -53,7 +53,6 @@ class MockDeployment:
         self.appspec = {
             'sensu_healthchecks': checks
         }
-
 
 class TestHealthChecks(unittest.TestCase):
     def setUp(self):
@@ -177,6 +176,43 @@ class TestHealthChecks(unittest.TestCase):
             with self.assertRaisesRegexp(ValidationError, "'{0}' is not of type 'number'".format(check[param])):
                 self.tested_fn._run(self.deployment)
 
+    def test_warn_on_old_property(self):
+        check = {
+            'name': 'sensu-check1',
+            'local_script': 'foo.py',
+            'notification_email': ['foo@bar.com', 'bar@biz.uk'],
+            'interval': 10
+        }
+        checks = {
+            'check_1': check
+        }
+        self.deployment.set_checks(checks)
+        
+        definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
+        obj = definition['checks']['sensu-check1']
+        with self.assertRaises(DeploymentError):
+            self.tested_fn._run(self.deployment)
+        self.deployment.logger.warning.assert_called_with("'notification_email' property is depracated, please use 'override_notification_email' instead")
+        self.assertEqual(obj['notification_email'], 'foo@bar.com,bar@biz.uk')
+
+    def test_emails(self):
+        check = {
+            'name': 'sensu-check1',
+            'local_script': 'foo.py',
+            'override_notification_email': ['foo', 'bar'],
+            'interval': 10
+        }
+        checks = {
+            'check_1': check
+        }
+        self.deployment.set_checks(checks)
+        
+        definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
+        obj = definition['checks']['sensu-check1']
+
+        with self.assertRaisesRegexp(ValidationError, "'foo' does not match"):
+            self.tested_fn._run(self.deployment)
+
     def test_team(self):
         check = {
             'name': 'sensu-check1',
@@ -188,15 +224,35 @@ class TestHealthChecks(unittest.TestCase):
         }
         self.deployment.set_checks(checks)
         
-        definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
+        definition = create_check_definition(self.deployment, 'test_path', 'sensu-check1', check)
         obj = definition['checks']['sensu-check1']
-        self.assertEqual(obj['team'], 'default_team')
+        self.assertEqual(obj['team'], None)
         
         # Should be transformed to lowercase
-        check['team'] = 'Test_tEAM1'
+        check['override_notification_settings'] = 'test_team1'
         definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
         obj = definition['checks']['sensu-check1']
         self.assertEqual(obj['team'], 'test_team1')
+
+    def test_splitting_arrays(self):
+        check = {
+            'name': 'sensu-check1',
+            'local_script': 'fuj.py',
+            'override_notification_email': ['email1@ble.pl', 'email2@ble.pl'],
+            'override_chat_channel': ['channel1', 'channel2'],
+            'interval': 10
+        }
+        checks = {
+            'check_1': check
+        }
+        self.deployment.set_checks(checks)
+        
+        definition = create_check_definition(self.deployment, 'test_path', 'sensu-check1', check)
+        obj = definition['checks']['sensu-check1']
+
+        # Note: we rewrite these property names for Sensu JSON (eg. override_chat_channel -> slack_channel)
+        self.assertEqual(obj['notification_email'], 'email1@ble.pl,email2@ble.pl')
+        self.assertEqual(obj['slack_channel'], 'channel1,channel2')
 
     def test_defaults(self):
         check = {
@@ -215,3 +271,33 @@ class TestHealthChecks(unittest.TestCase):
         self.assertEqual(obj['realert_every'], 30)
         self.assertEqual(obj['notification_email'], None)
 
+    def test_command_script_with_no_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'server_script': 'foo.py',
+            'interval': 10
+        }
+        checks = {
+            'check_1': check
+        }
+        self.deployment.set_checks(checks)
+        
+        definition = create_check_definition(self.deployment, check['server_script'], 'test_check_id', check)
+        obj = definition['checks']['sensu-check1']
+        self.assertEqual(obj['command'], 'foo.py')
+
+    def test_command_script_with_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'server_script': 'check-windows-service.ps1',
+            'script_arguments': '-ServiceName service_name',
+            'interval': 10
+        }
+        checks = {
+            'check_1': check
+        }
+        self.deployment.set_checks(checks)
+        
+        definition = create_check_definition(self.deployment, check['server_script'], 'test_check_id', check)
+        obj = definition['checks']['sensu-check1']
+        self.assertEqual(obj['command'], 'check-windows-service.ps1 -ServiceName service_name')

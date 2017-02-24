@@ -1,9 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 from common import *
 
-def create_service_check_id(service_id, check_id):
-    return service_id + ':' + check_id
-
 class DeregisterOldConsulHealthChecks(DeploymentStage):
     def __init__(self):
         DeploymentStage.__init__(self, name='DeregisterOldConsulHealthChecks')
@@ -89,3 +86,6 @@ class RegisterConsulHealthChecks(DeploymentStage):
                 deployment.logger.info('Successfuly registered Consul health check \'{0}\''.format(check_id))
             else:
                 raise DeploymentError('Failed to register Consul health check \'{0}\''.format(check_id))
+
+def create_service_check_id(service_id, check_id):
+    return service_id + ':' + check_id
