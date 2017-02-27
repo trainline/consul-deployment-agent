@@ -5,7 +5,7 @@ import boto.ec2, boto.utils, json, logging, socket, sys
 class EnvironmentError(RuntimeError):
     pass
 
-class Environment:
+class Environment(object):
     def __init__(self):
         self.environment_name = self.instance_id = self.ip_address = self.region = self.server_role = None
         logging.debug('Detecting if current instance is running in AWS.')

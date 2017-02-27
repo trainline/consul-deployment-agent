@@ -31,3 +31,4 @@ class CopyFiles(DeploymentStage):
             return
         clean_up(deployment.appspec.get('files', []), deployment.logger)
         copy_files(deployment.appspec.get('files', []), deployment.logger)
+        

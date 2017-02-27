@@ -2,7 +2,7 @@
 
 import os
 
-class HealthCheck():
+class HealthCheck(object):
     def __init__(self, id, name):
         self.id = id
         self.name = name

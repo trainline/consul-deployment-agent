@@ -21,3 +21,4 @@ class ApplyPermissions(DeploymentStage):
                 if 'mode' in permission:
                     deployment.logger.debug('Changing mode of {0} to {1}.'.format(object, permission['mode']))
                     dir_utils.change_mode_recursive(object, permission['mode'])
+                    

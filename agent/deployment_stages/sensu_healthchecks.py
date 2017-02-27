@@ -69,7 +69,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
             override_notification_email = ','.join(override_notification_email)
         if override_chat_channel is not 'undef':
             override_chat_channel = ','.join(override_chat_channel)
-        
+
         check_definition = { 
             'checks': {
                 check['name']: {
@@ -87,7 +87,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
                     'sla': check.get('sla', 'No SLA defined'),
                     'slack_channel': override_chat_channel,
                     'standalone': check.get('standalone', True),
-                    'subscribers': [ 'sensu-base' ],
+                    'subscribers': ['sensu-base'],
                     'tags': [],
                     'team': override_notification_settings,
                     'ticket': check.get('ticketing_enabled', False),
@@ -97,7 +97,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
             }
         }
 
-        custom_instance_tags = {k:v for k,v in instance_tags.iteritems() if not k.startswith('aws:')}
+        custom_instance_tags = {k:v for k, v in instance_tags.iteritems() if not k.startswith('aws:')}
         for key, value in custom_instance_tags.iteritems():
             check_definition['checks'][check['name']]['ttl_' + key.lower()] = value
 
@@ -114,7 +114,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
             script_absolute_path = check['server_script']
         else:
             raise DeploymentError('Missing script property \'local_script\' nor \'server_script\' in check definition')
-        
+
         deployment.logger.debug('Sensu check {0} script path: {1}'.format(check_id, script_absolute_path))
 
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment.instance_tags, deployment.logger)
@@ -122,7 +122,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
         check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], check_definition_filename)
         is_success = RegisterSensuHealthChecks.write_check_definition_file(check_definition, check_definition_absolute_path, deployment)
         if not is_success:
-            raise DeploymentError('Failed to register Sensu check \'{0}\''.format(check_id))  
+            raise DeploymentError('Failed to register Sensu check \'{0}\''.format(check_id))
 
     @staticmethod
     def validate_checks(checks, scripts_base_dir, deployment):
@@ -158,7 +158,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
             check['local_script'] = absolute_file_path
         elif 'server_script' in check:
             absolute_file_path = RegisterSensuHealthChecks.find_sensu_plugin(deployment.sensu['healthcheck_search_paths'], check['server_script'])
-            if absolute_file_path == None:
+            if absolute_file_path is None:
                 raise DeploymentError('Couldn\'t find Sensu plugin script: {0}\nPaths searched: {1}'.format(check['server_script'], deployment.sensu['healthcheck_search_paths']))
             check['server_script'] = absolute_file_path
 

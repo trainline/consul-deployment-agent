@@ -11,7 +11,10 @@ class Script(object):
         self.filepath = filepath
         self.env = os.environ.copy()
         self.env.update(env)
+        self.process = None
+        self.return_code = None
         self.run_as = run_as
+        self.stdout = None
         self.timeout = timeout
     def execute(self, logger):
         def run():
@@ -40,14 +43,14 @@ class ShellScript(Script):
     def __init__(self, filepath, env={}, run_as=None, timeout=3600):
         Script.__init__(self, filepath, env, run_as, timeout)
     def execute(self, logger):
-    	file_stats = os.stat(self.filepath)
-    	os.chmod(self.filepath, file_stats.st_mode | stat.S_IEXEC)
-    	if self.run_as is None or self.run_as == 'root':
-    	    command = self.filepath
-    	else:
-    	    command = 'su {0} -c {1}'.format(self.run_as, self.filepath)
-    	logger.debug('Command: {0}'.format(command))
-    	self.process = subprocess.Popen(command, cwd=os.getcwd(), env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        file_stats = os.stat(self.filepath)
+        os.chmod(self.filepath, file_stats.st_mode | stat.S_IEXEC)
+        if self.run_as is None or self.run_as == 'root':
+            command = self.filepath
+        else:
+            command = 'su {0} -c {1}'.format(self.run_as, self.filepath)
+        logger.debug('Command: {0}'.format(command))
+        self.process = subprocess.Popen(command, cwd=os.getcwd(), env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return super(ShellScript, self).execute(logger)
 
 class PowershellScript(Script):
@@ -56,5 +59,5 @@ class PowershellScript(Script):
     def execute(self, logger):
         self.process = subprocess.Popen([r'C:/WINDOWS/system32/WindowsPowerShell/v1.0/powershell.exe',
                                          '-ExecutionPolicy', 'Unrestricted', self.filepath],
-                                         cwd=os.getcwd(), env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                        cwd=os.getcwd(), env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return super(PowershellScript, self).execute(logger)

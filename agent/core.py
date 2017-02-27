@@ -147,16 +147,16 @@ def main():
     try:
         environment = Environment()
         logging.info('Environment configuration: {0}'.format(environment))
-    except EnvironmentError as e:
-        logging.exception(e)
+    except EnvironmentError as error:
+        logging.exception(error)
         logging.critical('Failed to load instance configuration. Exiting with error code 1.')
         sys.exit(1)
 
     try:
         consul_api = ConsulApi(config['consul'])
         consul_api.check_connectivity()
-    except ConsulError as e:
-        logging.exception(e)
+    except ConsulError as error:
+        logging.exception(error)
         logging.critical('Exiting with error code 1.')
         sys.exit(1)
 
@@ -178,9 +178,9 @@ def main():
                 logging.info('Finished converging to updated server role configuration.')
             else:
                 logging.error('Failed to converge to updated server role configuration.')
-        except ConsulError as e:
+        except ConsulError as error:
             logging.error('Error detecting changes in Consul key-value store. Skipping converging configuration.')
-            logging.exception(e)
+            logging.exception(error)
 
 if __name__ == '__main__':
     args = parser.parse_args()
