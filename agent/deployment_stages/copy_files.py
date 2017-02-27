@@ -1,6 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-from common import *
+import distutils.core, os
+from .common import DeploymentStage
 
 class CopyFiles(DeploymentStage):
     def __init__(self):

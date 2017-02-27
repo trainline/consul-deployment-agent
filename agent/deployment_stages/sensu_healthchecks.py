@@ -1,11 +1,9 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import json
-import re
+import json, os, re, stat, sys
 from jsonschema import Draft4Validator
-
-from common import *
-from schemas import SensuHealthCheckSchema
+from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec
+from .schemas import SensuHealthCheckSchema
 
 def create_sensu_check_definition_filename(service_id, check_id):
     return '{0}-{1}.json'.format(service_id, check_id)

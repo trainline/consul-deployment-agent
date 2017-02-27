@@ -11,3 +11,17 @@ from .sensu_healthchecks import DeregisterOldSensuHealthChecks, RegisterSensuHea
 from .stop_application import StopApplication
 from .validate_bundle import ValidateBundle
 from .validate_deployment import ValidateDeployment
+
+__all__ = [
+    'apply_permissions',
+    'common',
+    'consul_healthchecks',
+    'copy_files',
+    'delete_previous_deployment_files',
+    'download_bundle_from_s3',
+    'register_with_consul',
+    'sensu_healthchecks',
+    'stop_application',
+    'validate_bundle',
+    'validate_deployment']
+    

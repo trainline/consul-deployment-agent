@@ -1,5 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
-from common import *
+
+import os, stat
+from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec
 
 class DeregisterOldConsulHealthChecks(DeploymentStage):
     def __init__(self):
