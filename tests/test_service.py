@@ -1,8 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import os
 import unittest
-from .context import agent
 from agent.service import Service
 
 class TestService(unittest.TestCase):

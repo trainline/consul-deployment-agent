@@ -1,5 +1,6 @@
+# Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
+
 import unittest
-from .context import agent
 from agent.deployment import Deployment
 
 @unittest.skip("Comment out to run manually")
@@ -12,4 +13,4 @@ class WindowsDeploymentTest(unittest.TestCase):
             'timeout':'60'
         }
         deployment = Deployment(config)
-        deployment.run_all()
+        deployment.run()

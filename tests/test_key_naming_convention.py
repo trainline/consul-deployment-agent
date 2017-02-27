@@ -1,12 +1,10 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import unittest
-from .context import agent
 from agent import key_naming_convention
-from agent.environment import Environment
 
-class MockEnvironment:
-    def __init__(self, environment_name, server_role = None, instance_id = None):
+class MockEnvironment(object):
+    def __init__(self, environment_name, server_role=None, instance_id=None):
         self.environment_name = environment_name
         self.instance_id = instance_id
         self.server_role = server_role
@@ -36,7 +34,7 @@ class TestKeyNamingConvention(unittest.TestCase):
     def test_server_role_config_key(self):
         self.assertEqual(key_naming_convention.get_server_role_config_key(MockEnvironment('env', 'role')), 'environments/env/roles/role/configuration')
 
-    def test_server_role_config_key(self):
+    def test_server_role_services_key(self):
         self.assertEqual(key_naming_convention.get_server_role_services_key(MockEnvironment('env', 'role')), 'environments/env/roles/role/services')
 
     def test_service_key(self):
