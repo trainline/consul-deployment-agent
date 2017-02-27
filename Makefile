@@ -7,14 +7,14 @@ init-lint:
 init-test:
 	pip install -r test-requirements.txt
 
-lint:
+lint: init init-lint
 	pyflakes .
 
-test:
+test: init init-test
 	nosetests --verbosity=2 tests
 
-test-windows-deployment:
+test-windows-deployment: init init-test
 	nosetests --verbosity=2 tests/test_deployment_windows.py
 
-test-linux-deployment:
+test-linux-deployment: init init-test
 	nosetests --verbosity=2 tests/test_deployment_linux.py
