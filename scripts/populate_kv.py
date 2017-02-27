@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import imp, json, requests, uuid
+import imp
 
 consul_api = imp.load_source('consul_api', 'agent/consul_api.py')
 

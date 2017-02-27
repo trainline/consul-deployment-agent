@@ -1,8 +1,10 @@
-import json, os
+# Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
+
+import os
 
 class HealthCheck():
     def __init__(self, id, name):
-        self.id
+        self.id = id
         self.name = name
     def validate(self):
         assert 0, 'validate not implemented'

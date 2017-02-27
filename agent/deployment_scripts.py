@@ -30,7 +30,7 @@ class Script(object):
             # Process still running - kill it and raise timeout error
             try:
                 self.process.kill()
-            except OSError, e:
+            except OSError:
                 # The process finished between the `is_alive()` and `kill()`
                 self.return_code = self.process.returncode
             raise SubprocessTimeoutError('Process #%d killed after %d seconds' % (self.process.pid, self.timeout))

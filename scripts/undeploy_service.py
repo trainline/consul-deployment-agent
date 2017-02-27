@@ -2,7 +2,6 @@
 
 import argparse
 import consulate
-import sys
 
 class Options(object):
     pass
