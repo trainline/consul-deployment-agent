@@ -1,8 +1,14 @@
 init:
 	pip install -r requirements.txt
 
+init-lint:
+	pip install -r lint-requirements.txt
+
 init-test:
 	pip install -r test-requirements.txt
+
+lint:
+	pyflakes .
 
 test:
 	nosetests --verbosity=2 tests
