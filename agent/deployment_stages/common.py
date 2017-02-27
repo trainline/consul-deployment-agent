@@ -1,6 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import distutils.core, os, sys, yaml, zipfile, stat
+import os, sys, yaml
 from deployment_scripts import PowershellScript, ShellScript
 
 class DeploymentError(RuntimeError):
