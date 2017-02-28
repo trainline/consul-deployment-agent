@@ -92,3 +92,4 @@ ENV/
 config.yml
 config-logging.yml
 .vscode
+.pylintrc

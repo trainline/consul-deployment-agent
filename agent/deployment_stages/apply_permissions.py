@@ -1,8 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-from common import *
-
-import dir_utils
+from .dir_utils import change_mode_recursive, change_ownership_recursive
+from .common import DeploymentStage
 
 class ApplyPermissions(DeploymentStage):
     def __init__(self):
@@ -17,7 +16,8 @@ class ApplyPermissions(DeploymentStage):
                 object = permission['object']
                 if 'owner' in permission or 'group' in permission:
                     deployment.logger.debug('Changing ownership of {0} to user \'{1}\' and group \'{2}\'.'.format(object, permission.get('owner'), permission.get('group')))
-                    dir_utils.change_ownership_recursive(object, permission.get('owner'), permission.get('group'))
+                    change_ownership_recursive(object, permission.get('owner'), permission.get('group'))
                 if 'mode' in permission:
                     deployment.logger.debug('Changing mode of {0} to {1}.'.format(object, permission['mode']))
-                    dir_utils.change_mode_recursive(object, permission['mode'])
+                    change_mode_recursive(object, permission['mode'])
+                    

@@ -1,6 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-from common import *
+import distutils.core, os
+from .common import DeploymentStage
 
 class CopyFiles(DeploymentStage):
     def __init__(self):
@@ -31,3 +32,4 @@ class CopyFiles(DeploymentStage):
             return
         clean_up(deployment.appspec.get('files', []), deployment.logger)
         copy_files(deployment.appspec.get('files', []), deployment.logger)
+        

@@ -1,5 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
-from common import *
+
+import os, zipfile
+from .common import DeploymentError, DeploymentStage
 
 class DownloadBundleFromS3(DeploymentStage):
     def __init__(self):

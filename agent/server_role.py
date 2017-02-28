@@ -2,7 +2,7 @@
 
 import json, logging
 
-class ServerRole:
+class ServerRole(object):
     def __init__(self, id):
         self.actions = []
         self.id = id
@@ -12,7 +12,7 @@ class ServerRole:
         return json.dumps(
             {'id': self.id,
              'actions': [str(s) for s in self.actions],
-             'quarantine': self.quarantine })
+             'quarantine': self.quarantine})
 
     def find_action_to_execute(self, registered_services):
         for action in self.actions:
@@ -34,3 +34,4 @@ class ServerRole:
     def quarantine_action(self, deployment_id):
         logging.info('Quarantining deployment with ID: %s' % deployment_id)
         self.quarantine.append(deployment_id)
+        
