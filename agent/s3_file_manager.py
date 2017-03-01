@@ -5,7 +5,7 @@ from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from retrying import retry
 
-class S3FileManager:
+class S3FileManager(object):
     def __init__(self, config):
         if config is None:
             self._access_key_id = self._aws_secret_access_key = None

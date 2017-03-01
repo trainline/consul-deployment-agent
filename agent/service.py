@@ -2,7 +2,7 @@
 
 import json
 
-class Service:
+class Service(object):
     def __init__(self, definition, installation_info={}):
         self.address = definition.get('Address')
         self.installation = {

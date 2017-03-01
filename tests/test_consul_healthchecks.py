@@ -1,11 +1,10 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import unittest
-from mock import MagicMock, Mock
+from mock import Mock
 
-from .context import agent
-from agent import key_naming_convention
-from agent.deployment_stages import RegisterConsulHealthChecks, DeploymentError
+from agent.deployment_stages.common import DeploymentError
+from agent.deployment_stages.consul_healthchecks import RegisterConsulHealthChecks
 
 healthchecks = {
     'check_failing': {
@@ -16,13 +15,13 @@ healthchecks = {
     }
 }
 
-class MockLogger:
-  def __init__(self):
-    self.info = Mock()
-    self.error = Mock()
-    self.debug = Mock()
+class MockLogger(object):
+    def __init__(self):
+        self.info = Mock()
+        self.error = Mock()
+        self.debug = Mock()
 
-class MockDeployment:
+class MockDeployment(object):
     def __init__(self):
         self.logger = MockLogger()
         self.archive_dir = ''
@@ -45,7 +44,7 @@ class TestHealthChecks(unittest.TestCase):
     def setUp(self):
         self.deployment = MockDeployment()
         self.tested_fn = RegisterConsulHealthChecks()
-        
+
     def test_failing_check(self):
         check = {
             'type': 'unknown',

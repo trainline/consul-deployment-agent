@@ -1,6 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import argparse, json, logging, logging.config, os.path, platform, sys, time, yaml
+import argparse, logging, logging.config, os.path, platform, sys, yaml
 import key_naming_convention
 from consul_api import ConsulApi, ConsulError
 from consul_data_loader import ConsulDataLoader
@@ -76,7 +76,7 @@ def wait_for_instance_readiness(config):
     def wait_for_semaphore_file(semaphore_filepath):
         logging.debug('Checking presence and content of semaphore file at {0}'.format(semaphore_filepath))
         if os.path.isfile(filepath):
-            logging.info('Semaphore file exists, validating content'.format(filepath))
+            logging.info('Semaphore file exists, validating content')
             with open(filepath, 'r') as semaphore_file:
                 content = semaphore_file.read().replace('\n', '')
                 logging.debug('Semaphore file content: {0}'.format(content))
@@ -147,16 +147,16 @@ def main():
     try:
         environment = Environment()
         logging.info('Environment configuration: {0}'.format(environment))
-    except EnvironmentError as e:
-        logging.exception(e)
+    except EnvironmentError as error:
+        logging.exception(error)
         logging.critical('Failed to load instance configuration. Exiting with error code 1.')
         sys.exit(1)
 
     try:
         consul_api = ConsulApi(config['consul'])
         consul_api.check_connectivity()
-    except ConsulError as e:
-        logging.exception(e)
+    except ConsulError as error:
+        logging.exception(error)
         logging.critical('Exiting with error code 1.')
         sys.exit(1)
 
@@ -178,9 +178,9 @@ def main():
                 logging.info('Finished converging to updated server role configuration.')
             else:
                 logging.error('Failed to converge to updated server role configuration.')
-        except ConsulError as e:
+        except ConsulError as error:
             logging.error('Error detecting changes in Consul key-value store. Skipping converging configuration.')
-            logging.exception(e)
+            logging.exception(error)
 
 if __name__ == '__main__':
     args = parser.parse_args()

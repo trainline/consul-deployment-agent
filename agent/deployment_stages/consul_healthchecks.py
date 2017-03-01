@@ -1,5 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
-from common import *
+
+import os, stat
+from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec
 
 class DeregisterOldConsulHealthChecks(DeploymentStage):
     def __init__(self):
@@ -43,7 +45,7 @@ class RegisterConsulHealthChecks(DeploymentStage):
                 if check['type'] == 'script':
                     if check['script'].startswith('/'):
                         check['script'] = check['script'][1:]
-                        
+
                     file_path = os.path.join(deployment.archive_dir, scripts_base_dir, check['script'])
                     if not os.path.exists(file_path):
                         raise DeploymentError('Couldn\'t find health check script in package with path: {0}'.format(os.path.join(scripts_base_dir, check['script'])))
@@ -89,3 +91,4 @@ class RegisterConsulHealthChecks(DeploymentStage):
 
 def create_service_check_id(service_id, check_id):
     return service_id + ':' + check_id
+    

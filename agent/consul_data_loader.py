@@ -7,7 +7,7 @@ from server_role import ServerRole
 from actions import InstallAction, UninstallAction, IgnoreAction
 from service import Service
 
-class ConsulDataLoader:
+class ConsulDataLoader(object):
     def __init__(self, consul_api):
         self._consul_api = consul_api
 
