@@ -1,8 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import os
 import unittest
-from .context import agent
 from agent.service import Service
 
 class TestService(unittest.TestCase):
@@ -23,7 +21,7 @@ class TestService(unittest.TestCase):
         self.assertEqual(service.installation.get('timeout'), 3600)
         self.assertEqual(service.installation.get('package_bucket'), None)
         self.assertEqual(service.installation.get('package_key'), None)
-        self.assertEqual(service.name, 'Service')
+        self.assertEqual(service.name, 'Service-blue')
         self.assertEqual(service.port, 12345)
         self.assertEqual(service.slice, 'blue')
         self.assertEqual(service.version, '1.0.0')
@@ -48,7 +46,7 @@ class TestService(unittest.TestCase):
         self.assertEqual(service.installation.get('timeout'), 3600)
         self.assertEqual(service.installation.get('package_bucket'), 'some-bucket')
         self.assertEqual(service.installation.get('package_key'), 'some-key')
-        self.assertEqual(service.name, 'Service')
+        self.assertEqual(service.name, 'Service-blue')
         self.assertEqual(service.port, 12345)
         self.assertEqual(service.slice, None)
         self.assertEqual(service.version, '1.0.0')
@@ -70,12 +68,6 @@ class TestService(unittest.TestCase):
             Service(definition)
         error = cm.exception
         self.assertEqual(str(error), 'Service ID must be specified.')
-
-        definition['ID'] = 'Service-blue'
-        with self.assertRaises(ValueError) as cm:
-            Service(definition)
-        error = cm.exception
-        self.assertEqual(str(error), 'Service name must be specified.')
 
     def test_extract_tag_with_prefix_found(self):
         service = Service(self.service_definition)

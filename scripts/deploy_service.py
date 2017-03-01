@@ -3,7 +3,6 @@
 import argparse
 import consulate
 import json
-import sys
 import uuid
 
 class Options(object):

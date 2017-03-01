@@ -1,6 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-from common import *
+from .common import DeploymentStage
 
 class RegisterWithConsul(DeploymentStage):
     def __init__(self):
@@ -9,7 +9,7 @@ class RegisterWithConsul(DeploymentStage):
         deployment.logger.info('Registering service in Consul catalogue.')
         is_success = deployment.consul_api.register_service(
             id=deployment.service.id,
-            name=deployment.service.name,
+            name=deployment.service.id,
             address=deployment.service.address,
             port=deployment.service.port,
             tags=deployment.service.tags

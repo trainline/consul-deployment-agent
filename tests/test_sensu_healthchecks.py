@@ -2,240 +2,187 @@
 
 import unittest
 from jsonschema import ValidationError
-from mock import MagicMock, Mock
+from mock import Mock, patch
+from agent.deployment_stages.common import DeploymentError
+from agent.deployment_stages.sensu_healthchecks import RegisterSensuHealthChecks
 
-from .context import agent
-from agent import key_naming_convention
-from agent.deployment_stages import RegisterSensuHealthChecks, DeploymentError
-from agent.deployment_stages.sensu_healthchecks import create_and_copy_check, create_check_definition
-
-healthchecks = {
-    'check_failing': {
-        'type': 'script'
-    },
-    'check_2': {
-        'type': 'http'
-    }
-}
-
-class MockLogger:
+class MockLogger(object):
   def __init__(self):
     self.info = Mock()
     self.error = Mock()
     self.debug = Mock()
     self.warning = Mock()
 
-class MockService:
-  def __init__(self):
-    self.id = 'test_service'
-
-class MockDeployment:
+class MockDeployment(object):
     def __init__(self):
         self.logger = MockLogger()
         self.archive_dir = ''
-        self.service = MockService()
         self.instance_tags = {
-            'Environment': 'local'
+            'Environment': 'local',
+            'Role': 'role',
+            'OwningCluster': 'cluster'
         }
         self.sensu = {
-            'sensu_check_path': 'test_sensu_check_path'
-        }
-        self.appspec = {
-            'healthchecks': healthchecks
-        }
-    def set_check(self, check_id, check):
-        self.appspec = {
-            'sensu_healthchecks': {
-                check_id: check
-            }
-        }
-    def set_checks(self, checks):
-        self.appspec = {
-            'sensu_healthchecks': checks
+            'healthcheck_search_paths': ['sensu_plugins_path']
         }
 
-
-class TestHealthChecks(unittest.TestCase):
+class TestRegisterSensuHealthChecks(unittest.TestCase):
     def setUp(self):
         self.deployment = MockDeployment()
-        self.tested_fn = RegisterSensuHealthChecks()
-        
-    def test_missing_name_field(self):
-        check = {
-        }
-        self.deployment.set_check('check_failing', check)
-        with self.assertRaisesRegexp(ValidationError, "'name' is a required property"):
-            self.tested_fn._run(self.deployment)
 
-    def test_missing_interval_field(self):
+    def test_validate_missing_name_property(self):
+        check = {}
+        with self.assertRaisesRegexp(ValidationError, "'name' is a required property"):
+            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
+
+    def test_validate_missing_interval_property(self):
         check = {
             'name': 'Missing-interval'
         }
-        self.deployment.set_check('check_failing', check)
         with self.assertRaisesRegexp(ValidationError, "'interval' is a required property"):
-            self.tested_fn._run(self.deployment)
+            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
 
-    def test_missing_script_field(self):
+    def test_validate_missing_script_property(self):
         check = {
             'name': 'Missing-interval',
             'interval': 10
         }
-        self.deployment.set_check('check_failing', check)
         with self.assertRaisesRegexp(DeploymentError, 'you need at least one of'):
-            self.tested_fn._run(self.deployment)
+            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
 
-    def test_both_script_fields(self):
+    def test_validate_both_scripts_properties_provided(self):
         check = {
             'name': 'missing-interval',
             'interval': 10,
             'local_script': 'a',
             'server_script': 'b',
         }
-        self.deployment.set_check('check_failing', check)
         with self.assertRaisesRegexp(DeploymentError, "you can use either 'local_script' or 'server_script'"):
-            self.tested_fn._run(self.deployment)
+            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
 
-    def test_case_insensitive_id_conflict(self):
-        checks = {
-            'check_1': {
-                'name': 'missing-http-1',
-                'local_script': 'a',
-                'interval': 10
-            },
-            'cheCK_1': {
-                'name': 'missing-http-2',
-                'local_script': 'a',
-                'interval': 10
-            }
-        }
-        self.deployment.set_checks(checks)
-        with self.assertRaisesRegexp(DeploymentError, 'health checks require unique ids'):
-            self.tested_fn._run(self.deployment)
-
-    def test_case_insensitive_name_conflict(self):
-        checks = {
-            'check_1': {
-                'name': 'missing-http',
-                'local_script': 'a',
-                'interval': 10
-            },
-            'check_2': {
-                'name': 'missing-http',
-                'local_script': 'a',
-                'interval': 10
-            }
-        }
-        self.deployment.set_checks(checks)
-        with self.assertRaisesRegexp(DeploymentError, 'health checks require unique names'):
-            self.tested_fn._run(self.deployment)
-    
-    def test_name_regexp(self):
-        checks = {
-            'check_1': {
-                'name': 'missing http',
-                'local_script': 'a',
-                'interval': 10,
-            }
-        }
-
-        self.deployment.set_checks(checks)
-        with self.assertRaisesRegexp(DeploymentError, 'match required Sensu name expression'):
-            self.tested_fn._run(self.deployment)
-
-    def test_missing_script(self):
+    def test_validate_name_does_not_match_regexp(self):
         check = {
-            'name': 'missing-http',
+            'name': 'missing http',
             'local_script': 'a',
             'interval': 10,
-            'team': 'some_team'
         }
-        checks = {
-            'check_1': check
-        }
-        self.deployment.set_checks(checks)
-        with self.assertRaisesRegexp(DeploymentError, "Couldn't find Sensu health check script"):
-            self.tested_fn._run(self.deployment)
+        with self.assertRaisesRegexp(DeploymentError, 'match required Sensu name expression'):
+            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
 
-    def test_integer_type(self):
+    def test_validate_integer_type_properties(self):
         check = {
             'name': 'missing-http',
             'local_script': 'a',
             'team': 'some_team'
         }
-        checks = {
-            'check_1': check
-        }
-        
-        params = ['interval', 'realert_every', 'timeout', 'occurrences', 'refresh']
-        last_param = None
-        for param in params:
-            if last_param is not None:
-                check[last_param] = 10
-            check[param] = '10s'
-            last_param = param
-            self.deployment.set_checks(checks)
-            with self.assertRaisesRegexp(ValidationError, "'{0}' is not of type 'number'".format(check[param])):
-                self.tested_fn._run(self.deployment)
+        property_names = ['interval', 'realert_every', 'timeout', 'occurrences', 'refresh']
+        last_property_name = None
+        for property_name in property_names:
+            if last_property_name is not None:
+                check[property_name] = 10
+            check[property_name] = '10s'
+            last_property_name = property_name
+            with self.assertRaisesRegexp(ValidationError, "'{0}' is not of type 'number'".format(check[property_name])):
+                RegisterSensuHealthChecks.validate_check_properties('check_id', check)
 
-    def test_warn_on_old_property(self):
-        check = {
-            'name': 'sensu-check1',
-            'local_script': 'foo.py',
-            'notification_email': ['foo', 'bar'],
-            'interval': 10
-        }
-        checks = {
-            'check_1': check
-        }
-        self.deployment.set_checks(checks)
-        
-        definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
-        obj = definition['checks']['sensu-check1']
-        with self.assertRaises(DeploymentError):
-            self.tested_fn._run(self.deployment)
-        self.deployment.logger.warning.assert_called_with("'notification_email' property is depracated, please use 'override_notification_email' instead")
-        self.assertEqual(obj['notification_email'], 'foo,bar')
-
-    def test_emails(self):
+    def test_validate_override_notification_email_property(self):
         check = {
             'name': 'sensu-check1',
             'local_script': 'foo.py',
             'override_notification_email': ['foo', 'bar'],
             'interval': 10
         }
-        checks = {
-            'check_1': check
-        }
-        self.deployment.set_checks(checks)
-        
-        definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
-        obj = definition['checks']['sensu-check1']
-
         with self.assertRaisesRegexp(ValidationError, "'foo' does not match"):
-            self.tested_fn._run(self.deployment)
+            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
 
-    def test_team(self):
+    def test_validate_all_ids_unique(self):
+        checks = {
+            'check_1': {
+                'name': 'missing-http-1',
+                'local_script': 'script.sh',
+                'interval': 10
+            },
+            'cheCK_1': {
+                'name': 'missing-http-2',
+                'local_script': 'script.sh',
+                'interval': 10
+            }
+        }
+        with self.assertRaisesRegexp(DeploymentError, 'Sensu check definitions require unique ids'):
+            RegisterSensuHealthChecks.validate_unique_ids(checks)
+
+    def test_validate_all_names_unique(self):
+        checks = {
+            'check_1': {
+                'name': 'missing-http',
+                'local_script': 'script.sh',
+                'interval': 10
+            },
+            'check_2': {
+                'name': 'missing-http',
+                'local_script': 'script.sh',
+                'interval': 10
+            }
+        }
+        with self.assertRaisesRegexp(DeploymentError, 'Sensu check definitions require unique names'):
+            RegisterSensuHealthChecks.validate_unique_names(checks)
+
+    def test_validate_missing_local_script(self):
+        def file_exists(path):
+            return False
+        patcher = patch('os.path.exists')
+        mock = patcher.start()
+        mock.side_effect = file_exists
+
+        check = {
+            'name': 'missing-http',
+            'local_script': 'script.sh',
+            'interval': 10,
+            'team': 'some_team'
+        }
+        with self.assertRaisesRegexp(DeploymentError, "Couldn't find Sensu check script"):
+            RegisterSensuHealthChecks.validate_check_script('check_id', check, '/some/path', self.deployment)
+
+    def test_validate_missing_sensu_plugin_script(self):
+        def file_exists(path):
+            return False
+        patcher = patch('os.path.exists')
+        mock = patcher.start()
+        mock.side_effect = file_exists
+
+        check = {
+            'name': 'missing-http',
+            'server_script': 'script.sh',
+            'interval': 10,
+            'team': 'some_team'
+        }
+        with self.assertRaisesRegexp(DeploymentError, "Couldn't find Sensu plugin script"):
+            RegisterSensuHealthChecks.validate_check_script('check_id', check, None, self.deployment)
+
+    def test_warning_deprecated_properties(self):
+        check = {
+            'name': 'sensu-check1',
+            'local_script': 'foo.py',
+            'notification_email': ['foo@bar.com', 'bar@biz.uk'],
+            'interval': 10
+        }
+        definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        self.deployment.logger.warning.assert_called_with("'notification_email' property is deprecated, please use 'override_notification_email' instead")
+        self.assertEqual(definition['checks']['sensu-check1']['notification_email'], 'foo@bar.com,bar@biz.uk')
+
+    def test_generate_check_definiton_with_valid_team_property(self):
         check = {
             'name': 'sensu-check1',
             'local_script': 'foo.py',
             'interval': 10
         }
-        checks = {
-            'check_1': check
-        }
-        self.deployment.set_checks(checks)
-        
-        definition = create_check_definition(self.deployment, 'test_path', 'sensu-check1', check)
-        obj = definition['checks']['sensu-check1']
-        self.assertEqual(obj['team'], None)
-        
-        # Should be transformed to lowercase
-        check['override_notification_settings'] = 'test_team1'
-        definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
-        obj = definition['checks']['sensu-check1']
-        self.assertEqual(obj['team'], 'test_team1')
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        self.assertEqual(check_definition['checks']['sensu-check1']['team'], None)
+        check['override_notification_settings'] = 'dietcode'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        self.assertEqual(check_definition['checks']['sensu-check1']['team'], 'dietcode')
 
-    def test_splitting_arrays(self):
+    def test_generate_check_definiton_with_valid_list_of_emails_and_slack_channels(self):
         check = {
             'name': 'sensu-check1',
             'local_script': 'fuj.py',
@@ -243,32 +190,57 @@ class TestHealthChecks(unittest.TestCase):
             'override_chat_channel': ['channel1', 'channel2'],
             'interval': 10
         }
-        checks = {
-            'check_1': check
-        }
-        self.deployment.set_checks(checks)
-        
-        definition = create_check_definition(self.deployment, 'test_path', 'sensu-check1', check)
-        obj = definition['checks']['sensu-check1']
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        self.assertEqual(check_definition['checks']['sensu-check1']['notification_email'], 'email1@ble.pl,email2@ble.pl')
+        self.assertEqual(check_definition['checks']['sensu-check1']['slack_channel'], 'channel1,channel2')
 
-        # Note: we rewrite these property names for Sensu JSON (eg. override_chat_channel -> slack_channel)
-        self.assertEqual(obj['notification_email'], 'email1@ble.pl,email2@ble.pl')
-        self.assertEqual(obj['slack_channel'], 'channel1,channel2')
-
-    def test_defaults(self):
+    def test_generate_check_definiton_with_default_values(self):
         check = {
             'name': 'sensu-check1',
             'local_script': 'foo.py',
             'interval': 10
         }
-        checks = {
-            'check_1': check
-        }
-        self.deployment.set_checks(checks)
-        
-        definition = create_check_definition(self.deployment, 'test_path', 'test_check_id', check)
-        obj = definition['checks']['sensu-check1']
-        self.assertEqual(obj['alert_after'], 600)
-        self.assertEqual(obj['realert_every'], 30)
-        self.assertEqual(obj['notification_email'], None)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        self.assertEqual(check_definition['checks']['sensu-check1']['aggregate'], False)
+        self.assertEqual(check_definition['checks']['sensu-check1']['alert_after'], 600)
+        self.assertEqual(check_definition['checks']['sensu-check1']['handlers'], ['default'])
+        self.assertEqual(check_definition['checks']['sensu-check1']['notification_email'], 'undef')
+        self.assertEqual(check_definition['checks']['sensu-check1']['occurrences'], 5)
+        self.assertEqual(check_definition['checks']['sensu-check1']['page'], False)
+        self.assertEqual(check_definition['checks']['sensu-check1']['project'], False)
+        self.assertEqual(check_definition['checks']['sensu-check1']['realert_every'], 30)
+        self.assertEqual(check_definition['checks']['sensu-check1']['slack_channel'], 'undef')
+        self.assertEqual(check_definition['checks']['sensu-check1']['standalone'], True)
+        self.assertEqual(check_definition['checks']['sensu-check1']['subscribers'], ['sensu-base'])
+        self.assertEqual(check_definition['checks']['sensu-check1']['ticket'], False)
+        self.assertEqual(check_definition['checks']['sensu-check1']['timeout'], 120)
 
+    def test_generate_check_definiton_with_instance_tags(self):
+        check = {
+            'name': 'sensu-check1',
+            'local_script': 'foo.py',
+            'interval': 10
+        }
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        self.assertEqual(check_definition['checks']['sensu-check1']['ttl_environment'], self.deployment.instance_tags['Environment'])
+        self.assertEqual(check_definition['checks']['sensu-check1']['ttl_owningcluster'], self.deployment.instance_tags['OwningCluster'])
+        self.assertEqual(check_definition['checks']['sensu-check1']['ttl_role'], self.deployment.instance_tags['Role'])
+ 
+    def test_generate_check_definiton_with_command_and_no_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'server_script': 'foo.py',
+            'interval': 10
+        }
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment.instance_tags, self.deployment.logger)
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.py')
+
+    def test_generate_check_definiton_with_command_and_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'server_script': 'check-windows-service.ps1',
+            'script_arguments': '-ServiceName service_name',
+            'interval': 10
+        }
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment.instance_tags, self.deployment.logger)
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'check-windows-service.ps1 -ServiceName service_name')

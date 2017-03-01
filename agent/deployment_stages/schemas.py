@@ -20,9 +20,14 @@ SensuHealthCheckSchema = {
         "paging_enabled": {"type": "boolean"},
         "project": {"type": "boolean"},
 
-        "override_notification_settings": {
+        "team": {"type": "string"},
+        "override_notification_settings": {"type": "string"},
+        "notification_email": {
             "type": "array",
-            "items": { "type": "string"}
+            "items": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+            }
         },
         "override_notification_email": {
             "type": "array",
@@ -33,7 +38,7 @@ SensuHealthCheckSchema = {
         },
         "override_chat_channel": {
             "type": "array",
-            "items": { "type": "string"}
+            "items": {"type": "string"}
         },
 
         "page": {"type": "boolean"}

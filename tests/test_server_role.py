@@ -1,12 +1,10 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import os
 import unittest
-from .context import agent
 from agent.server_role import ServerRole
-from agent.actions import InstallAction, UninstallAction, IgnoreAction
+from agent.actions import InstallAction
 
-class MockService:
+class MockService(object):
     def __init__(self, id, deployment_id):
         self.id = id
         self.deployment_id = deployment_id
@@ -19,7 +17,7 @@ class TestServerRole(unittest.TestCase):
         server_role.actions = [
             InstallAction('2419483e-6aef-4dd9-a46e-dc00966ba2b2', MockService('Service1', '2419483e-6aef-4dd9-a46e-dc00966ba2b2'))
         ]
-        registered_services = [ MockService('Service1', '2419483e-6aef-4dd9-a46e-dc00966ba2b2') ]
+        registered_services = [MockService('Service1', '2419483e-6aef-4dd9-a46e-dc00966ba2b2')]
         self.assertEqual(server_role.find_action_to_execute(registered_services), None)
 
     def test_find_missing_action_one_missing(self):
@@ -41,7 +39,7 @@ class TestServerRole(unittest.TestCase):
         server_role.actions = [
             InstallAction('2419483e-6aef-4dd9-a46e-dc00966ba2b2', MockService('Service1', '2419483e-6aef-4dd9-a46e-dc00966ba2b2'))
         ]
-        registered_services = [ MockService('Service1', 'dfc6b093-c102-408c-bd3b-7bc2e2c68d29') ]
+        registered_services = [MockService('Service1', 'dfc6b093-c102-408c-bd3b-7bc2e2c68d29')]
         missing_action_report = server_role.find_action_to_execute(registered_services)
         missing_service = missing_action_report[0]
         deployment_info = missing_action_report[1]

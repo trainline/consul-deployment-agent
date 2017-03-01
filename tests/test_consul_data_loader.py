@@ -1,13 +1,10 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import os
 import unittest
-from .context import agent
 from agent import key_naming_convention
 from agent.consul_data_loader import ConsulDataLoader
-from agent.environment import Environment
 
-class MockConsulApi:
+class MockConsulApi(object):
     def __init__(self, environment):
         self.server_role_services_key = key_naming_convention.get_server_role_services_key(environment)
         # Correctly defined service
@@ -24,7 +21,7 @@ class MockConsulApi:
             self.correctly_defined_service_definition_key:{ 'Service': {'Name':'Service1', 'ID':'Service1', 'Address':'', 'Port':20200, 'Tags':['version:1.0.0', 'slice:blue']} },
             self.correctly_defined_service_installation_key:{ 'PackagePath':'http://some-location/2419483e-6aef-4dd9-a46e-dc00966ba2b2', 'InstallationTimeout':15 },
             self.incorrectly_defined_service_key:{ 'Name':'Service2', 'Version':'1.0.0', 'Slice':'none', 'DeploymentId':'8269ec14-1063-4e27-9e29-38e7454cdd98' },
-            self.incorrectly_defined_service_definition_key:{ 'Service':{'Name':'Service2', 'Address':'', 'Port':20202, 'Tags':['version:1.0.0']} },
+            self.incorrectly_defined_service_definition_key:{ 'Service':{'Name':'Service2', 'Port':20202, 'Tags':['version:1.0.0']} },
             self.incorrectly_defined_service_installation_key:{ 'PackagePath':'http://some-location/8269ec14-1063-4e27-9e29-38e7454cdd98', 'InstallationTimeout':15 },
         }
 
@@ -44,8 +41,8 @@ class MockConsulApi:
             'Service1': {'Service': 'Service1', 'ID': 'Service1', 'Address':'127.0.0.1', 'Port':20200, 'Tags':['version:1.0.0', 'slice:none', 'deployment_id:2419483e-6aef-4dd9-a46e-dc00966ba2b2'] }
         }
 
-class MockEnvironment:
-    def __init__(self, environment_name, server_role = None, instance_id = None):
+class MockEnvironment(object):
+    def __init__(self, environment_name, server_role=None, instance_id=None):
         self.environment_name = environment_name
         self.instance_id = instance_id
         self.ip_address = '127.0.0.1'
@@ -57,10 +54,9 @@ class TestConsulDataLoader(unittest.TestCase):
         consul_data_loader = ConsulDataLoader(MockConsulApi(environment))
         server_role = consul_data_loader.load_server_role(environment)
         self.assertEqual(server_role.id, 'role')
-        self.assertEqual(len(server_role.actions), 1)
-        print server_role.actions[0]
-        self.assertEqual(server_role.actions[0].service.name, 'Service1')
-        self.assertEqual(server_role.actions[0].service.slice, 'blue')
+        self.assertEqual(len(server_role.actions), 2)
+        self.assertEqual(server_role.actions[1].service.name, 'env-Service1-blue')
+        self.assertEqual(server_role.actions[1].service.slice, 'blue')
 
     def test_load_service_catalog(self):
         consul_data_loader = ConsulDataLoader(MockConsulApi(MockEnvironment('env', 'role',)))
