@@ -51,43 +51,58 @@ class RegisterSensuHealthChecks(DeploymentStage):
         return None
 
     @staticmethod
-    def generate_check_definition(check, script_absolute_path, instance_tags, logger):
-        override_notification_settings = check.get('override_notification_settings', None)
-        override_notification_email = check.get('override_notification_email', 'undef')
-        override_chat_channel = check.get('override_chat_channel', 'undef')
+    def generate_check_definition(check, script_absolute_path, platform, instance_tags, logger):
+        def get_command():
+            if platform == 'windows':
+                command = '{0} "{1}"'.format('powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file', script_absolute_path)
+            else:
+                command = script_absolute_path
+            return '{0} {1}'.format(command, check.get('script_arguments', '')).rstrip()
 
-        if override_notification_settings is None and (check.get('team', None) is not None):
-            logger.warning('\'team\' property is deprecated, please use \'override_notification_settings\' instead')
-            override_notification_settings = check.get('team')
-        if override_notification_email is 'undef' and (check.get('notification_email') is not None):
-            logger.warning('\'notification_email\' property is deprecated, please use \'override_notification_email\' instead')
-            override_notification_email = check.get('notification_email')
+        def get_override_chat_channel():
+            override_chat_channel = check.get('override_chat_channel', None)
+            if override_chat_channel is not None:
+                return ','.join(override_chat_channel)
+            return 'undef'
 
-        if override_notification_email is not 'undef':
-            override_notification_email = ','.join(override_notification_email)
-        if override_chat_channel is not 'undef':
-            override_chat_channel = ','.join(override_chat_channel)
+        def get_override_notification_email():
+            override_notification_email = check.get('override_notification_email', None)
+            if override_notification_email is None:
+                if check.get('notification_email') is not None:
+                    logger.warning('\'notification_email\' property is deprecated, please use \'override_notification_email\' instead')
+                    override_notification_email = check.get('notification_email', None)
+            if override_notification_email is not None:
+                return ','.join(override_notification_email)
+            return 'undef'
 
-        check_definition = { 
+        def get_override_notification_settings():
+            override_notification_settings = check.get('override_notification_settings', None)
+            if override_notification_settings is None:
+                if check.get('team', None) is not None:
+                    logger.warning('\'team\' property is deprecated, please use \'override_notification_settings\' instead')
+                    override_notification_settings = check.get('team', None)
+            return override_notification_settings
+
+        check_definition = {
             'checks': {
                 check['name']: {
                     'aggregate': check.get('aggregate', False),
                     'alert_after': check.get('alert_after', 600),
-                    'command': '{0} {1}'.format(script_absolute_path, check.get('script_arguments', '')).rstrip(),
-                    'handlers': [ 'default' ],
+                    'command': get_command(),
+                    'handlers': ['default'],
                     'interval': check.get('interval'),
-                    'notification_email': override_notification_email,
+                    'notification_email': get_override_notification_email(),
                     'occurrences': check.get('occurrences', 5),
                     'page': check.get('paging_enabled', False),
                     'project': check.get('project', False),
                     'realert_every': check.get('realert_every', 30),
                     'runbook': check.get('runbook', 'Please provide useful information to resolve alert'),
                     'sla': check.get('sla', 'No SLA defined'),
-                    'slack_channel': override_chat_channel,
+                    'slack_channel': get_override_chat_channel(),
                     'standalone': check.get('standalone', True),
                     'subscribers': ['sensu-base'],
                     'tags': [],
-                    'team': override_notification_settings,
+                    'team': get_override_notification_settings(),
                     'ticket': check.get('ticketing_enabled', False),
                     'timeout': check.get('timeout', 120),
                     'tip': check.get('tip', 'Fill me up with information')
@@ -115,7 +130,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
 
         deployment.logger.debug('Sensu check {0} script path: {1}'.format(check_id, script_absolute_path))
 
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment.instance_tags, deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment.platform, deployment.instance_tags, deployment.logger)
         check_definition_filename = create_sensu_check_definition_filename(deployment.service.id, check_id)
         check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], check_definition_filename)
         is_success = RegisterSensuHealthChecks.write_check_definition_file(check_definition, check_definition_absolute_path, deployment)
@@ -126,7 +141,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
     def validate_checks(checks, scripts_base_dir, deployment):
         for check_id, check in checks.iteritems():
             RegisterSensuHealthChecks.validate_check_properties(check_id, check)
-            RegisterSensuHealthChecks.validate_check_script(check_id, check, scripts_base_dir, deployment)
+            RegisterSensuHealthChecks.validate_check_script(check, scripts_base_dir, deployment)
         RegisterSensuHealthChecks.validate_unique_ids(checks)
         RegisterSensuHealthChecks.validate_unique_names(checks)
 
@@ -146,7 +161,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
                 raise DeploymentError('Either standalone or aggregate can be False at the same time')
 
     @staticmethod
-    def validate_check_script(check_id, check, local_scripts_base_dir, deployment):
+    def validate_check_script(check, local_scripts_base_dir, deployment):
         if 'local_script' in check:
             if check['local_script'].startswith('/'):
                 check['local_script'] = check['local_script'][1:]
