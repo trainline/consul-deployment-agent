@@ -20,8 +20,8 @@ SensuHealthCheckSchema = {
         "paging_enabled": {"type": "boolean"},
         "project": {"type": "boolean"},
 
-        "team": { "type": "string" },
-        "override_notification_settings": { "type": "string" },
+        "team": {"type": "string"},
+        "override_notification_settings": {"type": "string"},
         "notification_email": {
             "type": "array",
             "items": {
@@ -38,7 +38,7 @@ SensuHealthCheckSchema = {
         },
         "override_chat_channel": {
             "type": "array",
-            "items": { "type": "string"}
+            "items": {"type": "string"}
         },
 
         "page": {"type": "boolean"}

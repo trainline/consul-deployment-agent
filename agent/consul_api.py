@@ -18,7 +18,7 @@ def handle_connection_error(func):
 def retry_if_connection_error(exception):
     return isinstance(exception, requests.exceptions.ConnectionError)
 
-class ConsulApi:
+class ConsulApi(object):
     def __init__(self, consul_config):
         self._config = consul_config
         self._base_url = '{0}://{1}:{2}/{3}'.format(self._config['scheme'], self._config['host'], self._config['port'], self._config['version'])
@@ -73,7 +73,7 @@ class ConsulApi:
             logging.warning('Consul key-value store does not contain key prefix \'{0}\''.format(key_prefix))
             return []
         response = self._api_get('kv/{0}?keys'.format(key_prefix))
-        cases = { 200: decode, 404: not_found }
+        cases = {200: decode, 404: not_found}
         return cases[response.status_code]()
 
     def get_service_catalogue(self):
@@ -90,7 +90,7 @@ class ConsulApi:
             logging.warning('Consul key-value store does not contain a value for key \'{0}\''.format(key))
             return None
         response = self._api_get('kv/{0}'.format(key))
-        cases = { 200: decode, 404: not_found }
+        cases = {200: decode, 404: not_found}
         return cases[response.status_code]()
 
     def key_exists(self, key):
@@ -101,15 +101,15 @@ class ConsulApi:
         return response.status_code == 200
 
     def register_http_check(self, service_id, id, name, url, interval):
-        response = self._api_put('agent/check/register', json.dumps({ 'ServiceID': service_id, 'ID': id, 'Name': name, 'HTTP': url, 'Interval': interval }))
+        response = self._api_put('agent/check/register', json.dumps({'ServiceID': service_id, 'ID': id, 'Name': name, 'HTTP': url, 'Interval': interval}))
         return response.status_code == 200
 
     def register_script_check(self, service_id, id, name, script_path, interval):
-        response = self._api_put('agent/check/register', json.dumps({ 'ServiceID': service_id, 'ID': id, 'Name': name, 'Script': script_path, 'Interval': interval }))
+        response = self._api_put('agent/check/register', json.dumps({'ServiceID': service_id, 'ID': id, 'Name': name, 'Script': script_path, 'Interval': interval}))
         return response.status_code == 200
 
     def register_service(self, id, name, address, port, tags):
-        response = self._api_put('agent/service/register', json.dumps({ 'ID': id, 'Name': name, 'Address': address, 'Port': port, 'Tags': tags }))
+        response = self._api_put('agent/service/register', json.dumps({'ID': id, 'Name': name, 'Address': address, 'Port': port, 'Tags': tags}))
         return response.status_code == 200
 
     def wait_for_change(self, key_prefix):

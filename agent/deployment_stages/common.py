@@ -1,12 +1,12 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import distutils.core, os, sys, yaml, zipfile, stat
-from deployment_scripts import PowershellScript, ShellScript
+import os, sys, yaml
+from .deployment_scripts import PowershellScript, ShellScript
 
 class DeploymentError(RuntimeError):
     pass
 
-class DeploymentStage():
+class DeploymentStage(object):
     def __init__(self, name):
         self.name = name
     def _run(self, deployment):
@@ -41,9 +41,9 @@ class LifecycleHookExecutionStage(DeploymentStage):
             location = location[1:]
         filepath = os.path.join(deployment.archive_dir, location)
         env = {'APPLICATION_ID':str(deployment.service.id),
-            'DEPLOYMENT_BASE_DIR':str(deployment.archive_dir),
-            'DEPLOYMENT_ID':str(deployment.id),
-            'LIFECYCLE_EVENT':str(self.lifecycle_event)}
+               'DEPLOYMENT_BASE_DIR':str(deployment.archive_dir),
+               'DEPLOYMENT_ID':str(deployment.id),
+               'LIFECYCLE_EVENT':str(self.lifecycle_event)}
         self._init_script(hook_definition[0], filepath, env, deployment.platform, deployment.timeout)
         self._run_script(deployment.logger)
     def _run_script(self, logger):
@@ -107,4 +107,5 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
 
     if healthchecks is None:
         logger.info('No health checks found.')
-    return ( healthchecks, scripts_base_dir )
+    return (healthchecks, scripts_base_dir)
+

@@ -6,7 +6,7 @@ from deployment_stages import ValidateDeployment, StopApplication, DownloadBundl
 from s3_file_manager import S3FileManager
 from version import semantic_version
 
-class Deployment():
+class Deployment(object):
     def __init__(self, config={}, consul_api=None, aws_config={}):
         if config is None:
             raise ValueError('config must be specified.')
@@ -27,7 +27,7 @@ class Deployment():
         self.s3_file_manager = S3FileManager(self._aws_config)
         self.service = config.get('service')
         self.timeout = self.service.installation['timeout']
-        self._is_success = self.logger = self._log_filename = self._log_filepath = self._report = self._report_key =  None
+        self._is_success = self.logger = self._log_filename = self._log_filepath = self._report = self._report_key = None
         self.number_of_attempts = 0
         if self.platform == 'linux':
             self.dir = os.path.join('/opt/consul-deployment-agent/deployments', self.service.id, self.id)
@@ -77,8 +77,8 @@ class Deployment():
             try:
                 handler.close()
                 self.logger.removeHandler(handler)
-            except IOError as e:
-                logging.exception(e)
+            except IOError as error:
+                logging.exception(error)
         if is_log_shipping_configured(self._aws_config):
             if os.path.isfile(self._log_filepath):
                 bucket_name = self._aws_config['deployment_logs']['bucket_name']
@@ -146,9 +146,9 @@ class Deployment():
             try:
                 logging.debug('Writing report to Consul.')
                 self.consul_api.write_value(self._report_key, self._report)
-            except ConsulError as e:
+            except ConsulError as error:
                 logging.error('Failed to write deployment report to Consul.')
-                logging.exception(e)
+                logging.exception(error)
 
     def _validate_config(self, config):
         def check_not_none(property_name, dictionary):
@@ -168,10 +168,10 @@ class Deployment():
         self.logger.info('Installing service: {0}'.format(self.service))
         self.logger.info('Configuration: {0}'.format(self))
         self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
-        stages = [ ValidateDeployment(), StopApplication(), DeregisterOldConsulHealthChecks(),
-                   DeregisterOldSensuHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
-                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
-                   RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(), DeletePreviousDeploymentFiles() ]
+        stages = [ValidateDeployment(), StopApplication(), DeregisterOldConsulHealthChecks(),
+                  DeregisterOldSensuHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
+                  CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
+                  RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(), DeletePreviousDeploymentFiles()]
         for stage in stages:
             success = stage.run(self)
             self._update_report({'last_completed_stage':stage.name})

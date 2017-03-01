@@ -1,6 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-from common import *
+import os, yaml
+from .common import DeploymentError, DeploymentStage
 
 class ValidateBundle(DeploymentStage):
     def __init__(self):

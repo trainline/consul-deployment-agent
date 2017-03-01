@@ -1,9 +1,8 @@
-import base64, json, mock, requests, responses, unittest
-from .context import agent
+import base64, json, responses, unittest
 from agent.consul_api import ConsulApi, ConsulError
 from mock import patch
 
-consul_config = {'scheme':'http', 'host':'localhost', 'port':8500, 'version':'v1','acl_token':None}
+consul_config = {'scheme':'http', 'host':'localhost', 'port':8500, 'version':'v1', 'acl_token':None}
 
 class TestConsulApi(unittest.TestCase):
     @responses.activate

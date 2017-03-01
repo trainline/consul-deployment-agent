@@ -1,13 +1,10 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import os
 import unittest
-from .context import agent
 from agent import key_naming_convention
 from agent.consul_data_loader import ConsulDataLoader
-from agent.environment import Environment
 
-class MockConsulApi:
+class MockConsulApi(object):
     def __init__(self, environment):
         self.server_role_services_key = key_naming_convention.get_server_role_services_key(environment)
         # Correctly defined service
@@ -44,8 +41,8 @@ class MockConsulApi:
             'Service1': {'Service': 'Service1', 'ID': 'Service1', 'Address':'127.0.0.1', 'Port':20200, 'Tags':['version:1.0.0', 'slice:none', 'deployment_id:2419483e-6aef-4dd9-a46e-dc00966ba2b2'] }
         }
 
-class MockEnvironment:
-    def __init__(self, environment_name, server_role = None, instance_id = None):
+class MockEnvironment(object):
+    def __init__(self, environment_name, server_role=None, instance_id=None):
         self.environment_name = environment_name
         self.instance_id = instance_id
         self.ip_address = '127.0.0.1'
