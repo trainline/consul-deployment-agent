@@ -54,8 +54,8 @@ class RegisterSensuHealthChecks(DeploymentStage):
     def generate_check_definition(check, script_absolute_path, deployment):
         instance_tags = deployment.instance_tags
         logger = deployment.logger
-        deployment_slice = deployment.service.get('slice', 'none')
-        if deployment_slice.lower() == 'none':
+        deployment_slice = deployment.service.get('slice', 'none').lower()
+        if deployment_slice == 'none':
             deployment_slice = None
 
         override_notification_settings = check.get('override_notification_settings', None)
