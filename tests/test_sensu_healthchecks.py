@@ -25,6 +25,9 @@ class MockDeployment(object):
         self.sensu = {
             'healthcheck_search_paths': ['sensu_plugins_path']
         }
+        self.service = {
+            
+        }
 
 class TestRegisterSensuHealthChecks(unittest.TestCase):
     def setUp(self):
@@ -166,7 +169,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'notification_email': ['foo@bar.com', 'bar@biz.uk'],
             'interval': 10
         }
-        definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment)
         self.deployment.logger.warning.assert_called_with("'notification_email' property is deprecated, please use 'override_notification_email' instead")
         self.assertEqual(definition['checks']['sensu-check1']['notification_email'], 'foo@bar.com,bar@biz.uk')
 
@@ -176,10 +179,10 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'local_script': 'foo.py',
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['team'], None)
         check['override_notification_settings'] = 'dietcode'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['team'], 'dietcode')
 
     def test_generate_check_definiton_with_valid_list_of_emails_and_slack_channels(self):
@@ -190,7 +193,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'override_chat_channel': ['channel1', 'channel2'],
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['notification_email'], 'email1@ble.pl,email2@ble.pl')
         self.assertEqual(check_definition['checks']['sensu-check1']['slack_channel'], 'channel1,channel2')
 
@@ -200,7 +203,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'local_script': 'foo.py',
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['aggregate'], False)
         self.assertEqual(check_definition['checks']['sensu-check1']['alert_after'], 600)
         self.assertEqual(check_definition['checks']['sensu-check1']['handlers'], ['default'])
@@ -221,7 +224,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'local_script': 'foo.py',
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment.instance_tags, self.deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['ttl_environment'], self.deployment.instance_tags['Environment'])
         self.assertEqual(check_definition['checks']['sensu-check1']['ttl_owningcluster'], self.deployment.instance_tags['OwningCluster'])
         self.assertEqual(check_definition['checks']['sensu-check1']['ttl_role'], self.deployment.instance_tags['Role'])
@@ -232,9 +235,29 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'server_script': 'foo.py',
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment.instance_tags, self.deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.py')
 
+    def test_generate_check_definiton_with_command_and_slice_and_no_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'server_script': 'foo.py',
+            'interval': 10
+        }
+        self.deployment.service['slice'] = 'blue'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.py blue')
+    
+    def test_generate_check_definiton_with_command_and_none_slice_and_no_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'server_script': 'foo.py',
+            'interval': 10
+        }
+        self.deployment.service['slice'] = 'none'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.py')
+    
     def test_generate_check_definiton_with_command_and_arguments(self):
         check = {
             'name': 'sensu-check1',
@@ -242,5 +265,16 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'script_arguments': '-ServiceName service_name',
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment.instance_tags, self.deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'check-windows-service.ps1 -ServiceName service_name')
+    
+    def test_generate_check_definiton_with_command_and_arguments_and_slice(self):
+        check = {
+            'name': 'sensu-check1',
+            'server_script': 'check-windows-service.ps1',
+            'script_arguments': '-ServiceName service_name',
+            'interval': 10
+        }
+        self.deployment.service['slice'] = 'green'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'check-windows-service.ps1 -ServiceName service_name green')

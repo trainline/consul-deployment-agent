@@ -51,7 +51,13 @@ class RegisterSensuHealthChecks(DeploymentStage):
         return None
 
     @staticmethod
-    def generate_check_definition(check, script_absolute_path, instance_tags, logger):
+    def generate_check_definition(check, script_absolute_path, deployment):
+        instance_tags = deployment.instance_tags
+        logger = deployment.logger
+        deployment_slice = deployment.service.get('slice', 'none')
+        if deployment_slice.lower() == 'none':
+            deployment_slice = None
+
         override_notification_settings = check.get('override_notification_settings', None)
         override_notification_email = check.get('override_notification_email', 'undef')
         override_chat_channel = check.get('override_chat_channel', 'undef')
@@ -67,13 +73,16 @@ class RegisterSensuHealthChecks(DeploymentStage):
             override_notification_email = ','.join(override_notification_email)
         if override_chat_channel is not 'undef':
             override_chat_channel = ','.join(override_chat_channel)
+        
+        script_args = check.get('script_arguments')
+        script_args = ' '.join(filter(None, (script_args, deployment_slice)))
 
         check_definition = { 
             'checks': {
                 check['name']: {
                     'aggregate': check.get('aggregate', False),
                     'alert_after': check.get('alert_after', 600),
-                    'command': '{0} {1}'.format(script_absolute_path, check.get('script_arguments', '')).rstrip(),
+                    'command': '{0} {1}'.format(script_absolute_path, script_args).rstrip(),
                     'handlers': [ 'default' ],
                     'interval': check.get('interval'),
                     'notification_email': override_notification_email,
@@ -115,7 +124,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
 
         deployment.logger.debug('Sensu check {0} script path: {1}'.format(check_id, script_absolute_path))
 
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment.instance_tags, deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment)
         check_definition_filename = create_sensu_check_definition_filename(deployment.service.id, check_id)
         check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], check_definition_filename)
         is_success = RegisterSensuHealthChecks.write_check_definition_file(check_definition, check_definition_absolute_path, deployment)
