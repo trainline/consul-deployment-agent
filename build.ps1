@@ -38,6 +38,10 @@ function CreateChocolateyPackage {
     $NuspecFile = @(Get-Item $OutputDirectory\package.nuspec)
     $Nuspec = [xml] (Get-Content $NuspecFile)
     $Nuspec.package.metadata.version = $Version
+    $Nuspec.package.metadata.id = $PackageId
+    $Nuspec.package.metadata.title = $PackageId
+    $Nuspec.package.metadata.summary = $PackageId
+    $Nuspec.package.metadata.tags = $PackageId
     $Nuspec.Save($NuspecFile)
 
     Write-Host "Packaging deployment agent code into a single executable..."
