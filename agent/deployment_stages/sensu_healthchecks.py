@@ -55,8 +55,8 @@ class RegisterSensuHealthChecks(DeploymentStage):
         platform = deployment.platform
         instance_tags = deployment.instance_tags
         logger = deployment.logger
-        deployment_slice = deployment.service.get('slice', 'none').lower()
-        if deployment_slice == 'none':
+        deployment_slice = deployment.service.slice
+        if deployment_slice is not None and deployment_slice.lower() == 'none':
             deployment_slice = None
 
         def get_command():

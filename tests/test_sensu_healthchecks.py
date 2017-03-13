@@ -13,6 +13,12 @@ class MockLogger(object):
         self.debug = Mock()
         self.warning = Mock()
 
+class MockService(object):
+    slice = None
+
+    def set_slice(self, slice):
+        self.slice = slice
+
 class MockDeployment(object):
     def __init__(self):
         self.logger = MockLogger()
@@ -26,9 +32,7 @@ class MockDeployment(object):
         self.sensu = {
             'healthcheck_search_paths': ['sensu_plugins_path']
         }
-        self.service = {
-            
-        }
+        self.service = MockService()
 
 class TestRegisterSensuHealthChecks(unittest.TestCase):
     def setUp(self):
@@ -248,7 +252,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.platform = 'linux'
-        self.deployment.service['slice'] = 'none'
+        self.deployment.service.slice = 'none'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh')
     
@@ -259,7 +263,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.platform = 'linux'
-        self.deployment.service['slice'] = 'green'
+        self.deployment.service.slice = 'green'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh green')
     
@@ -282,7 +286,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.platform = 'linux'
-        self.deployment.service['slice'] = 'blue'
+        self.deployment.service.slice = 'blue'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh -o service_name blue')
     
@@ -301,7 +305,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'server_script': 'foo.ps1',
             'interval': 10
         }
-        self.deployment.service['slice'] = 'none'
+        self.deployment.service.slice = 'none'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file "foo.ps1"')
     
@@ -323,6 +327,6 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'script_arguments': '-ServiceName service_name',
             'interval': 10
         }
-        self.deployment.service['slice'] = 'green'
+        self.deployment.service.slice = 'green'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name green')
