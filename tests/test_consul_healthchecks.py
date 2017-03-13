@@ -1,7 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import unittest
-import os
 
 from mock import Mock, MagicMock, patch
 from agent.deployment_stages.common import DeploymentError
