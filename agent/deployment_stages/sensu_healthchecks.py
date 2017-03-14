@@ -64,8 +64,13 @@ class RegisterSensuHealthChecks(DeploymentStage):
                 command = '{0} "{1}"'.format('powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file', script_absolute_path)
             else:
                 command = script_absolute_path
-            script_args = check.get('script_arguments')
-            script_args = ' '.join(filter(None, (script_args, deployment_slice)))
+            
+            script_args = check.get('script_arguments', '')
+            
+            # Append slice value for local scripts
+            if 'local_script' in check:
+                script_args = ' '.join(filter(None, (script_args, deployment_slice)))
+
             return '{0} {1}'.format(command, script_args).rstrip()
 
         def get_override_chat_channel():

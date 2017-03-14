@@ -256,7 +256,18 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh')
     
-    def test_generate_linux_check_definition_with_command_and_slice_and_no_arguments(self):
+    def test_generate_linux_local_check_definition_with_command_and_slice_and_no_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'local_script': 'foo.sh',
+            'interval': 10
+        }
+        self.deployment.platform = 'linux'
+        self.deployment.service.slice = 'green'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['local_script'], self.deployment)
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh green')
+    
+    def test_generate_linux_server_check_definition_with_command_and_slice_and_no_arguments(self):
         check = {
             'name': 'sensu-check1',
             'server_script': 'foo.sh',
@@ -265,7 +276,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         self.deployment.platform = 'linux'
         self.deployment.service.slice = 'green'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh green')
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh')
     
     def test_generate_linux_check_definition_with_command_and_arguments(self):
         check = {
@@ -278,7 +289,19 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh -o service_name')
 
-    def test_generate_linux_check_definition_with_command_and_slice_and_arguments(self):
+    def test_generate_linux_local_check_definition_with_command_and_slice_and_arguments(self):
+        check = {
+            'name': 'sensu-check1',
+            'local_script': 'foo.sh',
+            'script_arguments': '-o service_name',
+            'interval': 10
+        }
+        self.deployment.platform = 'linux'
+        self.deployment.service.slice = 'blue'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['local_script'], self.deployment)
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh -o service_name blue')
+    
+    def test_generate_linux_server_check_definition_with_command_and_slice_and_arguments(self):
         check = {
             'name': 'sensu-check1',
             'server_script': 'foo.sh',
@@ -288,7 +311,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         self.deployment.platform = 'linux'
         self.deployment.service.slice = 'blue'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh -o service_name blue')
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'foo.sh -o service_name')
     
     def test_generate_windows_check_definition_with_command_and_no_arguments(self):
         check = {
@@ -309,7 +332,6 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file "foo.ps1"')
     
-    
     def test_generate_windows_check_definition_with_command_and_arguments(self):
         check = {
             'name': 'sensu-check1',
@@ -320,7 +342,18 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name')
     
-    def test_generate_check_definition_with_command_and_arguments_and_slice(self):
+    def test_generate_local_check_definition_with_command_and_arguments_and_slice(self):
+        check = {
+            'name': 'sensu-check1',
+            'local_script': 'C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1',
+            'script_arguments': '-ServiceName service_name',
+            'interval': 10
+        }
+        self.deployment.service.slice = 'green'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['local_script'], self.deployment)
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name green')
+    
+    def test_generate_server_check_definition_with_command_and_arguments_and_slice(self):
         check = {
             'name': 'sensu-check1',
             'server_script': 'C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1',
@@ -329,4 +362,4 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.service.slice = 'green'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name green')
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name')
