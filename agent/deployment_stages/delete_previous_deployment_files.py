@@ -10,8 +10,8 @@ class DeletePreviousDeploymentFiles(DeploymentStage):
         if deployment.last_id is None:
             deployment.logger.info('Skipping {0} stage as there is no previous deployment.'.format(self.name))
         else:
-            if os.path.isdir(deployment.last_archive_dir):
-                deployment.logger.info('Deleting directory of previous deployment {0}.'.format(deployment.last_archive_dir))
-                distutils.dir_util.remove_tree(deployment.last_archive_dir)
+            if os.path.isdir(deployment.last_dir):
+                deployment.logger.info('Deleting directory of previous deployment {0}.'.format(deployment.last_dir))
+                distutils.dir_util.remove_tree(deployment.last_dir)
             else:
-                deployment.logger.warning('The directory of last deployment doesn\'t exist {0}.'.format(deployment.last_archive_dir))
+                deployment.logger.warning('The directory of last deployment doesn\'t exist {0}.'.format(deployment.last_dir))

@@ -67,6 +67,10 @@ class RegisterConsulHealthChecks(DeploymentStage):
             return
 
         validate_checks(healthchecks, scripts_base_dir)
+        deployment_slice = deployment.service.slice
+        if deployment_slice is not None and deployment_slice.lower() == 'none':
+            deployment_slice = None
+
         for check_id, check in healthchecks.iteritems():
             service_check_id = create_service_check_id(deployment.service.id, check_id)
 
@@ -76,6 +80,10 @@ class RegisterConsulHealthChecks(DeploymentStage):
                 # Add execution permission to file
                 st = os.stat(file_path)
                 os.chmod(file_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+                
+                # Pass slice name as argument to healthcheck
+                if deployment_slice is not None:
+                    file_path += ' {0}'.format(deployment_slice)
 
                 deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, file_path))
                 is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], file_path, check['interval'])

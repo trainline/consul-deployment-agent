@@ -51,13 +51,27 @@ class RegisterSensuHealthChecks(DeploymentStage):
         return None
 
     @staticmethod
-    def generate_check_definition(check, script_absolute_path, platform, instance_tags, logger):
+    def generate_check_definition(check, script_absolute_path, deployment):
+        platform = deployment.platform
+        instance_tags = deployment.instance_tags
+        logger = deployment.logger
+        deployment_slice = deployment.service.slice
+        if deployment_slice is not None and deployment_slice.lower() == 'none':
+            deployment_slice = None
+
         def get_command():
             if platform == 'windows':
                 command = '{0} "{1}"'.format('powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file', script_absolute_path)
             else:
                 command = script_absolute_path
-            return '{0} {1}'.format(command, check.get('script_arguments', '')).rstrip()
+            
+            script_args = check.get('script_arguments', '')
+            
+            # Append slice value for local scripts
+            if 'local_script' in check:
+                script_args = ' '.join(filter(None, (script_args, deployment_slice)))
+
+            return '{0} {1}'.format(command, script_args).rstrip()
 
         def get_override_chat_channel():
             override_chat_channel = check.get('override_chat_channel', None)
@@ -82,7 +96,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
                     logger.warning('\'team\' property is deprecated, please use \'override_notification_settings\' instead')
                     override_notification_settings = check.get('team', None)
             return override_notification_settings
-
+        
         check_definition = {
             'checks': {
                 check['name']: {
@@ -130,7 +144,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
 
         deployment.logger.debug('Sensu check {0} script path: {1}'.format(check_id, script_absolute_path))
 
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment.platform, deployment.instance_tags, deployment.logger)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment)
         check_definition_filename = create_sensu_check_definition_filename(deployment.service.id, check_id)
         check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], check_definition_filename)
         is_success = RegisterSensuHealthChecks.write_check_definition_file(check_definition, check_definition_absolute_path, deployment)

@@ -1,8 +1,8 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import unittest
-from mock import Mock
 
+from mock import Mock, MagicMock, patch
 from agent.deployment_stages.common import DeploymentError
 from agent.deployment_stages.consul_healthchecks import RegisterConsulHealthChecks
 
@@ -14,6 +14,15 @@ healthchecks = {
         'type': 'http'
     }
 }
+
+class MockService(object):
+    slice = None
+
+    def __init__(self):
+        self.id = 'my-mock-service'
+
+    def set_slice(self, slice):
+        self.slice = slice
 
 class MockLogger(object):
     def __init__(self):
@@ -28,6 +37,8 @@ class MockDeployment(object):
         self.appspec = {
             'healthchecks': healthchecks
         }
+        self.service = MockService()
+
     def set_check(self, check_id, check):
         self.appspec = {
             'consul_healthchecks': {
@@ -104,5 +115,71 @@ class TestHealthChecks(unittest.TestCase):
         with self.assertRaisesRegexp(DeploymentError, 'health checks require unique names'):
             self.tested_fn._run(self.deployment)
 
+    @patch('os.stat')
+    @patch('os.chmod')
+    @patch('os.path.exists', return_value=True)
+    def test_script_check_registration(self, stat, chmod, exists):
+        checks = {
+            'test_check': self.create_check(True, 'test-script', 'test-script.py', '10')
+        }
+        self.deployment.set_checks(checks)
+        self.deployment.consul_api = MagicMock()
 
+        with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
+            self.tested_fn._run(self.deployment)
+            self.deployment.consul_api.register_script_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_check', 'test-script', 'test-script.py', '10')
 
+    @patch('os.stat')
+    @patch('os.chmod')
+    @patch('os.path.exists', return_value=True)
+    def test_script_check_registration_with_slice(self, stat, chmod, exists):
+        checks = {
+            'test_check': self.create_check(True, 'test-script', 'test-script.py', '10')
+        }
+        self.deployment.set_checks(checks)
+        self.deployment.service.set_slice('blue')
+        self.deployment.consul_api = MagicMock()
+
+        with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
+            self.tested_fn._run(self.deployment)
+            self.deployment.consul_api.register_script_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_check', 'test-script', 'test-script.py blue', '10')
+
+    @patch('os.stat')
+    @patch('os.chmod')
+    @patch('os.path.exists', return_value=True)
+    def test_script_http_registration(self, stat, chmod, exists):
+        checks = {
+            'test_http_check': self.create_check(False, 'test-http', 'http://acme.com/healthcheck', '20')
+        }
+        self.deployment.set_checks(checks)
+        self.deployment.consul_api = MagicMock()
+
+        with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
+            self.tested_fn._run(self.deployment)
+            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', 'http://acme.com/healthcheck', '20')
+    
+    @patch('os.stat')
+    @patch('os.chmod')
+    @patch('os.path.exists', return_value=True)
+    def test_http_check_registration_with_slice(self, stat, chmod, exists):
+        checks = {
+            'test_http_check': self.create_check(False, 'test-http', 'http://acme.com/healthcheck', '20')
+        }
+        self.deployment.set_checks(checks)
+        self.deployment.service.set_slice('blue')
+        self.deployment.consul_api = MagicMock()
+
+        # Slice value should not affect http value
+        with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
+            self.tested_fn._run(self.deployment)
+            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', 'http://acme.com/healthcheck', '20')
+    
+    def create_check(self, is_script, name, value, interval):
+        check = { 'name':name, 'interval':interval }
+        if is_script:
+            check['type'] = 'script'
+            check['script'] = value
+        else:
+            check['type'] = 'http'
+            check['http'] = value
+        return check
