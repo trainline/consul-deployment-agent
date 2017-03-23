@@ -1,6 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import os, sys, yaml
+from codecs import open
 from .deployment_scripts import PowershellScript, ShellScript
 
 class DeploymentError(RuntimeError):
@@ -93,8 +94,14 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
     if os.path.exists(absolute_filepath):
         logger.debug('Found {0}'.format(relative_path))
         scripts_base_dir = os.path.join('healthchecks', check_type)
-        healthchecks_stream = file(absolute_filepath, 'r')
-        healthchecks_object = yaml.load(healthchecks_stream)
+        healthchecks_file = open(absolute_filepath, 'r')
+        
+        try:
+            healthchecks_object = yaml.safe_load(healthchecks_file)
+        except yaml.scanner.ScannerError:
+            healthchecks_object = None
+            logger.error('{0} contains invalid YAML'.format(absolute_filepath))
+        
         if type(healthchecks_object) is not dict:
             logger.error('{0} doesn\'t contain valid definition of healthchecks'.format(relative_path))
             healthchecks = None
