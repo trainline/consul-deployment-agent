@@ -13,7 +13,7 @@ class TestCommonDeploymentStageUtils(unittest.TestCase):
     @patch('yaml.safe_load', side_effect=yaml.scanner.ScannerError)
     def test_find_healtchecks_safely_handles_invalid_yaml(self, exists, mock_open, mock_safe_load):
         logger = MagicMock()
-        result = find_healthchecks('sensu', '', {}, logger)
+        (healthchecks, script_dir) = find_healthchecks('sensu', '', {}, logger)
         self.assertEqual(logger.error.mock_calls[0], call('healthchecks/sensu/healthchecks.yml contains invalid YAML'))
-        self.assertEqual(result[0], None)
+        self.assertEqual(healthchecks, None)
 

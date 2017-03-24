@@ -26,6 +26,7 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
                 for check_id, check in healthchecks.iteritems():
                     check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], create_sensu_check_definition_filename(deployment.service.id, check_id))
                     if os.path.exists(check_definition_absolute_path):
+                        deployment.logger.info('Removing healthcheck: {0}'.format(check_definition_absolute_path))
                         os.remove(check_definition_absolute_path)
 
 class RegisterSensuHealthChecks(DeploymentStage):
