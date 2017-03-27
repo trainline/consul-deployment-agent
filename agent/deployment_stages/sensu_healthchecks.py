@@ -21,7 +21,7 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
                 deployment.logger.warning('Previous deployment directory not found, id: {0}'.format(deployment.last_id))
             else:
                 (healthchecks, scripts_base_dir) = find_healthchecks('sensu', deployment.last_archive_dir, previous_appspec, deployment.logger)
-                deployment.logger.debug('Sensu healthchecks to remove: {0}{1}'.format(os.linesep, healthchecks))
+                deployment.logger.debug('Sensu healthchecks to remove: {0}'.format(healthchecks))
                 if healthchecks is None:
                     deployment.logger.warning('No sensu checks will be removed')
                     return
