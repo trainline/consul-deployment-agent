@@ -21,13 +21,18 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
                 deployment.logger.warning('Previous deployment directory not found, id: {0}'.format(deployment.last_id))
             else:
                 (healthchecks, scripts_base_dir) = find_healthchecks('sensu', deployment.last_archive_dir, previous_appspec, deployment.logger)
+                deployment.logger.debug('Sensu healthchecks to remove: {0}{1}'.format(os.linesep, healthchecks))
                 if healthchecks is None:
+                    deployment.logger.warning('No sensu checks will be removed')
                     return
                 for check_id, check in healthchecks.iteritems():
+                    deployment.logger.debug('Looking for sensu check: {0}'.format(check_id))
                     check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], create_sensu_check_definition_filename(deployment.service.id, check_id))
                     if os.path.exists(check_definition_absolute_path):
                         deployment.logger.info('Removing healthcheck: {0}'.format(check_definition_absolute_path))
                         os.remove(check_definition_absolute_path)
+                    else:
+                        deployment.logger.warning('Could not find file: {0}'.format(check_definition_absolute_path))
 
 class RegisterSensuHealthChecks(DeploymentStage):
     def __init__(self):
