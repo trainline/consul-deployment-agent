@@ -50,6 +50,10 @@ coverage.xml
 *.mo
 *.pot
 
+# Swap
+*.swp
+*.swo
+
 # Django stuff:
 *.log
 local_settings.py

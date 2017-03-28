@@ -30,13 +30,17 @@ class Deployment(object):
         self._is_success = self.logger = self._log_filename = self._log_filepath = self._report = self._report_key = None
         self.number_of_attempts = 0
         if self.platform == 'linux':
-            self.dir = os.path.join('/opt/consul-deployment-agent/deployments', self.service.id, self.id)
+            base_dir = '/opt/consul-deployment-agent/deployments'
+            self.dir = os.path.join(base_dir, self.service.id, self.id)
             if self.last_id is not None:
-                self.last_archive_dir = os.path.join('/opt/consul-deployment-agent/deployments', self.service.id, self.last_id, 'archive')
+                self.last_dir = os.path.join(base_dir, self.service.id, self.last_id)
+                self.last_archive_dir = os.path.join(self.last_dir, 'archive')
         else:
-            self.dir = os.path.join('C:\TLDeploy', self.id)
+            base_dir = 'C:\TLDeploy'
+            self.dir = os.path.join(base_dir, self.id)
             if self.last_id is not None:
-                self.last_archive_dir = os.path.join('C:\TLDeploy', self.last_id, 'archive')
+                self.last_dir = os.path.join(base_dir, self.last_id)
+                self.last_archive_dir = os.path.join(self.last_dir, 'archive')
         self.archive_dir = os.path.join(self.dir, 'archive')
 
     def __str__(self):
