@@ -1,4 +1,10 @@
-﻿function BundleIntoSingleExe {
+﻿param (
+    [string]$BuildTarget
+)
+
+if(-not($BuildTarget)) { Throw "You must supply a value for -BuildTarget"}
+
+function BundleIntoSingleExe {
     param(
         [string] $ExeName,
         [string] $ScriptPath,
@@ -105,10 +111,10 @@ try {
         Remove-Item $TempDirectory -Recurse -Force
     }
 
-    $PackageId = "ttl-consul-deployment-agent-" + $env:tcbranch
+    $PackageId = "ttl-consul-deployment-agent-" + $BuildTarget
     $Version = $env:BUILD_NUMBER
     if ($Version -eq $null) {
-        $Version = "0.0.1"
+        Throw "Could not determine build version"
     }
 
     Write-Host "Creating Chocolatey package..."
