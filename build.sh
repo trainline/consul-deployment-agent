@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -euf
+set -o pipefail
 
 if [ $# -eq 0 ]; then
   echo "No arguments supplied"

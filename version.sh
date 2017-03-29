@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euf
+set -o pipefail
 
 GIT_INFO=$(git describe)
 TAG=$(echo $GIT_INFO | cut -d'-' -f1)
