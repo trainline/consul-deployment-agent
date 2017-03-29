@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euf 
+set -ef 
 set -o pipefail
 
 sudo yum -y install rh-ruby22-ruby-devel rh-ruby22-rubygems-devel
