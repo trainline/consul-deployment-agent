@@ -14,5 +14,6 @@ source scl_source enable rh-ruby22
 export GEM_HOME=$TCHOME/.fpmgem/ruby/
 
 # BUILD_TARGET is a build variable that defines which target we are building
-./build.sh "${BUILD_TARGET}"
+echo "Run build..."
+( ./build.sh "${BUILD_TARGET}" )
 
