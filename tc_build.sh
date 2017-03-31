@@ -10,7 +10,3 @@ PATH=$TCHOME/.fpmgem/ruby/bin:$PATH
 source scl_source enable rh-ruby22
 export GEM_HOME=$TCHOME/.fpmgem/ruby/
 
-# BUILD_TARGET is a build variable that defines which target we are building
-echo "Run build..."
-( sudo ./build.sh "${BUILD_TARGET}" )
-
