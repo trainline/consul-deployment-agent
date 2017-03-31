@@ -9,7 +9,10 @@ from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
 from actions import InstallAction, IgnoreAction, UninstallAction
 
-from version import semantic_version
+try:
+    from version import semantic_version
+except:
+    semantic_version = '0.0.0'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-config-dir', help='Location of configuration files (e.g. config.yml and config-logging.yml)')

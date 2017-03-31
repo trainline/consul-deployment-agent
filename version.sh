@@ -15,3 +15,5 @@ fi
 
 echo "##teamcity[buildNumber '${BUILD_VERSION}']"
 
+echo "semantic_version = $BUILD_VERSION" >> agent/version.py
+
