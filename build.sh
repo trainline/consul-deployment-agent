@@ -1,12 +1,6 @@
 #!/bin/sh
 
 
-if [ $# -eq 0 ]; then
-  echo "No arguments supplied"
-  exit 1
-fi
-
-
 if [ -s $TCHOME ]; then
   sudo yum -y install rh-ruby22-ruby-devel rh-ruby22-rubygems-devel
   source scl_source enable rh-ruby22
