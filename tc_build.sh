@@ -12,5 +12,5 @@ export GEM_HOME=$TCHOME/.fpmgem/ruby/
 
 # BUILD_TARGET is a build variable that defines which target we are building
 echo "Run build..."
-sudo ./build.sh "${BUILD_TARGET}"
+( sudo ./build.sh "${BUILD_TARGET}" )
 
