@@ -7,11 +7,13 @@ if [ $# -eq 0 ]; then
 fi
 
 
-sudo yum -y install rh-ruby22-ruby-devel rh-ruby22-rubygems-devel
-source scl_source enable rh-ruby22
-PATH=$TCHOME/.fpmgem/ruby/bin:$PATH
-mkdir -p $TCHOME/.fpmgem/ruby 2> /dev/null
-GEM_HOME=$TCHOME/.fpmgem/ruby/ gem install --install-dir $TCHOME/.fpmgem/ruby/ --no-ri --no-rdoc fpm
+if [ -s $TCHOME ]; then
+  sudo yum -y install rh-ruby22-ruby-devel rh-ruby22-rubygems-devel
+  source scl_source enable rh-ruby22
+  PATH=$TCHOME/.fpmgem/ruby/bin:$PATH
+  mkdir -p $TCHOME/.fpmgem/ruby 2> /dev/null
+  GEM_HOME=$TCHOME/.fpmgem/ruby/ gem install --install-dir $TCHOME/.fpmgem/ruby/ --no-ri --no-rdoc fpm
+fi
 
 BUILD_TARGET=$1
 VERSION=$BUILD_NUMBER
