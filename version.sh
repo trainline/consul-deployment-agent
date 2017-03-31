@@ -15,3 +15,4 @@ fi
 
 echo "##teamcity[buildNumber '${BUILD_VERSION}']"
 
+echo $BUILD_VERSION >> version.txt
