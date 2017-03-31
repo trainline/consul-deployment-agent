@@ -97,4 +97,3 @@ config.yml
 config-logging.yml
 .vscode
 .pylintrc
-agent/version.py
