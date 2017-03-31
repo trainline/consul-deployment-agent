@@ -1,12 +1,13 @@
 #!/bin/sh
 
-set -euf
-set -o pipefail
 
 if [ $# -eq 0 ]; then
   echo "No arguments supplied"
   exit 1
 fi
+
+
+ls
 
 BUILD_TARGET=$1
 VERSION=$BUILD_NUMBER
