@@ -10,7 +10,7 @@ SHA=$(echo $GIT_INFO | cut -d'-' -f3)
 if [[ "$TAG" == "$SHA" ]]; then
   BUILD_VERSION="$TAG"
 else
-  BUILD_VERSION="$TAG-$BUILD_COUNTER-${SHA}"
+  BUILD_VERSION="$TAG-$BUILD_COUNTER${SHA}"
 fi
 
 echo "##teamcity[buildNumber '${BUILD_VERSION}']"
