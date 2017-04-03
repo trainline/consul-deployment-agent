@@ -2,7 +2,7 @@
 
 import json, os, re, stat, sys
 from jsonschema import Draft4Validator
-from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec
+from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec, wrap_script_command
 from .schemas import SensuHealthCheckSchema
 
 def create_sensu_check_definition_filename(service_id, check_id):
@@ -66,11 +66,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
             deployment_slice = None
 
         def get_command():
-            if platform == 'windows':
-                command = '{0} "{1}"'.format('powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file', script_absolute_path)
-            else:
-                command = script_absolute_path
-            
+            command = wrap_script_command(script_absolute_path, platform)
             script_args = check.get('script_arguments', '')
             
             # Append slice value for local scripts
