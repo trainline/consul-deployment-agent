@@ -119,8 +119,9 @@ try {
 
     Write-Host "Creating Chocolatey package..."
     CreateChocolateyPackage $PackageId $Version
-    Write-Host "Publishing Chocolatey package to Artifactory..."
-    PublishChocolateyPackage $PackageId $Version
+    Write-Host "Publishing disabled..."
+    # Write-Host "Publishing Chocolatey package to Artifactory..."
+    # PublishChocolateyPackage $PackageId $Version
 }
 catch {
     Write-Host "FATAL EXCEPTION: $_"
