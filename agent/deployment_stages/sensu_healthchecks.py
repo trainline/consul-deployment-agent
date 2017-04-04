@@ -61,7 +61,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
 
         def get_command():
             if platform == 'windows':
-                command = 'powershell -noprofile -noninteractive -executionpolicy unrestricted -command "{0}"'.format(script_absolute_path)
+                command = 'powershell -noprofile -noninteractive -executionpolicy bypass -command "{0}"'.format(script_absolute_path)
             else:
                 command = script_absolute_path
             
