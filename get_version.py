@@ -15,13 +15,7 @@ else:
 
 def set_build_version(version):
     print("##teamcity[buildNumber '{0}']".format(version))
-
-def write_version_file(version):
-    with open('agent/version.py', 'r') as file:
-        filedata = file.read()
-    filedata = filedata.replace('0.0.0', version)
-    with open('agent/version.py', 'w') as file:
-        file.write(filedata)
+    print("##teamcity[setParameter name='system.BUILD_VERSION' value='{0]']".format(version))
 
 set_build_version(build_version)
-write_version_file(build_version)
+
