@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import subprocess
 import os
 from codecs import open
@@ -15,7 +17,7 @@ else:
 
 def set_build_version(version):
     print("##teamcity[buildNumber '{0}']".format(version))
-    print("##teamcity[setParameter name='system.BUILD_VERSION' value='{0]']".format(version))
+    print("##teamcity[setParameter name='system.BUILD_VERSION' value='{0}']".format(version))
 
 set_build_version(build_version)
 
