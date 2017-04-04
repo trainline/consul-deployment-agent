@@ -2,7 +2,6 @@
 
 import subprocess
 import os
-from codecs import open
 
 git_info = subprocess.check_output(['git', 'describe']).strip()
 git_info = git_info.split('-')
