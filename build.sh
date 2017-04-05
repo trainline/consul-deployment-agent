@@ -35,7 +35,7 @@ echo "Copying $PWD/config/config-logging-linux.yml to $OUTPUT_DIR/config-logging
 cp $PWD/config/config-logging-linux.yml $PACKAGE_DIR/config-logging.yml
 
 if [ -s $TCHOME ]; then
-    MYHOME="${TCHOME}/.."
+    MYHOME="."
 else
     MYHOME="$TEMP_DIR"
 fi
@@ -60,10 +60,10 @@ find $PACKAGE_DIR/consul-deployment-agent -type f -exec chmod 755 {} \;
 find $PACKAGE_DIR/*.yml -type f -exec chmod 644 {} \;
 
 echo " ==> Building RPM package"
-fpm -s dir -t rpm -a all -n consul-deployment-agent-$BUILD_TARGET -v $VERSION --iteration $VERSION_TIMESTAMP --description "Consul Deployment Agent $BUILD_TARGET branch" --rpm-os linux --rpm-user root --rpm-group root --prefix /opt/consul-deployment-agent --package "./the-package" -C $PACKAGE_DIR .
+fpm -s dir -t rpm -a all -n consul-deployment-agent-$BUILD_TARGET -v $VERSION --iteration $VERSION_TIMESTAMP --description "Consul Deployment Agent $BUILD_TARGET branch" --rpm-os linux --rpm-user root --rpm-group root --prefix /opt/consul-deployment-agent --package "$MYHOME/globalpackage" -C $PACKAGE_DIR .
 
 DEB_VERSION_TIMESTAMP=`echo $VERSION_TIMESTAMP | tr "_" "."`
 
 # We use FPM to build our package
 echo " ==> Building DEB package"
-fpm -s dir -t deb -a all -n consul-deployment-agent-$BUILD_TARGET -v $VERSION --iteration $DEB_VERSION_TIMESTAMP --deb-no-default-config-files --description "Consul Deployment Agent $BUILD_TARGET branch" --deb-user root --deb-group root --prefix /opt/consul-deployment-agent --package "./the-package" -C $PACKAGE_DIR .
+fpm -s dir -t deb -a all -n consul-deployment-agent-$BUILD_TARGET -v $VERSION --iteration $DEB_VERSION_TIMESTAMP --deb-no-default-config-files --description "Consul Deployment Agent $BUILD_TARGET branch" --deb-user root --deb-group root --prefix /opt/consul-deployment-agent --package "$MYHOME/globalpackage" -C $PACKAGE_DIR .
