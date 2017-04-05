@@ -162,7 +162,7 @@ class TestHealthChecks(unittest.TestCase):
 
         with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
                 self.tested_fn._run(self.deployment)
-                self.deployment.consul_api.register_script_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_check', 'test-script', 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -file test-script.ps1', '10')
+                self.deployment.consul_api.register_script_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_check', 'test-script', 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command test-script.ps1', '10')
 
     @patch('os.stat')
     @patch('os.chmod')
@@ -178,7 +178,7 @@ class TestHealthChecks(unittest.TestCase):
 
         with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
             self.tested_fn._run(self.deployment)
-            self.deployment.consul_api.register_script_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_check', 'test-script', 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -file test-script.ps1 blue', '10')
+            self.deployment.consul_api.register_script_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_check', 'test-script', 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command test-script.ps1 blue', '10')
 
     @patch('os.stat')
     @patch('os.chmod')
