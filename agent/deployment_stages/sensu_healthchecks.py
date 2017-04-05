@@ -5,7 +5,7 @@ from jsonschema import Draft4Validator
 from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec, wrap_script_command
 from .schemas import SensuHealthCheckSchema
 
-def create_sensu_check_definition_filename(service_id, check_id, environment='', service='', slice='', version=''):
+def create_sensu_check_definition_filename(service_id, check_id, environment='none', service='none', slice='none', version='none'):
     return '{0}-{1}-{2}-{3}-{4}-{5}.json'.format(service_id, check_id, environment, service, slice, version)
 
 class DeregisterOldSensuHealthChecks(DeploymentStage):
