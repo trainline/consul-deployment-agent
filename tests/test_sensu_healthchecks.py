@@ -320,7 +320,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "foo.ps1"')
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command foo.ps1')
 
     def test_generate_windows_check_definition_with_command_and_none_slice_and_no_arguments(self):
         check = {
@@ -330,7 +330,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.service.slice = 'none'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "foo.ps1"')
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command foo.ps1')
     
     def test_generate_windows_check_definition_with_command_and_arguments(self):
         check = {
@@ -340,7 +340,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name')
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1 -ServiceName service_name')
 
     def test_generate_local_check_definition_with_command_and_arguments_and_slice(self):
         check = {
@@ -351,7 +351,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.service.slice = 'green'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['local_script'], self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name green')
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1 -ServiceName service_name green')
     
     def test_generate_server_check_definition_with_command_and_arguments_and_slice(self):
         check = {
@@ -362,4 +362,4 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.service.slice = 'green'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name')
+        self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1 -ServiceName service_name')
