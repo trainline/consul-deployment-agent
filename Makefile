@@ -11,7 +11,7 @@ lint: init init-lint
 	pyflakes .
 
 test: init init-test
-	nosetests --verbosity=2 tests
+	nosetests --verbosity=2 tests modules/**/tests
 
 test-windows-deployment: init init-test
 	nosetests --verbosity=2 tests/test_deployment_windows.py
