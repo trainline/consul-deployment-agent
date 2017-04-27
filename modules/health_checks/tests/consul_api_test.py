@@ -2,7 +2,7 @@ import base64
 import json
 import responses
 import unittest
-from lib.api.consul.consul_api import ConsulApi, ConsulError
+from modules.health_checks.lib.api.consul.consul_api import ConsulApi, ConsulError
 from mock import patch
 
 consul_config = {'scheme': 'http', 'host': 'localhost',
@@ -17,7 +17,7 @@ class TestConsulApi(unittest.TestCase):
         consul_api = ConsulApi(consul_config)
         consul_api.check_connectivity()
 
-    @patch('lib.api.consul.consul_api.ConsulApi._api_get')
+    @patch('modules.health_checks.lib.api.consul.consul_api.ConsulApi._api_get')
     def test_check_connectivity_fails(self, mock_call):
         mock_call.side_effect = ConsulError('Some error message')
         consul_api = ConsulApi(consul_config)

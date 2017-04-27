@@ -4,10 +4,9 @@
 import unittest
 
 from mock import Mock, MagicMock, patch
-from lib.health_checks.health_check_errors import RegisterError
-from lib.health_checks.consul_health_check import ConsulHealthCheck
-from lib.api.consul.consul_config import ConsulConfig
-from lib.api.consul.consul_api import ConsulApi
+from modules.health_checks.lib.health_checks.health_check_errors import RegisterError
+from modules.health_checks.lib.health_checks.consul_health_check import ConsulHealthCheck
+
 
 HEALTHCHECKS = {
     'check_failing': {
