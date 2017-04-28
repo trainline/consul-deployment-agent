@@ -1,2 +1,0 @@
-Consul Deployment Agent - Health Checks
-Copyright 2015-2016 Trainline.com Ltd

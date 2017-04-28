@@ -9,7 +9,7 @@ import platform
 import sys
 import yaml
 import key_naming_convention
-from consul - deployment - agent - health - checks import ConsulApi, ConsulError
+import consul_deployment_agent_health_checks
 from consul_data_loader import ConsulDataLoader
 from deployment import Deployment
 from environment import Environment, EnvironmentError
