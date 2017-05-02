@@ -9,7 +9,7 @@ import platform
 import sys
 import yaml
 import key_naming_convention
-import consul_deployment_agent_health_checks
+import envmgr_healthchecks
 from consul_data_loader import ConsulDataLoader
 from deployment import Deployment
 from environment import Environment, EnvironmentError
@@ -186,9 +186,10 @@ def main():
         sys.exit(1)
 
     try:
-        consul_api = ConsulApi(config['consul'])
+        consul_api = envmgr_healthchecks.api.consul.consul_api.ConsulApi(
+            config['consul'])
         consul_api.check_connectivity()
-    except ConsulError as error:
+    except envmgr_healthchecks.api.consul.consul_api.ConsulError as error:
         logging.exception(error)
         logging.critical('Exiting with error code 1.')
         sys.exit(1)
@@ -215,7 +216,7 @@ def main():
             else:
                 logging.error(
                     'Failed to converge to updated server role configuration.')
-        except ConsulError as error:
+        except envmgr_healthchecks.api.consul.consul_api.ConsulError as error:
             logging.error(
                 'Error detecting changes in Consul key-value store. Skipping converging configuration.')
             logging.exception(error)
