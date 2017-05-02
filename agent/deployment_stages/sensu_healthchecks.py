@@ -41,6 +41,7 @@ def build_health_check(name, deployment):
         name=name,
         platform=getattr(deployment, 'platform', None),
         instance_tags=getattr(deployment, 'instance_tags', None),
+        logger=getattr(deployment, 'logger', None),
         sensu=getattr(deployment, 'sensu', None),
         service_id=getattr(
             getattr(deployment, 'service', None), 'id', None),
