@@ -81,11 +81,17 @@ class RegisterConsulHealthChecks(DeploymentStage):
                 st = os.stat(file_path)
                 os.chmod(file_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
                 
-                command = wrap_script_command(file_path, deployment.platform)
+                extra = ''
+
+                if deployment_slice is not None:
+                    extra = file_path + ' ' + deployment_slice
+                else:
+                    extra = file_path
+
+                command = wrap_script_command(extra, deployment.platform)
 
                 # Pass slice name as argument to healthcheck
-                if deployment_slice is not None:
-                    command = '{0} {1}'.format(command, deployment_slice)
+                
 
                 deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, file_path))
                 is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], command, check['interval'])
