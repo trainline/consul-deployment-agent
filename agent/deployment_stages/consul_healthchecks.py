@@ -1,7 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import os, stat
-from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec
+from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec, wrap_script_command
 
 class DeregisterOldConsulHealthChecks(DeploymentStage):
     def __init__(self):
@@ -81,12 +81,14 @@ class RegisterConsulHealthChecks(DeploymentStage):
                 st = os.stat(file_path)
                 os.chmod(file_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
                 
+                command = wrap_script_command(file_path, deployment.platform)
+
                 # Pass slice name as argument to healthcheck
                 if deployment_slice is not None:
-                    file_path += ' {0}'.format(deployment_slice)
+                    command = '{0} {1}'.format(command, deployment_slice)
 
                 deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, file_path))
-                is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], file_path, check['interval'])
+                is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], command, check['interval'])
             elif check['type'] == 'http':
                 is_success = deployment.consul_api.register_http_check(deployment.service.id, service_check_id, check['name'], check['http'], check['interval'])
             else:

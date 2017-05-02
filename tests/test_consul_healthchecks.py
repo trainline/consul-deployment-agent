@@ -34,6 +34,7 @@ class MockDeployment(object):
     def __init__(self):
         self.logger = MockLogger()
         self.archive_dir = ''
+        self.platform = 'linux'
         self.appspec = {
             'healthchecks': healthchecks
         }
@@ -45,10 +46,14 @@ class MockDeployment(object):
                 check_id: check
             }
         }
+
     def set_checks(self, checks):
         self.appspec = {
             'consul_healthchecks': checks
         }
+
+    def set_platform(self, platform):
+        self.platform = platform
 
 
 class TestHealthChecks(unittest.TestCase):
@@ -147,6 +152,37 @@ class TestHealthChecks(unittest.TestCase):
     @patch('os.stat')
     @patch('os.chmod')
     @patch('os.path.exists', return_value=True)
+    def test_windows_script_check_registration(self, stat, chmod, exists):
+        checks = {
+            'test_check': self.create_check(True, 'test-script', 'test-script.ps1', '10')
+        }
+        self.deployment.set_checks(checks)
+        self.deployment.consul_api = MagicMock()
+        self.deployment.set_platform('windows')
+
+        with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
+                self.tested_fn._run(self.deployment)
+                self.deployment.consul_api.register_script_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_check', 'test-script', 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "test-script.ps1"', '10')
+
+    @patch('os.stat')
+    @patch('os.chmod')
+    @patch('os.path.exists', return_value=True)
+    def test_windows_script_check_registration_with_slice(self, stat, chmod, exists):
+        checks = {
+            'test_check': self.create_check(True, 'test-script', 'test-script.ps1', '10')
+        }
+        self.deployment.set_checks(checks)
+        self.deployment.service.set_slice('blue')
+        self.deployment.consul_api = MagicMock()
+        self.deployment.set_platform('windows')
+
+        with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
+            self.tested_fn._run(self.deployment)
+            self.deployment.consul_api.register_script_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_check', 'test-script', 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "test-script.ps1" blue', '10')
+
+    @patch('os.stat')
+    @patch('os.chmod')
+    @patch('os.path.exists', return_value=True)
     def test_script_http_registration(self, stat, chmod, exists):
         checks = {
             'test_http_check': self.create_check(False, 'test-http', 'http://acme.com/healthcheck', '20')
@@ -158,7 +194,7 @@ class TestHealthChecks(unittest.TestCase):
             self.tested_fn._run(self.deployment)
             self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', 'http://acme.com/healthcheck', '20')
     
-    @patch('os.stat')
+    @patch('os.stat')   
     @patch('os.chmod')
     @patch('os.path.exists', return_value=True)
     def test_http_check_registration_with_slice(self, stat, chmod, exists):
