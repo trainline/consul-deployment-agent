@@ -1,7 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See
 # LICENSE.txt in the project root for license information.
 
-
 from envmgr_healthchecks.health_checks.sensu_heath_check import SensuHealthCheck
 from .common import DeploymentStage
 
@@ -15,6 +14,7 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
         DeploymentStage.__init__(self, name='DeregisterOldSensuHealthChecks')
 
     def _run(self, deployment):
+
         health_check = build_health_check(self.name, deployment)
         health_check.deregister()
 
