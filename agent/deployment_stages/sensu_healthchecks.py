@@ -2,11 +2,11 @@
 
 import json, os, re, stat, sys
 from jsonschema import Draft4Validator
-from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec
+from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec, wrap_script_command
 from .schemas import SensuHealthCheckSchema
 
-def create_sensu_check_definition_filename(service_id, check_id):
-    return '{0}-{1}.json'.format(service_id, check_id)
+def create_sensu_check_definition_filename(service_id, check_id, environment='none', service='none', slice='none', version='none'):
+    return '{0}-{1}-{2}-{3}-{4}-{5}.json'.format(service_id, check_id, environment, service, slice, version)
 
 class DeregisterOldSensuHealthChecks(DeploymentStage):
     def __init__(self):
@@ -27,7 +27,7 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
                     return
                 for check_id, check in healthchecks.iteritems():
                     deployment.logger.debug('Looking for sensu check: {0}'.format(check_id))
-                    check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], create_sensu_check_definition_filename(deployment.service.id, check_id))
+                    check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], create_sensu_check_definition_filename(deployment.service.id, check_id, deployment._environment.environment_name, deployment.service.name, deployment.service.slice, deployment.service.version))
                     if os.path.exists(check_definition_absolute_path):
                         deployment.logger.info('Removing healthcheck: {0}'.format(check_definition_absolute_path))
                         os.remove(check_definition_absolute_path)
@@ -66,11 +66,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
             deployment_slice = None
 
         def get_command():
-            if platform == 'windows':
-                command = '{0} "{1}"'.format('powershell.exe -NonInteractive -NoProfile -ExecutionPolicy Bypass -file', script_absolute_path)
-            else:
-                command = script_absolute_path
-            
+            command = wrap_script_command(script_absolute_path, platform)
             script_args = check.get('script_arguments', '')
             
             # Append slice value for local scripts
@@ -151,7 +147,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
         deployment.logger.debug('Sensu check {0} script path: {1}'.format(check_id, script_absolute_path))
 
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment)
-        check_definition_filename = create_sensu_check_definition_filename(deployment.service.id, check_id)
+        check_definition_filename = create_sensu_check_definition_filename(deployment.service.id, check_id, deployment._environment.environment_name, deployment.service.name, deployment.service.slice, deployment.service.version)
         check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], check_definition_filename)
         is_success = RegisterSensuHealthChecks.write_check_definition_file(check_definition, check_definition_absolute_path, deployment)
         if not is_success:

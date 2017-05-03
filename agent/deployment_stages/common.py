@@ -116,3 +116,10 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
         logger.info('No health checks found.')
     return (healthchecks, scripts_base_dir)
 
+
+def wrap_script_command(script, platform):
+    if platform == 'windows':
+        return 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}"'.format(script)
+    else:
+        return script
+
