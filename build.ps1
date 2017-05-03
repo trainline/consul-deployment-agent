@@ -1,4 +1,10 @@
-﻿function BundleIntoSingleExe {
+﻿param (
+    [string]$BuildTarget
+)
+
+if(-not($BuildTarget)) { Throw "You must supply a value for -BuildTarget"}
+
+function BundleIntoSingleExe {
     param(
         [string] $ExeName,
         [string] $ScriptPath,
@@ -73,30 +79,6 @@ function CreateChocolateyPackage {
     Set-Location $RootDirectory
 }
 
-function PublishChocolateyPackage {
-    param(
-        [string] $PackageId,
-        [string] $Version
-    )
-    if (Test-Path -path env:\TEAMCITY_VERSION) {
-        $ApiKey = "repo-pkgs-build:gd2VsbC4NC"
-        $OutputDirectory = "$TempDirectory\output"
-
-        & nuget setApiKey $ApiKey -Source http://push.pkgs.ttldev
-        if ($LASTEXITCODE -ne 0) {
-            throw "Error setting API key for http://push.pkgs.ttldev Artifactory repository."
-        }
-
-        & choco push $OutputDirectory\$PackageId.$Version.nupkg -Source http://push.pkgs.ttldev
-        if ($LASTEXITCODE -ne 0) {
-            throw "Error publishing $OutputDirectory\$PackageId.$Version.nupkg to Artifactory."
-        }
-    }
-    else {
-        Write-Host "Skipping push to Artifactory..."
-    }
-}
-
 try {
     Write-Host "Cleaning up temporary directory..."
     $RootDirectory = (Get-Item -Path ".\" -Verbose).FullName
@@ -105,16 +87,15 @@ try {
         Remove-Item $TempDirectory -Recurse -Force
     }
 
-    $PackageId = "ttl-consul-deployment-agent-" + $env:tcbranch
+    $PackageId = "ttl-consul-deployment-agent-" + $BuildTarget
     $Version = $env:BUILD_NUMBER
     if ($Version -eq $null) {
-        $Version = "0.0.1"
+        Throw "Could not determine build version"
     }
 
     Write-Host "Creating Chocolatey package..."
     CreateChocolateyPackage $PackageId $Version
-    Write-Host "Publishing Chocolatey package to Artifactory..."
-    PublishChocolateyPackage $PackageId $Version
+    Write-Host "Publishing disabled..."
 }
 catch {
     Write-Host "FATAL EXCEPTION: $_"
