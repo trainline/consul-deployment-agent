@@ -2,6 +2,7 @@
 
 import os, stat
 from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec, wrap_script_command
+from agent.healthcheck_utils import HealthcheckTypes, HealthcheckUtils
 
 class DeregisterOldConsulHealthChecks(DeploymentStage):
     def __init__(self):
@@ -53,9 +54,12 @@ class RegisterConsulHealthChecks(DeploymentStage):
         def validate_check(check_id, check):
             if not 'type' in check or (check['type'] != 'script' and check['type'] != 'http'):
                 raise DeploymentError('Failed to register health check \'{0}\', only \'script\' and \'http\' check types are supported, found {1} .'.format(check_id, check['type']))
-            if check['type'] == 'script':
+
+            check_type = HealthcheckUtils.get_type(check)
+
+            if check_type == HealthcheckTypes.SCRIPT:
                 required_fields = ['name', 'script', 'interval']
-            elif check['type'] == 'http':
+            elif check_type == HealthcheckTypes.HTTP:
                 required_fields = ['name', 'http', 'interval']
             for field in required_fields:
                 if not field in check:
@@ -73,8 +77,9 @@ class RegisterConsulHealthChecks(DeploymentStage):
 
         for check_id, check in healthchecks.iteritems():
             service_check_id = create_service_check_id(deployment.service.id, check_id)
+            check_type = HealthcheckUtils.get_type(check)
 
-            if check['type'] == 'script':
+            if check_type == HealthcheckTypes.SCRIPT:
                 file_path = os.path.join(deployment.archive_dir, scripts_base_dir, check['script'])
 
                 # Add execution permission to file
@@ -89,14 +94,12 @@ class RegisterConsulHealthChecks(DeploymentStage):
                     extra = file_path
 
                 command = wrap_script_command(extra, deployment.platform)
-
-                # Pass slice name as argument to healthcheck
-                
-
                 deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, file_path))
                 is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], command, check['interval'])
-            elif check['type'] == 'http':
-                is_success = deployment.consul_api.register_http_check(deployment.service.id, service_check_id, check['name'], check['http'], check['interval'])
+
+            elif check_type == HealthcheckTypes.HTTP:
+                check_url = HealthcheckUtils.get_http_url(check, deployment.service)
+                is_success = deployment.consul_api.register_http_check(deployment.service.id, service_check_id, check['name'], check_url, check['interval'])
             else:
                 is_success = False
 
