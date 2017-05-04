@@ -4,6 +4,7 @@ import json, os, re, stat, sys
 from jsonschema import Draft4Validator
 from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec, wrap_script_command
 from .schemas import SensuHealthCheckSchema
+from agent.healthcheck_utils import HealthcheckTypes, HealthcheckUtils
 
 def create_sensu_check_definition_filename(service_id, check_id, environment='none', service='none', slice='none', version='none'):
     return '{0}-{1}-{2}-{3}-{4}-{5}.json'.format(service_id, check_id, environment, service, slice, version)
@@ -62,18 +63,26 @@ class RegisterSensuHealthChecks(DeploymentStage):
         instance_tags = deployment.instance_tags
         logger = deployment.logger
         deployment_slice = deployment.service.slice
+        check_type = HealthcheckUtils.get_type(check)
+        
         if deployment_slice is not None and deployment_slice.lower() == 'none':
             deployment_slice = None
 
         def get_command():
-            command = wrap_script_command(script_absolute_path, platform)
-            script_args = check.get('script_arguments', '')
-            
-            # Append slice value for local scripts
-            if 'local_script' in check:
-                script_args = ' '.join(filter(None, (script_args, deployment_slice)))
+            if check_type == HealthcheckTypes.HTTP:
+                if deployment.platform == 'linux':
+                    raise Exception('HTTP checks are not yet supported on Linux')
 
-            return '{0} {1}'.format(command, script_args).rstrip()
+                service_url = HealthcheckUtils.get_http_url(check, deployment.service)
+                http_check_path = RegisterSensuHealthChecks.find_sensu_plugin(deployment.sensu['healthcheck_search_paths'], 'ttl-check-http.bat')
+                return '{0} {1}'.format(http_check_path, service_url)
+            else:
+                command = wrap_script_command(script_absolute_path, platform)
+                script_args = check.get('script_arguments', '')
+                # Append slice value for local scripts
+                if 'local_script' in check:
+                    script_args = ' '.join(filter(None, (script_args, deployment_slice)))
+                return '{0} {1}'.format(command, script_args).rstrip()
 
         def get_override_chat_channel():
             override_chat_channel = check.get('override_chat_channel', None)
@@ -134,6 +143,8 @@ class RegisterSensuHealthChecks(DeploymentStage):
 
     @staticmethod
     def register_check(check_id, check, deployment):
+        check_type = HealthcheckUtils.get_type(check)
+
         if 'local_script' in check:
             script_absolute_path = check['local_script']
             deployment.logger.info('Setting mode on file: {0}'.format(script_absolute_path))
@@ -141,8 +152,10 @@ class RegisterSensuHealthChecks(DeploymentStage):
             os.chmod(script_absolute_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
         elif 'server_script' in check:
             script_absolute_path = check['server_script']
+        elif check_type == HealthcheckTypes.HTTP:
+            script_absolute_path = ''
         else:
-            raise DeploymentError('Missing script property \'local_script\' nor \'server_script\' in check definition')
+            raise DeploymentError('Sensu check must define a local_script, server_script or http value')
 
         deployment.logger.debug('Sensu check {0} script path: {1}'.format(check_id, script_absolute_path))
 

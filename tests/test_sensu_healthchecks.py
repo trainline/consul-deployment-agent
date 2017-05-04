@@ -6,6 +6,9 @@ from mock import Mock, patch
 from agent.deployment_stages.common import DeploymentError
 from agent.deployment_stages.sensu_healthchecks import RegisterSensuHealthChecks
 
+MOCK_PORT = 8899
+MOCK_SENSU_PLUGINS = 'sensu_plugins_path'
+
 class MockLogger(object):
     def __init__(self):
         self.info = Mock()
@@ -15,6 +18,9 @@ class MockLogger(object):
 
 class MockService(object):
     slice = None
+    
+    def __init__(self):
+        self.port = MOCK_PORT
 
     def set_slice(self, slice):
         self.slice = slice
@@ -30,7 +36,7 @@ class MockDeployment(object):
             'OwningCluster': 'cluster'
         }
         self.sensu = {
-            'healthcheck_search_paths': ['sensu_plugins_path']
+            'healthcheck_search_paths': [MOCK_SENSU_PLUGINS]
         }
         self.service = MockService()
 
@@ -363,3 +369,57 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         self.deployment.service.slice = 'green'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, check['server_script'], self.deployment)
         self.assertEqual(check_definition['checks']['sensu-check1']['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name')
+
+    @patch('os.path.exists', return_value=True)
+    def test_generate_windows_http_check(self, mock_patch):
+        check = {
+            'name': 'sensu-http-win-check',
+            'type': 'http',
+            'http': 'https://localhost/my/service',
+            'interval': 10
+        }
+        self.deployment.service.slice = 'none'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, '', self.deployment)
+        self.assertEqual(check_definition['checks']['sensu-http-win-check']['command'], '{0}/ttl-check-http.bat https://localhost/my/service'.format(MOCK_SENSU_PLUGINS))
+
+    @patch('os.path.exists', return_value=True)
+    def test_generate_windows_http_check_with_port(self, mock_patch):
+        check = {
+            'name': 'sensu-http-win-check',
+            'type': 'http',
+            'http': 'https://localhost:${PORT}/my/service',
+            'interval': 10
+        }
+        self.deployment.service.slice = 'none'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, '', self.deployment)
+        self.assertEqual(check_definition['checks']['sensu-http-win-check']['command'], '{0}/ttl-check-http.bat https://localhost:{1}/my/service'.format(MOCK_SENSU_PLUGINS, MOCK_PORT))
+
+    @patch('os.path.exists', return_value=True)
+    def test_linux_http_checks_unsupported(self, mock_patch):
+        check = {
+            'name': 'sensu-http-win-check',
+            'type': 'http',
+            'http': 'https://localhost/my/service',
+            'interval': 10
+        }
+        self.deployment.service.slice = 'none'
+        self.deployment.platform = 'linux'
+        with self.assertRaises(Exception) as context:
+            check_definition = RegisterSensuHealthChecks.generate_check_definition(check, '', self.deployment)
+        self.assertTrue('HTTP checks are not yet supported on Linux' in context.exception)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
