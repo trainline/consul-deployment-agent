@@ -405,21 +405,6 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         self.deployment.service.slice = 'none'
         self.deployment.platform = 'linux'
         with self.assertRaises(Exception) as context:
-            check_definition = RegisterSensuHealthChecks.generate_check_definition(check, '', self.deployment)
+            RegisterSensuHealthChecks.generate_check_definition(check, '', self.deployment)
         self.assertTrue('HTTP checks are not yet supported on Linux' in context.exception)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
