@@ -1,7 +1,5 @@
 # consul-deployment-agent
 
-[TeamCity pipeline] (http://infra.teamcity.ci.ttldev/project.html?projectId=PlatformServices_ConsulDeploymentAgent&tab=projectOverview)
-
 #### Command line options
 
 ```bash
