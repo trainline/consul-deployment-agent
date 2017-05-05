@@ -380,7 +380,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.service.slice = 'none'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, '', self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-http-win-check']['command'], '{0}/ttl-check-http.bat https://localhost/my/service'.format(MOCK_SENSU_PLUGINS))
+        self.assertEqual(check_definition['checks']['sensu-http-win-check']['command'], '"{0}/ttl-check-http.bat" https://localhost/my/service'.format(MOCK_SENSU_PLUGINS))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_windows_http_check_with_port(self, mock_patch):
@@ -392,7 +392,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.service.slice = 'none'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, '', self.deployment)
-        self.assertEqual(check_definition['checks']['sensu-http-win-check']['command'], '{0}/ttl-check-http.bat https://localhost:{1}/my/service'.format(MOCK_SENSU_PLUGINS, MOCK_PORT))
+        self.assertEqual(check_definition['checks']['sensu-http-win-check']['command'], '"{0}/ttl-check-http.bat" https://localhost:{1}/my/service'.format(MOCK_SENSU_PLUGINS, MOCK_PORT))
 
     @patch('os.path.exists', return_value=True)
     def test_linux_http_checks_unsupported(self, mock_patch):
