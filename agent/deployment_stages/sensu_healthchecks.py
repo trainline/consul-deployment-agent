@@ -177,11 +177,13 @@ class RegisterSensuHealthChecks(DeploymentStage):
     @staticmethod
     def validate_check_properties(check_id, check):
         Draft4Validator(SensuHealthCheckSchema).validate(check)
+        check_type = HealthcheckUtils.get_type(check)
+        
         if not re.match(r'^[\w\.-]+$', check['name']):
             raise DeploymentError('Health check name \'{0}\' doesn\'t match required Sensu name expression {1}'.format(check['name'], '/^[\w\.-]+$/'))
         if 'local_script' in check and 'server_script' in check:
             raise DeploymentError('Failed to register health check \'{0}\', you can use either \'local_script\' or \'server_script\', but not both.'.format(check_id))
-        if not ('local_script' in check or 'server_script' in check):
+        if not ('local_script' in check or 'server_script' in check or check_type == HealthcheckTypes.HTTP):
             raise DeploymentError('Failed to register health check \'{0}\', you need at least one of: \'local_script\' or \'server_script\''.format(check_id))
         if 'standalone' in check and 'aggregate' in check:
             if check['standalone'] is True and check['aggregate'] is True:
