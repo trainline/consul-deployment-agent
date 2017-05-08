@@ -54,7 +54,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
         for plugin_path in plugin_paths:
             script_filepath = os.path.join(plugin_path, script_filename)
             if os.path.exists(script_filepath):
-                return '"{0}"'.format(script_filepath)
+                return '{0}'.format(script_filepath)
         return None
 
     @staticmethod
