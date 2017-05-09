@@ -41,10 +41,16 @@ class LifecycleHookExecutionStage(DeploymentStage):
         if location.startswith('/'):
             location = location[1:]
         filepath = os.path.join(deployment.archive_dir, location)
-        env = {'APPLICATION_ID':str(deployment.service.id),
-               'DEPLOYMENT_BASE_DIR':str(deployment.archive_dir),
-               'DEPLOYMENT_ID':str(deployment.id),
-               'LIFECYCLE_EVENT':str(self.lifecycle_event)}
+        env = {
+            'APPLICATION_ID':str(deployment.service.id),
+            'DEPLOYMENT_BASE_DIR':str(deployment.archive_dir),
+            'DEPLOYMENT_ID':str(deployment.id),
+            'LIFECYCLE_EVENT':str(self.lifecycle_event),
+            'EM_SERVICE_SLICE':str(deployment.service.slice),
+            'EM_SERVICE_NAME':str(deployment.service.name),
+            'EM_SERVICE_PORT':str(deployment.service.port),
+            'EM_SERVICE_VERSION':str(deployment.service.version)
+        }
         self._init_script(hook_definition[0], filepath, env, deployment.platform, deployment.timeout)
         self._run_script(deployment.logger)
     def _run_script(self, logger):
