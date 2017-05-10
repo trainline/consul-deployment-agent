@@ -3,9 +3,9 @@
 require 'uri'
 require 'digest/md5'
 
-artifactory_base_url = ENV['artifactory_base_url']
-artifactory_user = ENV['artifactory_user']
-artifactory_password = ENV['artifactory_password']
+artifactory_base_url = 'http://view.artifacts.ttldev/artifactory/'
+artifactory_user = ENV['ARTIFACTORY_USER']
+artifactory_password = ENV['ARTIFACTORY_PASSWORD']
 
 if ARGV.length < 2
   puts "Usage: #{File.basename(__FILE__)} <base_url_path> <file1> [file2] [file3] ..."
@@ -24,24 +24,24 @@ abort "Provide a artifactory_password environment variable" unless artifactory_p
 
 ARGV.shift
 
-def upload_to_artifactory(filename, url, user, password)
+def upload_to_artifactory( filename, url, user, password )
   digMD5 = Digest::MD5.new
   digSHA1 = Digest::SHA1.new
-  File.open(filename, 'rb') do |io|
+  File.open( filename, 'rb' ) do |io|
     buf = ""
     while io.read(65536, buf) do
       digMD5.update(buf)
       digSHA1.update(buf)
     end
   end
-  system("curl -v -X PUT -i -T #{filename} -u \"#{user}:#{password}\" -H\"X-Checksum-Md5:#{digMD5}\" -H\"X-Checksum-Sha1:#{digSHA1}\" #{url}")
+  system( "curl -v -X PUT -i -T #{filename} -u \"#{user}:#{password}\" -H\"X-Checksum-Md5:#{digMD5}\" -H\"X-Checksum-Sha1:#{digSHA1}\" #{url}" )
 end
 
 ARGV.each do |file|
   puts "Uploading #{file} to ..."
-  file_basename = File.basename(file)
-  uri = URI::join(artifactory_base_url, url_path+'/', file_basename)
+  file_basename = File.basename( file )
+  uri = URI::join( artifactory_base_url, url_path+'/', file_basename )
   url = uri.to_s
   puts url
-  upload_to_artifactory(file, url, artifactory_user, artifactory_password)
+  upload_to_artifactory( file, url, artifactory_user, artifactory_password )
 end
