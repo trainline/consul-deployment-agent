@@ -56,8 +56,8 @@ class ShellScript(Script):
 class PowershellScript(Script):
     def __init__(self, filepath, env={}, run_as=None, timeout=3600, arch=None):
         Script.__init__(self, filepath, env, run_as, timeout)
-	self.exe = r'C:/WINDOWS/system32/WindowsPowerShell/v1.0/powershell.exe'
-	if arch == '32bit':
+        self.exe = r'C:/WINDOWS/system32/WindowsPowerShell/v1.0/powershell.exe'
+        if arch == '32bit':
 	    self.exe = r'C:/WINDOWS/SysWOW64/WindowsPowerShell/v1.0/powershell.exe'
     def execute(self, logger):
         self.process = subprocess.Popen([self.exe,
