@@ -6,8 +6,8 @@ from .common import DeploymentError, DeploymentStage, find_healthchecks, get_pre
 from .schemas import SensuHealthCheckSchema
 from agent.healthcheck_utils import HealthcheckTypes, HealthcheckUtils
 
-def create_sensu_check_definition_filename(service_id, check_id, environment='none', service='none', slice='none', version='none'):
-    return '{0}-{1}-{2}-{3}-{4}-{5}.json'.format(service_id, check_id, environment, service, slice, version)
+def create_sensu_check_definition_filename(service_id, check_id, slice='none'):
+    return '{0}-{1}-{2}.json'.format(service_id, check_id, slice)
 
 class DeregisterOldSensuHealthChecks(DeploymentStage):
     def __init__(self):
@@ -28,7 +28,7 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
                     return
                 for check_id, check in healthchecks.iteritems():
                     deployment.logger.debug('Looking for sensu check: {0}'.format(check_id))
-                    check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], create_sensu_check_definition_filename(deployment.service.id, check_id, deployment._environment.environment_name, deployment.service.name, deployment.service.slice, deployment.service.version))
+                    check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], create_sensu_check_definition_filename(deployment.service.id, check_id, deployment.service.slice))
                     if os.path.exists(check_definition_absolute_path):
                         deployment.logger.info('Removing healthcheck: {0}'.format(check_definition_absolute_path))
                         os.remove(check_definition_absolute_path)
@@ -160,7 +160,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
         deployment.logger.debug('Sensu check {0} script path: {1}'.format(check_id, script_absolute_path))
 
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment)
-        check_definition_filename = create_sensu_check_definition_filename(deployment.service.id, check_id, deployment._environment.environment_name, deployment.service.name, deployment.service.slice, deployment.service.version)
+        check_definition_filename = create_sensu_check_definition_filename(deployment.service.id, check_id, deployment.service.slice)
         check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], check_definition_filename)
         is_success = RegisterSensuHealthChecks.write_check_definition_file(check_definition, check_definition_absolute_path, deployment)
         if not is_success:
