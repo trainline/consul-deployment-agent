@@ -53,3 +53,14 @@ class HealthcheckUtils(object):
             url = url.replace('${PORT}', str(port))
         return url
 
+    @staticmethod
+    def get_unique_name(check, service):
+        check_name = check.get('name', 'unnamed-check')
+        service_base = service.name.split('-')[1]
+        unique_name = "{0}-{1}".format(service_base, check_name)
+        slice = service.slice
+        if slice != 'none' and slice is not None:
+            slice_id = slice[0]
+            unique_name = "{0}-{1}".format(unique_name, slice_id)
+        return unique_name
+

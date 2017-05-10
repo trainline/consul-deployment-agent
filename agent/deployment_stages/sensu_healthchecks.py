@@ -108,9 +108,11 @@ class RegisterSensuHealthChecks(DeploymentStage):
                     override_notification_settings = check.get('team', None)
             return override_notification_settings
         
+        unique_check_name = HealthcheckUtils.get_unique_name(check, deployment.service)
+
         check_definition = {
             'checks': {
-                check['name']: {
+                unique_check_name: {
                     'aggregate': check.get('aggregate', False),
                     'alert_after': check.get('alert_after', 600),
                     'command': get_command(),
@@ -137,7 +139,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
 
         custom_instance_tags = {k:v for k, v in instance_tags.iteritems() if not k.startswith('aws:')}
         for key, value in custom_instance_tags.iteritems():
-            check_definition['checks'][check['name']]['ttl_' + key.lower()] = value
+            check_definition['checks'][unique_check_name]['ttl_' + key.lower()] = value
 
         return check_definition
 
