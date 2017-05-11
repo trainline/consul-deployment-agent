@@ -12,6 +12,9 @@ class Deployment(object):
             raise ValueError('config must be specified.')
         if consul_api is None:
             raise ValueError('consul_api must be specified.')
+        
+        print('DEPLOYMENT: {0}'.format(config))
+
         self._validate_config(config)
         self._aws_config = aws_config
         self.consul_api = consul_api

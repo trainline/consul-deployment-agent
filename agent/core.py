@@ -98,6 +98,9 @@ def wait_for_instance_readiness(config):
         logging.warning('Instance readiness timeout has been reached, will assume instance is ready for deployments.')
 
 def execute(action, action_info, environment, consul_api):
+    
+    logging.info('EXECUTE: {0}'.format(action))
+    
     if isinstance(action, InstallAction):
         deployment_config = {
             'cause': 'Deployment',
