@@ -12,10 +12,10 @@ class Service(object):
         }
         self.id = definition.get('ID')
         self.name = self.id
-        self.port = int(definition.get('Port', 0))
         self.tags = definition.get('Tags', [])
         self.deployment_id = self._extract_tag_with_prefix('deployment_id:')
         self.slice = self._extract_tag_with_prefix('slice:')
+        self.port = self._get_port(definition.get('Ports'), self.slice)
         self.version = self._extract_tag_with_prefix('version:')
         self._validate()
 
@@ -26,6 +26,13 @@ class Service(object):
         return json.dumps(
             {'id': self.id, 'name': self.name, 'port': self.port,
              'slice': self.slice, 'version': self.version, 'tags': self.tags})
+
+    def _get_port(self, port_config, slice):
+        if port_config is None:
+            return 0
+        if slice is None or slice.lower() == 'none':
+            return 0
+        return port_config.get(slice.lower(), 0)
 
     def _extract_tag_with_prefix(self, prefix):
         tag = next((tag for tag in self.tags if tag.startswith(prefix)), None)

@@ -9,7 +9,7 @@ class TestService(unittest.TestCase):
             'Address':'127.0.0.1',
             'ID':'Service-blue',
             'Name':'Service',
-            'Port':12345,
+            'Ports': {'blue':12345, 'green':67890},
             'Tags':['version:1.0.0', 'deployment_id:12345', 'slice:blue']
         }
 
@@ -31,7 +31,7 @@ class TestService(unittest.TestCase):
             'Address':'127.0.0.1',
             'ID':'Service-blue',
             'Name':'Service',
-            'Port':12345,
+            'Ports': {'blue':12345, 'green':67890},
             'Tags':['version:1.0.0']
         }
         installation_info = {
@@ -47,10 +47,35 @@ class TestService(unittest.TestCase):
         self.assertEqual(service.installation.get('package_bucket'), 'some-bucket')
         self.assertEqual(service.installation.get('package_key'), 'some-key')
         self.assertEqual(service.name, 'Service-blue')
-        self.assertEqual(service.port, 12345)
+        self.assertEqual(service.port, 0)
         self.assertEqual(service.slice, None)
         self.assertEqual(service.version, '1.0.0')
 
+    def test_service_instantiation_from_server_role_with_slice(self):
+        definition = {
+            'Address':'127.0.0.1',
+            'ID':'Service-green',
+            'Name':'Service',
+            'Ports': {'blue':12345, 'green':67890},
+            'Tags':['version:1.0.0', 'deployment_id:12345', 'slice:green']
+        }
+        installation_info = {
+            'InstallationTimeout':60,
+            'PackageBucket':'some-bucket',
+            'PackageKey':'some-key'
+        }
+        service = Service(definition, installation_info)
+        self.assertEqual(service.address, '127.0.0.1')
+        self.assertEqual(service.deployment_id, '12345')
+        self.assertEqual(service.id, 'Service-green')
+        self.assertEqual(service.installation.get('timeout'), 3600)
+        self.assertEqual(service.installation.get('package_bucket'), 'some-bucket')
+        self.assertEqual(service.installation.get('package_key'), 'some-key')
+        self.assertEqual(service.name, 'Service-green')
+        self.assertEqual(service.port, 67890)
+        self.assertEqual(service.slice, 'green')
+        self.assertEqual(service.version, '1.0.0')
+    
     def test_service_instantiation_failure(self):
         definition = {
             'Address':None,
