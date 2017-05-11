@@ -108,6 +108,9 @@ def execute(action, action_info, environment, consul_api):
             'sensu': config['sensu'],
             'service': action.service
         }
+
+        loggging.info('Execute, service: {0}'.format(action.service))
+
         deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])
         return deployment.run()
     elif isinstance(action, IgnoreAction):

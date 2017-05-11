@@ -15,6 +15,9 @@ class ConsulDataLoader(object):
         definition_key = key_naming_convention.get_service_definition_key(environment, name, version)
         installation_key = key_naming_convention.get_service_installation_key(environment, name, version)
         definition = self._consul_api.get_value(definition_key).get('Service', {})
+        
+        logging.info('Data loder definition: {0}'.format(definition))
+        
         definition['Address'] = environment.ip_address
         installation = self._consul_api.get_value(installation_key)
         consul_name = environment.environment_name + '-' + name + ('-' + deployment_slice if deployment_slice != 'none' else '')
