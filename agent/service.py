@@ -1,9 +1,12 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import json
+import logging
 
 class Service(object):
     def __init__(self, definition, installation_info={}):
+        logging.debug('Service Definition is {0}'.format(definition))
+
         self.address = definition.get('Address')
         self.installation = {
             'timeout': installation_info.get('InstallationTimeout', 60) * 60,
@@ -28,6 +31,8 @@ class Service(object):
              'slice': self.slice, 'version': self.version, 'tags': self.tags})
 
     def _get_port(self, port_config, slice):
+        logging.debug('Getting {0} port from {1}'.format(slice, port_config))
+
         if port_config is None:
             return 0
         if slice is None or slice.lower() == 'none':
