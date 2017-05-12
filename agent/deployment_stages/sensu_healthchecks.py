@@ -106,10 +106,11 @@ class RegisterSensuHealthChecks(DeploymentStage):
                 if check.get('team', None) is not None:
                     logger.warning('\'team\' property is deprecated, please use \'override_notification_settings\' instead')
                     override_notification_settings = check.get('team', None)
+            if override_notification_settings is None:
+                override_notification_settings = deployment.cluster.lower()
             return override_notification_settings
         
         unique_check_name = HealthcheckUtils.get_unique_name(check, deployment.service)
-
         check_definition = {
             'checks': {
                 unique_check_name: {

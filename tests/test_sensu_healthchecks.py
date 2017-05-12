@@ -33,6 +33,7 @@ class MockDeployment(object):
         self.logger = MockLogger()
         self.archive_dir = ''
 	self.platform = 'windows'
+        self.cluster = 'ateam'
         self.instance_tags = {
             'Environment': 'local',
             'Role': 'role',
@@ -196,7 +197,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['team'], None)
+        self.assertEqual(check_definition['checks'][unique_check_name]['team'], 'ateam')
         check['override_notification_settings'] = 'dietcode'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(check, 'test_path', self.deployment)
         self.assertEqual(check_definition['checks'][unique_check_name]['team'], 'dietcode')
