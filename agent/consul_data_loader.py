@@ -50,7 +50,7 @@ class ConsulDataLoader(object):
                 if deployment_slice is not None and deployment_slice != 'none':
                     port = service.portsConfig[deployment_slice]
                     logging.debug('UPGRADING PORT INFO {0}, {1}, {2}'.format(name, deployment_slice, port))
-                    service.port = service.port
+                    service.port = port
 
 
                 if deployment_action == 'Install':
