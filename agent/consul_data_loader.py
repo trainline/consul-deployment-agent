@@ -47,7 +47,11 @@ class ConsulDataLoader(object):
                 service.tag('server_role:', environment.server_role)
                 service.tag('slice:', deployment_slice)
                 
-                self.update_service_definition(server_role, service)
+                if deployment_slice is not None and deployment_slice != 'none':
+                    port = service.portsConfig[deployment_slice]
+                    logging.debug('UPGRADING PORT INFO {0}, {1}, {2}'.format(name, deployment_slice, port))
+                    service.port = service.port
+
 
                 if deployment_action == 'Install':
                     server_role.actions.append(InstallAction(deployment_id, service))
@@ -62,20 +66,6 @@ class ConsulDataLoader(object):
                 logging.exception(e)
                 logging.warning('Failed to read service from Consul, will ignore. [name: {0} version: {1} deployment_id: {2}]'.format(name, version, deployment_id))
         return server_role
-
-    def update_service_definition(self, server_role, service):
-        logging.debug('UPDATING SERVUCE DEFINITIONS.......')
-        for action in server_role.get('actions', []):
-            service_def = action.get('service')
-            logging.debug('UPDATING {0}'.format(service_def.get('name')))
-            if service_def is not None:
-                service_name = service_def.get('name')
-                service_slice = service_def.get('slice')
-                service_version = service.get('version')
-                logging.debug('LOOKING FOR {0} {1} {2}'.format(service_name, service_slice, service_version))
-                if service_name == service.name and service_version == service.version:
-                    service_def.port = service.portsConfig[service_slice]
-                    logging.debug('UPDATED SERVICE DEF: {0}'.format(service_def))
 
     def load_service_catalogue(self):
         logging.debug('LOADING SERVICE CATALOG')

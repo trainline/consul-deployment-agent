@@ -22,7 +22,6 @@ class TestService(unittest.TestCase):
         self.assertEqual(service.installation.get('package_bucket'), None)
         self.assertEqual(service.installation.get('package_key'), None)
         self.assertEqual(service.name, 'Service-blue')
-        self.assertEqual(service.port, 12345)
         self.assertEqual(service.slice, 'blue')
         self.assertEqual(service.version, '1.0.0')
 
@@ -72,7 +71,6 @@ class TestService(unittest.TestCase):
         self.assertEqual(service.installation.get('package_bucket'), 'some-bucket')
         self.assertEqual(service.installation.get('package_key'), 'some-key')
         self.assertEqual(service.name, 'Service-green')
-        self.assertEqual(service.port, 67890)
         self.assertEqual(service.slice, 'green')
         self.assertEqual(service.version, '1.0.0')
     
