@@ -1,7 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import json
-import logging
 
 class Service(object):
     def __init__(self, definition, installation_info={}):
