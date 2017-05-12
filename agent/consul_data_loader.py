@@ -15,9 +15,6 @@ class ConsulDataLoader(object):
         definition_key = key_naming_convention.get_service_definition_key(environment, name, version)
         installation_key = key_naming_convention.get_service_installation_key(environment, name, version)
         definition = self._consul_api.get_value(definition_key).get('Service', {})
-        
-        logging.info('Data loder definition: {0}'.format(definition))
-        
         definition['Address'] = environment.ip_address
         installation = self._consul_api.get_value(installation_key)
         consul_name = environment.environment_name + '-' + name + ('-' + deployment_slice if deployment_slice != 'none' else '')
@@ -25,12 +22,10 @@ class ConsulDataLoader(object):
         return Service(definition, installation)
 
     def load_server_role(self, environment):
-        logging.debug('LOAD SERVER ROLE')
         server_role = ServerRole(environment.server_role)
         services_key = key_naming_convention.get_server_role_services_key(environment)
         for key in self._consul_api.get_keys(services_key):
             try:
-                logging.debug('GETTING DEFINITION...')
                 definition = self._consul_api.get_value(key)
                 name = definition.get('Name')
                 version = definition.get('Version')
@@ -39,7 +34,6 @@ class ConsulDataLoader(object):
 
                 # If Action isn't specified, we assume it's Install for backward compatibility for now
                 deployment_action = definition.get('Action', 'Install')
-                logging.debug('LOADING SERVICE??')
                 service = self._load_service(environment, deployment_id, name, version, deployment_slice)
                 service.deployment_id = deployment_id
                 service.slice = deployment_slice
@@ -49,9 +43,8 @@ class ConsulDataLoader(object):
                 
                 if deployment_slice is not None and deployment_slice != 'none':
                     port = service.portsConfig[deployment_slice]
-                    logging.debug('UPGRADING PORT INFO {0}, {1}, {2}'.format(name, deployment_slice, port))
+                    logging.debug('Upgrading port info: {0}, {1}, {2}'.format(name, deployment_slice, port))
                     service.port = port
-
 
                 if deployment_action == 'Install':
                     server_role.actions.append(InstallAction(deployment_id, service))
@@ -68,12 +61,10 @@ class ConsulDataLoader(object):
         return server_role
 
     def load_service_catalogue(self):
-        logging.debug('LOADING SERVICE CATALOG')
         registered_services = self._consul_api.get_service_catalogue()
         services = []
         for consul_name, definition in registered_services.iteritems():
             for tag in definition['Tags']:
                 if tag.startswith('deployment_id'):
-                    logging.debug('CREATING SERVICE FROM CATALOG DEFINTIION')
                     services.append(Service(definition))
         return services

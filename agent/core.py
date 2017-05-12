@@ -98,9 +98,6 @@ def wait_for_instance_readiness(config):
         logging.warning('Instance readiness timeout has been reached, will assume instance is ready for deployments.')
 
 def execute(action, action_info, environment, consul_api):
-    
-    logging.info('EXECUTE: {0}'.format(action))
-    
     if isinstance(action, InstallAction):
         deployment_config = {
             'cause': 'Deployment',
@@ -111,9 +108,6 @@ def execute(action, action_info, environment, consul_api):
             'sensu': config['sensu'],
             'service': action.service
         }
-
-        logging.info('Execute, service: {0}'.format(action.service))
-
         deployment = Deployment(config=deployment_config, consul_api=consul_api, aws_config=config['aws'])
         return deployment.run()
     elif isinstance(action, IgnoreAction):
@@ -126,10 +120,7 @@ def execute(action, action_info, environment, consul_api):
 def converge(consul_api, environment):
     try:
         data_loader = ConsulDataLoader(consul_api)
-
         server_role = data_loader.load_server_role(environment)
-        logging.info('Server role configuration: {0}'.format(server_role))
-
         registered_services = data_loader.load_service_catalogue()
         logging.debug('Registered services:')
         for service in registered_services:
