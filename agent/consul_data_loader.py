@@ -25,10 +25,12 @@ class ConsulDataLoader(object):
         return Service(definition, installation)
 
     def load_server_role(self, environment):
+        logging.debug('LOAD SERVER ROLE')
         server_role = ServerRole(environment.server_role)
         services_key = key_naming_convention.get_server_role_services_key(environment)
         for key in self._consul_api.get_keys(services_key):
             try:
+                logging.debug('GETTING DEFINITION...')
                 definition = self._consul_api.get_value(key)
                 name = definition.get('Name')
                 version = definition.get('Version')
@@ -37,7 +39,7 @@ class ConsulDataLoader(object):
 
                 # If Action isn't specified, we assume it's Install for backward compatibility for now
                 deployment_action = definition.get('Action', 'Install')
-
+                logging.debug('LOADING SERVICE??')
                 service = self._load_service(environment, deployment_id, name, version, deployment_slice)
                 service.deployment_id = deployment_id
                 service.slice = deployment_slice
@@ -60,10 +62,12 @@ class ConsulDataLoader(object):
         return server_role
 
     def load_service_catalogue(self):
+        logging.debug('LOADING SERVICE CATALOG')
         registered_services = self._consul_api.get_service_catalogue()
         services = []
         for consul_name, definition in registered_services.iteritems():
             for tag in definition['Tags']:
                 if tag.startswith('deployment_id'):
+                    logging.debug('CREATING SERVICE FROM CATALOG DEFINTIION')
                     services.append(Service(definition))
         return services
