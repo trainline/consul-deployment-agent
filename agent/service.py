@@ -18,7 +18,8 @@ class Service(object):
         self.tags = definition.get('Tags', [])
         self.deployment_id = self._extract_tag_with_prefix('deployment_id:')
         self.slice = self._extract_tag_with_prefix('slice:')
-        self.port = self._get_port(definition.get('Ports'), self.slice)
+        self.port = 0
+        self.portsConfig = definition.get('Ports', {'blue':0, 'green':0})
         self.version = self._extract_tag_with_prefix('version:')
         self._validate()
 
