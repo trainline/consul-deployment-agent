@@ -5,6 +5,7 @@ from jsonschema import Draft4Validator
 from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec, wrap_script_command
 from .schemas import SensuHealthCheckSchema
 from agent.healthcheck_utils import HealthcheckTypes, HealthcheckUtils
+from agent.health_check import HealthCheck
 
 def create_sensu_check_definition_filename(service_id, check_id, slice='none'):
     return '{0}-{1}-{2}.json'.format(service_id, check_id, slice)
@@ -58,111 +59,24 @@ class RegisterSensuHealthChecks(DeploymentStage):
         return None
 
     @staticmethod
-    def generate_check_definition(check, script_absolute_path, deployment):
-        platform = deployment.platform
+    def generate_check_definition(check_data, deployment):
         instance_tags = deployment.instance_tags
-        logger = deployment.logger
         deployment_slice = deployment.service.slice
-        check_type = HealthcheckUtils.get_type(check)
-        
         if deployment_slice is not None and deployment_slice.lower() == 'none':
             deployment_slice = None
 
-        def get_command():
-            if check_type == HealthcheckTypes.HTTP:
-                if deployment.platform == 'linux':
-                    raise Exception('HTTP checks are not yet supported on Linux')
-
-                service_url = HealthcheckUtils.get_http_url(check, deployment.service)
-                http_check_path = RegisterSensuHealthChecks.find_sensu_plugin(deployment.sensu['healthcheck_search_paths'], 'ttl-check-http.bat')
-                return '{0} {1}'.format(http_check_path, service_url)
-            else:
-                command = wrap_script_command(script_absolute_path, platform)
-                script_args = check.get('script_arguments', '')
-                # Append slice value for local scripts
-                if 'local_script' in check:
-                    script_args = ' '.join(filter(None, (script_args, deployment_slice)))
-                return '{0} {1}'.format(command, script_args).rstrip()
-
-        def get_override_chat_channel():
-            override_chat_channel = check.get('override_chat_channel', None)
-            if override_chat_channel is not None:
-                return ','.join(override_chat_channel)
-            return 'undef'
-
-        def get_override_notification_email():
-            override_notification_email = check.get('override_notification_email', None)
-            if override_notification_email is None:
-                if check.get('notification_email') is not None:
-                    logger.warning('\'notification_email\' property is deprecated, please use \'override_notification_email\' instead')
-                    override_notification_email = check.get('notification_email', None)
-            if override_notification_email is not None:
-                return ','.join(override_notification_email)
-            return 'undef'
-
-        def get_override_notification_settings():
-            override_notification_settings = check.get('override_notification_settings', None)
-            if override_notification_settings is None:
-                if check.get('team', None) is not None:
-                    logger.warning('\'team\' property is deprecated, please use \'override_notification_settings\' instead')
-                    override_notification_settings = check.get('team', None)
-            if override_notification_settings is None:
-                override_notification_settings = deployment.cluster.lower()
-            return override_notification_settings
+        check = HealthCheck.create(check_data, deployment, deployment_slice, deployment.logger)
+        check_definition = { 'checks': { check.name: check.get_definition() } }
         
-        unique_check_name = HealthcheckUtils.get_unique_name(check, deployment.service)
-        check_definition = {
-            'checks': {
-                unique_check_name: {
-                    'aggregate': check.get('aggregate', False),
-                    'alert_after': check.get('alert_after', 600),
-                    'command': get_command(),
-                    'handlers': ['default'],
-                    'interval': check.get('interval'),
-                    'notification_email': get_override_notification_email(),
-                    'occurrences': check.get('occurrences', 5),
-                    'page': check.get('paging_enabled', False),
-                    'project': check.get('project', False),
-                    'realert_every': check.get('realert_every', 30),
-                    'runbook': check.get('runbook', 'Please provide useful information to resolve alert'),
-                    'sla': check.get('sla', 'No SLA defined'),
-                    'slack_channel': get_override_chat_channel(),
-                    'standalone': check.get('standalone', True),
-                    'subscribers': ['sensu-base'],
-                    'tags': [],
-                    'team': get_override_notification_settings(),
-                    'ticket': check.get('ticketing_enabled', False),
-                    'timeout': check.get('timeout', 120),
-                    'tip': check.get('tip', 'Fill me up with information')
-                }
-            }
-        }
-
         custom_instance_tags = {k:v for k, v in instance_tags.iteritems() if not k.startswith('aws:')}
         for key, value in custom_instance_tags.iteritems():
-            check_definition['checks'][unique_check_name]['ttl_' + key.lower()] = value
+            check_definition['checks'][check.name]['ttl_' + key.lower()] = value
 
         return check_definition
 
     @staticmethod
     def register_check(check_id, check, deployment):
-        check_type = HealthcheckUtils.get_type(check)
-
-        if 'local_script' in check:
-            script_absolute_path = check['local_script']
-            deployment.logger.info('Setting mode on file: {0}'.format(script_absolute_path))
-            st = os.stat(script_absolute_path)
-            os.chmod(script_absolute_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-        elif 'server_script' in check:
-            script_absolute_path = check['server_script']
-        elif check_type == HealthcheckTypes.HTTP:
-            script_absolute_path = ''
-        else:
-            raise DeploymentError('Sensu check must define a local_script, server_script or http value')
-
-        deployment.logger.debug('Sensu check {0} script path: {1}'.format(check_id, script_absolute_path))
-
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, script_absolute_path, deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, deployment)
         check_definition_filename = create_sensu_check_definition_filename(deployment.service.id, check_id, deployment.service.slice)
         check_definition_absolute_path = os.path.join(deployment.sensu['sensu_check_path'], check_definition_filename)
         is_success = RegisterSensuHealthChecks.write_check_definition_file(check_definition, check_definition_absolute_path, deployment)
@@ -196,18 +110,18 @@ class RegisterSensuHealthChecks(DeploymentStage):
 
     @staticmethod
     def validate_check_script(check, local_scripts_base_dir, deployment):
-        if 'local_script' in check:
-            if check['local_script'].startswith('/'):
-                check['local_script'] = check['local_script'][1:]
-            absolute_file_path = os.path.join(deployment.archive_dir, local_scripts_base_dir, check['local_script'])
+        if 'script' in check:
+            if check['script'].startswith('/'):
+                check['script'] = check['script'][1:]
+            absolute_file_path = os.path.join(deployment.archive_dir, local_scripts_base_dir, check['script'])
             if not os.path.exists(absolute_file_path):
-                raise DeploymentError('Couldn\'t find Sensu check script in package with path: {0}'.format(os.path.join(local_scripts_base_dir, check['local_script'])))
-            check['local_script'] = absolute_file_path
-        elif 'server_script' in check:
-            absolute_file_path = RegisterSensuHealthChecks.find_sensu_plugin(deployment.sensu['healthcheck_search_paths'], check['server_script'])
+                raise DeploymentError('Couldn\'t find Sensu check script in package with path: {0}'.format(os.path.join(local_scripts_base_dir, check['script'])))
+            check['script'] = absolute_file_path
+        elif 'plugin' in check:
+            absolute_file_path = RegisterSensuHealthChecks.find_sensu_plugin(deployment.sensu['healthcheck_search_paths'], check['plugin'])
             if absolute_file_path is None:
-                raise DeploymentError('Couldn\'t find Sensu plugin script: {0}\nPaths searched: {1}'.format(check['server_script'], deployment.sensu['healthcheck_search_paths']))
-            check['server_script'] = absolute_file_path
+                raise DeploymentError('Couldn\'t find Sensu plugin script: {0}\nPaths searched: {1}'.format(check['plugin'], deployment.sensu['healthcheck_search_paths']))
+            check['plugin'] = absolute_file_path
 
     @staticmethod
     def validate_unique_ids(checks):

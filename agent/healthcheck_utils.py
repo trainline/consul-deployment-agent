@@ -47,7 +47,7 @@ class HealthcheckUtils(object):
 
     @staticmethod
     def get_http_url(check, service):
-        url = check.get('http', '')
+        url = check.get('url', '')
         port = service.port
         if port is not None and port is not 0:
             url = url.replace('${PORT}', str(port))

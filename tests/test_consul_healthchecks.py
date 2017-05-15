@@ -88,7 +88,7 @@ class TestHealthChecks(unittest.TestCase):
             'name': 'Missing http'
         }
         self.deployment.set_check('check_failing', check)
-        with self.assertRaisesRegexp(DeploymentError, 'is missing field \'http\''):
+        with self.assertRaisesRegexp(DeploymentError, 'is missing field \'url\''):
             self.tested_fn._run(self.deployment)
 
     def test_case_insensitive_id_conflict(self):
@@ -235,5 +235,5 @@ class TestHealthChecks(unittest.TestCase):
             check['script'] = value
         else:
             check['type'] = 'http'
-            check['http'] = value
+            check['url'] = value
         return check

@@ -60,7 +60,7 @@ class RegisterConsulHealthChecks(DeploymentStage):
             if check_type == HealthcheckTypes.SCRIPT:
                 required_fields = ['name', 'script', 'interval']
             elif check_type == HealthcheckTypes.HTTP:
-                required_fields = ['name', 'http', 'interval']
+                required_fields = ['name', 'url', 'interval']
             for field in required_fields:
                 if not field in check:
                     raise DeploymentError('Health check \'{0}\' is missing field \'{1}\''.format(check_id, field))
