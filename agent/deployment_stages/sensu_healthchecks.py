@@ -4,8 +4,8 @@ import json, os, re, sys
 from jsonschema import Draft4Validator
 from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec
 from .schemas import SensuHealthCheckSchema
-from agent.healthcheck_utils import HealthcheckTypes, HealthcheckUtils
-from agent.health_check import HealthCheck
+from .healthcheck_utils import HealthcheckTypes, HealthcheckUtils
+from .health_check import HealthCheck
 
 def create_sensu_check_definition_filename(service_id, check_id, slice='none'):
     return '{0}-{1}-{2}.json'.format(service_id, check_id, slice)

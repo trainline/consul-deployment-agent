@@ -2,8 +2,8 @@
 
 import os
 
-from agent.deployment_stages.common import wrap_script_command
-from agent.healthcheck_utils import HealthcheckTypes, HealthcheckUtils
+from deployment_stages.common import wrap_script_command
+from .healthcheck_utils import HealthcheckTypes, HealthcheckUtils
 
 class HealthCheck(object):
     @staticmethod

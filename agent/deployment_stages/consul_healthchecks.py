@@ -2,7 +2,7 @@
 
 import os, stat
 from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec, wrap_script_command
-from agent.healthcheck_utils import HealthcheckTypes, HealthcheckUtils
+from .healthcheck_utils import HealthcheckTypes, HealthcheckUtils
 
 class DeregisterOldConsulHealthChecks(DeploymentStage):
     def __init__(self):
