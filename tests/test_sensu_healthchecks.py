@@ -3,7 +3,7 @@
 import unittest
 from jsonschema import ValidationError
 from mock import Mock, patch
-from agent.healthcheck_utils import HealthcheckUtils
+from agent.deployment_stages.healthcheck_utils import HealthcheckUtils
 from agent.deployment_stages.common import DeploymentError
 from agent.deployment_stages.sensu_healthchecks import RegisterSensuHealthChecks
 
