@@ -121,7 +121,7 @@ class HttpCheck(HealthCheck):
         return '{0} {1}'.format(self.http_check_path, self.url)
     
     def validate(self):
-        basic_valid = super(HealthCheck, self).validate()
+        basic_valid = super(HttpCheck, self).validate()
         is_valid_os = self.deployment.platform != 'linux'
         return basic_valid and is_valid_os
 
@@ -167,6 +167,6 @@ class PluginCheck(HealthCheck):
         return '{0} {1}'.format(command, self.script_args).rstrip()
 
     def validate(self):
-        basic_valid = super(HealthCheck, self).validate()
+        basic_valid = super(PluginCheck, self).validate()
         return basic_valid and os.path.exists(self.plugin_path)
 
