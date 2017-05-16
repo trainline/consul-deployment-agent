@@ -81,7 +81,7 @@ class HealthCheck(object):
         override_chat_channel = self.data.get('override_chat_channel', None)
         if override_chat_channel is not None:
             return ','.join(override_chat_channel)
-        return 'undef'
+        return 'undefined'
 
     def get_override_notification_email(self):
         override_notification_email = self.data.get('override_notification_email', None)
@@ -91,7 +91,7 @@ class HealthCheck(object):
                 override_notification_email = self.data.get('notification_email', None)
         if override_notification_email is not None:
             return ','.join(override_notification_email)
-        return 'undef'
+        return 'undefined'
 
     def get_override_notification_settings(self):
         override_notification_settings = self.data.get('override_notification_settings', None)
