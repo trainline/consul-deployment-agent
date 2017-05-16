@@ -123,9 +123,14 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
     return (healthchecks, scripts_base_dir)
 
 
-def wrap_script_command(script, platform):
-    if platform == 'windows':
-        return 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}"'.format(script)
+def wrap_script_command(script, platform, slice=None):
+    if slice is None or slice.lower() == 'none':
+        slice = ''
     else:
-        return script
+        slice = ' {0}'.format(slice)
+    (f_name, f_ext) = os.path.splitext(script)
+    if platform == 'windows' and f_ext.lower() == '.ps1':
+        return 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}"{1}'.format(script, slice)
+    else:
+        return '{0}{1}'.format(script, slice)
 

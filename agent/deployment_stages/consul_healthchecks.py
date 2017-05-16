@@ -81,19 +81,11 @@ class RegisterConsulHealthChecks(DeploymentStage):
 
             if check_type == HealthcheckTypes.SCRIPT:
                 file_path = os.path.join(deployment.archive_dir, scripts_base_dir, check['script'])
-
                 # Add execution permission to file
                 st = os.stat(file_path)
                 os.chmod(file_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
                 
-                extra = ''
-
-                if deployment_slice is not None:
-                    extra = file_path + ' ' + deployment_slice
-                else:
-                    extra = file_path
-
-                command = wrap_script_command(extra, deployment.platform)
+                command = wrap_script_command(file_path, deployment.platform, deployment_slice)
                 deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, file_path))
                 is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], command, check['interval'])
 

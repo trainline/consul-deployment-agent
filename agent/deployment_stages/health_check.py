@@ -131,6 +131,8 @@ Custom script check for user defined check logic.
 Supported types are Python, Powershell or Batch
 """
 class ScriptCheck(HealthCheck):
+    ALLOWED_WIN_SCRIPTS = ['.py', '.ps1', '.bat']
+
     def __init__(self, *args, **kwargs):
         super(ScriptCheck, self).__init__(*args, **kwargs)
         self.type = HealthcheckTypes.SCRIPT
@@ -146,7 +148,12 @@ class ScriptCheck(HealthCheck):
 
     def validate(self):
         basic_valid = super(ScriptCheck, self).validate()
-        return basic_valid and os.path.exists(self.script_path)
+        file_exists = self._validate(os.path.exists(self.script_path), 'cannot find script file')
+        file_type_valid = True
+        if self.deployment.platform != 'linux':
+            (f_name, f_ext) = os.path.splitext(self.script_path)
+            file_type_valid = self._validate(f_ext.lower() in ScriptCheck.ALLOWED_WIN_SCRIPTS, 'file type is not supported')
+        return basic_valid and file_exists and file_type_valid
 
 
 """
