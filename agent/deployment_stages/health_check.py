@@ -1,30 +1,49 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import os
+import re
 
+from jsonschema import Draft4Validator
 from deployment_stages.common import wrap_script_command
 from .healthcheck_utils import HealthcheckTypes, HealthcheckUtils
+from .schemas import SensuHealthCheckSchema
 
 class HealthCheck(object):
     @staticmethod
-    def create(data, deployment, slice, logger):
+    def create(data, deployment):
         check_type = HealthcheckUtils.get_type(data)
         if check_type == HealthcheckTypes.HTTP:
-            return HttpCheck(data, deployment, slice, logger)
+            return HttpCheck(data, deployment)
         elif check_type == HealthcheckTypes.SCRIPT:
-            return ScriptCheck(data, deployment, slice, logger)
+            return ScriptCheck(data, deployment)
         elif check_type == HealthcheckTypes.PLUGIN:
-            return PluginCheck(data, deployment, slice, logger)
+            return PluginCheck(data, deployment)
         else:
-            return HealthCheck(data, deployment, slice, logger)
+            return HealthCheck(data, deployment)
 
-    def __init__(self, data, deployment, slice, logger):
+    def __init__(self, data, deployment):
         self.name = HealthcheckUtils.get_unique_name(data, deployment.service)
         self.data = data
         self.deployment = deployment
-        self.slice = slice
-        self.logger = logger
+        slice = deployment.service.slice
+        self.slice = None if slice is not None and slice.lower() == 'none' else slice
+        self.logger = deployment.logger
         self.type = HealthcheckTypes.UNKNOWN
+
+    def validate(self):
+        valid_schema = self._validate(Draft4Validator(SensuHealthCheckSchema).is_valid(self.data), 'schema is not valid')
+        valid_name = self._validate(re.match(r'^[\w\.-]+$', self.check.get('name')), 'name is not valid')
+        valid_type = self._validate(self.type != HealthcheckTypes.UNKNOWN, 'unknown check type')
+        is_standalone = self.data.get('standalone')
+        is_aggregate = self.data.get('aggregate')
+        valid_standalone = self._validate((not is_standalone and not is_aggregate) or (is_standalone != is_aggregate),
+                'only of standalone and aggregate can be True')
+        return valid_type and valid_schema and valid_name and valid_standalone
+
+    def _validate(self, predicate, description):
+        if predicate is not True:
+            self.logger.warn('Invalid sensu checK: {0}'.format(description))
+        return predicate
 
     def get_definition(self):
         return {
@@ -57,7 +76,6 @@ class HealthCheck(object):
             if os.path.exists(script_filepath):
                 return '{0}'.format(script_filepath)
         return None
-    
 
     def get_override_chat_channel(self):
         override_chat_channel = self.data.get('override_chat_channel', None)
@@ -86,6 +104,10 @@ class HealthCheck(object):
         return override_notification_settings
 
 
+"""
+HTTP(S) for checking the response status of a user provioded URL.
+Checks are performed by a .bat file provided on each Windows instance
+"""
 class HttpCheck(HealthCheck):
     PLUGIN_FILE = 'ttl-check-http.bat'
     
@@ -93,22 +115,28 @@ class HttpCheck(HealthCheck):
         super(HttpCheck, self).__init__(*args, **kwargs)
         self.type = HealthcheckTypes.HTTP
         self.url = HealthcheckUtils.get_http_url(self.data, self.deployment.service)
+        self.http_check_path = self.find_sensu_plugin(self.deployment, HttpCheck.PLUGIN_FILE)
 
     def get_command(self):
-        if self.deployment.platform == 'linux':
-            return 'HTTP checks are not supported on linux, please implement your own'
-        http_check_path = self.find_sensu_plugin(self.deployment, HttpCheck.PLUGIN_FILE)
-        if http_check_path is None:
-            raise Exception('Could not find HTTP plugin')
-        else:
-            return '{0} {1}'.format(http_check_path, self.url)
+        return '{0} {1}'.format(self.http_check_path, self.url)
+    
+    def validate(self):
+        basic_valid = super(HealthCheck, self).validate()
+        is_valid_os = self.deployment.platform != 'linux'
+        return basic_valid and is_valid_os
 
 
+"""
+Custom script check for user defined check logic.
+Supported types are Python, Powershell or Batch
+"""
 class ScriptCheck(HealthCheck):
     def __init__(self, *args, **kwargs):
         super(ScriptCheck, self).__init__(*args, **kwargs)
         self.type = HealthcheckTypes.SCRIPT
-        self.script_path = self.data.get('script')
+        script_path = self.data.get('script', '').lstrip('\/')
+        script_path = os.path.join(self.deployment.archive_dir, 'healthchecks', 'sensu', script_path)
+        self.script_path = script_path
         self.script_args = self.data.get('script_arguments', '')
 
     def get_command(self):
@@ -116,15 +144,29 @@ class ScriptCheck(HealthCheck):
         script_args_and_slice = ' '.join(filter(None, (self.script_args, self.slice)))
         return '{0} {1}'.format(command, script_args_and_slice).rstrip()
 
+    def validate(self):
+        basic_valid = super(ScriptCheck, self).validate()
+        return basic_valid and os.path.exists(self.script_path)
 
+
+"""
+Plugin checks specify a sensu plugin to use.
+Available plugins are provided on each box at startup.
+"""
 class PluginCheck(HealthCheck):
     def __init__(self, *args, **kwargs):
         super(PluginCheck, self).__init__(*args, **kwargs)
         self.type = HealthcheckTypes.SCRIPT
-        self.plugin_name = self.data.get('plugin')
+        plugin_name = self.data.get('plugin')
+        plugin_path = self.find_sensu_plugin(self.deployment, plugin_name)
+        self.plugin_path = plugin_path
         self.script_args = self.data.get('plugin_arguments', '')
 
     def get_command(self):
-        command = wrap_script_command(self.plugin_name, self.deployment.platform)
+        command = wrap_script_command(self.plugin_path, self.deployment.platform)
         return '{0} {1}'.format(command, self.script_args).rstrip()
+
+    def validate(self):
+        basic_valid = super(HealthCheck, self).validate()
+        return basic_valid and os.path.exists(self.plugin_path)
 

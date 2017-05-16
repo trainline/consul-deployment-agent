@@ -1,9 +1,9 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import unittest
-from jsonschema import ValidationError
 from mock import Mock, patch
 from agent.deployment_stages.healthcheck_utils import HealthcheckUtils
+from agent.deployment_stages.health_check import HealthCheck
 from agent.deployment_stages.common import DeploymentError
 from agent.deployment_stages.sensu_healthchecks import RegisterSensuHealthChecks
 
@@ -48,71 +48,6 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
     def setUp(self):
         self.deployment = MockDeployment()
 
-    def test_validate_missing_name_property(self):
-        check = {}
-        with self.assertRaisesRegexp(ValidationError, "'name' is a required property"):
-            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
-
-    def test_validate_missing_interval_property(self):
-        check = {
-            'name': 'Missing-interval'
-        }
-        with self.assertRaisesRegexp(ValidationError, "'interval' is a required property"):
-            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
-
-    def test_validate_missing_script_property(self):
-        check = {
-            'name': 'Missing-interval',
-            'interval': 10
-        }
-        with self.assertRaisesRegexp(DeploymentError, 'you need at least one of'):
-            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
-
-    def test_validate_both_scripts_properties_provided(self):
-        check = {
-            'name': 'missing-interval',
-            'interval': 10,
-            'local_script': 'a',
-            'server_script': 'b',
-        }
-        with self.assertRaisesRegexp(DeploymentError, "you can use either 'local_script' or 'server_script'"):
-            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
-
-    def test_validate_name_does_not_match_regexp(self):
-        check = {
-            'name': 'missing http',
-            'local_script': 'a',
-            'interval': 10,
-        }
-        with self.assertRaisesRegexp(DeploymentError, 'match required Sensu name expression'):
-            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
-
-    def test_validate_integer_type_properties(self):
-        check = {
-            'name': 'missing-http',
-            'local_script': 'a',
-            'team': 'some_team'
-        }
-        property_names = ['interval', 'realert_every', 'timeout', 'occurrences', 'refresh']
-        last_property_name = None
-        for property_name in property_names:
-            if last_property_name is not None:
-                check[property_name] = 10
-            check[property_name] = '10s'
-            last_property_name = property_name
-            with self.assertRaisesRegexp(ValidationError, "'{0}' is not of type 'number'".format(check[property_name])):
-                RegisterSensuHealthChecks.validate_check_properties('check_id', check)
-
-    def test_validate_override_notification_email_property(self):
-        check = {
-            'name': 'sensu-check1',
-            'local_script': 'foo.py',
-            'override_notification_email': ['foo', 'bar'],
-            'interval': 10
-        }
-        with self.assertRaisesRegexp(ValidationError, "'foo' does not match"):
-            RegisterSensuHealthChecks.validate_check_properties('check_id', check)
-
     def test_validate_all_ids_unique(self):
         checks = {
             'check_1': {
@@ -147,40 +82,6 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         with self.assertRaisesRegexp(DeploymentError, 'Sensu check definitions require unique names'):
             RegisterSensuHealthChecks.validate_unique_names(checks)
 
-    def test_validate_missing_local_script(self):
-        def file_exists(path):
-            return False
-        patcher = patch('os.path.exists')
-        mock = patcher.start()
-        mock.side_effect = file_exists
-
-        check = {
-            'name': 'missing-http',
-            'script': 'script.sh',
-            'type': 'script',
-            'interval': 10,
-            'team': 'some_team'
-        }
-        with self.assertRaisesRegexp(DeploymentError, "Couldn't find Sensu check script"):
-            RegisterSensuHealthChecks.validate_check_script(check, '/some/path', self.deployment)
-
-    def test_validate_missing_sensu_plugin_script(self):
-        def file_exists(path):
-            return False
-        patcher = patch('os.path.exists')
-        mock = patcher.start()
-        mock.side_effect = file_exists
-
-        check = {
-            'name': 'missing-http',
-            'plugin': 'script.sh',
-            'type': 'plugin',
-            'interval': 10,
-            'team': 'some_team'
-        }
-        with self.assertRaisesRegexp(DeploymentError, "Couldn't find Sensu plugin script"):
-            RegisterSensuHealthChecks.validate_check_script(check, None, self.deployment)
-
     def test_warning_deprecated_properties(self):
         check = {
             'name': 'sensu-check1',
@@ -189,7 +90,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'notification_email': ['foo@bar.com', 'bar@biz.uk'],
             'interval': 10
         }
-        definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         self.deployment.logger.warning.assert_called_with("'notification_email' property is deprecated, please use 'override_notification_email' instead")
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
         self.assertEqual(definition['checks'][unique_check_name]['notification_email'], 'foo@bar.com,bar@biz.uk')
@@ -201,11 +102,11 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'type': 'script',
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['team'], 'ateam')
         check['override_notification_settings'] = 'dietcode'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         self.assertEqual(check_definition['checks'][unique_check_name]['team'], 'dietcode')
 
     def test_generate_check_definition_with_valid_list_of_emails_and_slack_channels(self):
@@ -217,7 +118,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'override_chat_channel': ['channel1', 'channel2'],
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['notification_email'], 'email1@ble.pl,email2@ble.pl')
         self.assertEqual(check_definition['checks'][unique_check_name]['slack_channel'], 'channel1,channel2')
@@ -229,7 +130,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'script': 'foo.py',
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['aggregate'], False)
         self.assertEqual(check_definition['checks'][unique_check_name]['alert_after'], 600)
@@ -253,13 +154,14 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.platform = 'linux'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['ttl_environment'], self.deployment.instance_tags['Environment'])
         self.assertEqual(check_definition['checks'][unique_check_name]['ttl_owningcluster'], self.deployment.instance_tags['OwningCluster'])
         self.assertEqual(check_definition['checks'][unique_check_name]['ttl_role'], self.deployment.instance_tags['Role'])
 
-    def test_generate_linux_check_definition_with_command_and_no_arguments(self):
+    @patch('os.path.exists', return_value=True)
+    def test_generate_linux_check_definition_with_command_and_no_arguments(self, mock_exists):
         check = {
             'name': 'sensu-check1',
             'plugin': 'foo.sh',
@@ -267,11 +169,12 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.platform = 'linux'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'foo.sh')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], '{0}/foo.sh'.format(MOCK_SENSU_PLUGINS))
 
-    def test_generate_linux_check_definition_with_command_and_none_slice_and_no_arguments(self):
+    @patch('os.path.exists', return_value=True)
+    def test_generate_linux_check_definition_with_command_and_none_slice_and_no_arguments(self, mock_exists):
         check = {
             'name': 'sensu-check1',
             'plugin': 'foo.sh',
@@ -280,9 +183,9 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.platform = 'linux'
         self.deployment.service.slice = 'none'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'foo.sh')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], '{0}/foo.sh'.format(MOCK_SENSU_PLUGINS))
     
     def test_generate_linux_local_check_definition_with_command_and_slice_and_no_arguments(self):
         check = {
@@ -293,11 +196,12 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.platform = 'linux'
         self.deployment.service.slice = 'green'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'foo.sh green')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'healthchecks/sensu/foo.sh green')
     
-    def test_generate_linux_server_check_definition_with_command_and_slice_and_no_arguments(self):
+    @patch('os.path.exists', return_value=True)
+    def test_generate_linux_server_check_definition_with_command_and_slice_and_no_arguments(self, mock_exists):
         check = {
             'name': 'sensu-check1',
             'plugin': 'foo.sh',
@@ -306,11 +210,12 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.platform = 'linux'
         self.deployment.service.slice = 'green'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'foo.sh')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], '{0}/foo.sh'.format(MOCK_SENSU_PLUGINS))
     
-    def test_generate_linux_check_definition_with_command_and_arguments(self):
+    @patch('os.path.exists', return_value=True)
+    def test_generate_linux_check_definition_with_command_and_arguments(self, mock_exists):
         check = {
             'name': 'sensu-check1',
             'plugin': 'foo.sh',
@@ -319,9 +224,9 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.platform = 'linux'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'foo.sh -o service_name')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], '{0}/foo.sh -o service_name'.format(MOCK_SENSU_PLUGINS))
 
     def test_generate_linux_local_check_definition_with_command_and_slice_and_arguments(self):
         check = {
@@ -333,11 +238,12 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.platform = 'linux'
         self.deployment.service.slice = 'blue'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'foo.sh -o service_name blue')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'healthchecks/sensu/foo.sh -o service_name blue')
     
-    def test_generate_linux_server_check_definition_with_command_and_slice_and_arguments(self):
+    @patch('os.path.exists', return_value=True)
+    def test_generate_linux_server_check_definition_with_command_and_slice_and_arguments(self, mock_exists):
         check = {
             'name': 'sensu-check1',
             'plugin': 'foo.sh',
@@ -347,22 +253,25 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         self.deployment.platform = 'linux'
         self.deployment.service.slice = 'blue'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'foo.sh -o service_name')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], '{0}/foo.sh -o service_name'.format(MOCK_SENSU_PLUGINS))
     
-    def test_generate_windows_check_definition_with_command_and_no_arguments(self):
+    @patch('os.path.exists', return_value=True)
+    def test_generate_windows_check_definition_with_command_and_no_arguments(self, mock_exists):
         check = {
             'name': 'sensu-check1',
             'plugin': 'foo.ps1',
             'type': 'plugin',
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "foo.ps1"')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 
+                'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}/foo.ps1"'.format(MOCK_SENSU_PLUGINS))
 
-    def test_generate_windows_check_definition_with_command_and_none_slice_and_no_arguments(self):
+    @patch('os.path.exists', return_value=True)
+    def test_generate_windows_check_definition_with_command_and_none_slice_and_no_arguments(self, mock_exists):
         check = {
             'name': 'sensu-check1',
             'plugin': 'foo.ps1',
@@ -370,47 +279,52 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.service.slice = 'none'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "foo.ps1"')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 
+                'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}/foo.ps1"'.format(MOCK_SENSU_PLUGINS))
     
-    def test_generate_windows_check_definition_with_command_and_arguments(self):
+    @patch('os.path.exists', return_value=True)
+    def test_generate_windows_check_definition_with_command_and_arguments(self, mock_exists):
         check = {
             'name': 'sensu-check1',
-            'plugin': 'C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1',
+            'plugin': 'check-windows-service.ps1',
             'type': 'plugin',
             'plugin_arguments': '-ServiceName service_name',
             'interval': 10
         }
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 
+                'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}/check-windows-service.ps1" -ServiceName service_name'.format(MOCK_SENSU_PLUGINS))
 
     def test_generate_local_check_definition_with_command_and_arguments_and_slice(self):
         check = {
             'name': 'sensu-check1',
             'type': 'script',
-            'script': 'C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1',
+            'script': 'check-windows-service.ps1',
             'script_arguments': '-ServiceName service_name',
             'interval': 10
         }
         self.deployment.service.slice = 'green'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name green')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "healthchecks/sensu/check-windows-service.ps1" -ServiceName service_name green')
     
-    def test_generate_server_check_definition_with_command_and_arguments_and_slice(self):
+    @patch('os.path.exists', return_value=True)
+    def test_generate_server_check_definition_with_command_and_arguments_and_slice(self, mock_exists):
         check = {
             'name': 'sensu-check1',
-            'plugin': 'C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1',
+            'plugin': 'check-windows-service.ps1',
             'type': 'plugin',
             'plugin_arguments': '-ServiceName service_name',
             'interval': 10
         }
         self.deployment.service.slice = 'green'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
-        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "C:\\Programs Files (x86)\\Sensu\\plugins\\check-windows-service.ps1" -ServiceName service_name')
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'], 
+                'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}/check-windows-service.ps1" -ServiceName service_name'.format(MOCK_SENSU_PLUGINS))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_windows_http_check(self, mock_patch):
@@ -421,7 +335,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.service.slice = 'none'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'], '{0}/ttl-check-http.bat https://localhost/my/service'.format(MOCK_SENSU_PLUGINS))
 
@@ -434,7 +348,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.service.slice = 'none'
-        check_definition = RegisterSensuHealthChecks.generate_check_definition(check, self.deployment)
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'], '{0}/ttl-check-http.bat https://localhost:{1}/my/service'.format(MOCK_SENSU_PLUGINS, MOCK_PORT))
 
