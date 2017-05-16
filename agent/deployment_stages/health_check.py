@@ -32,7 +32,7 @@ class HealthCheck(object):
 
     def validate(self):
         valid_schema = self._validate(Draft4Validator(SensuHealthCheckSchema).is_valid(self.data), 'schema is not valid')
-        valid_name = self._validate(re.match(r'^[\w\.-]+$', self.check.get('name')), 'name is not valid')
+        valid_name = self._validate(re.match(r'^[\w\.-]+$', self.data.get('name')), 'name is not valid')
         valid_type = self._validate(self.type != HealthcheckTypes.UNKNOWN, 'unknown check type')
         is_standalone = self.data.get('standalone')
         is_aggregate = self.data.get('aggregate')
