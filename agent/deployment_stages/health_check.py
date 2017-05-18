@@ -142,9 +142,7 @@ class ScriptCheck(HealthCheck):
         self.script_args = self.data.get('script_arguments', '')
 
     def get_command(self):
-        command = wrap_script_command(self.script_path, self.deployment.platform)
-        script_args_and_slice = ' '.join(filter(None, (self.script_args, self.slice)))
-        return '{0} {1}'.format(command, script_args_and_slice).rstrip()
+        return wrap_script_command(self.script_path, self.deployment.platform, [self.script_args, self.slice])
 
     def validate(self):
         basic_valid = super(ScriptCheck, self).validate()
@@ -167,11 +165,10 @@ class PluginCheck(HealthCheck):
         plugin_name = self.data.get('plugin')
         plugin_path = self.find_sensu_plugin(self.deployment, plugin_name)
         self.plugin_path = plugin_path
-        self.script_args = self.data.get('plugin_arguments', '')
+        self.plugin_args = self.data.get('plugin_arguments', '')
 
     def get_command(self):
-        command = wrap_script_command(self.plugin_path, self.deployment.platform)
-        return '{0} {1}'.format(command, self.script_args).rstrip()
+        return wrap_script_command(self.plugin_path, self.deployment.platform, [self.plugin_args])
 
     def validate(self):
         basic_valid = super(PluginCheck, self).validate()
