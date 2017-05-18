@@ -2,6 +2,7 @@
 
 import os
 import re
+import stat
 
 from jsonschema import Draft4Validator
 from deployment_stages.common import wrap_script_command
@@ -142,6 +143,9 @@ class ScriptCheck(HealthCheck):
         self.script_args = self.data.get('script_arguments', '')
 
     def get_command(self):
+        if self.deployment.platform == 'linux':
+            st = os.stat(self.script_path)
+            os.chmod(self.script_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
         return wrap_script_command(self.script_path, self.deployment.platform, [self.script_args, self.slice])
 
     def validate(self):
