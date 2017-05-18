@@ -86,7 +86,7 @@ class RegisterConsulHealthChecks(DeploymentStage):
                 os.chmod(file_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
                 args = check.get('script_arguments')
 
-                command = wrap_script_command(file_path, deployment.platform, [args, deployment_slice])
+                command = wrap_script_command(file_path, deployment.platform, [args, deployment_slice], True)
                 deployment.logger.debug('Healthcheck {0} full path: {1}'.format(check_id, file_path))
                 is_success = deployment.consul_api.register_script_check(deployment.service.id, service_check_id, check['name'], command, check['interval'])
 

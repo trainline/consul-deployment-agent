@@ -123,7 +123,7 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
     return (healthchecks, scripts_base_dir)
 
 
-def wrap_script_command(script, platform, arguments=None):
+def wrap_script_command(script, platform, arguments=None, wrap_args=False):
     if arguments is not None:
         arguments = filter(None, arguments)
         arguments = ' '.join(arguments)
@@ -134,7 +134,12 @@ def wrap_script_command(script, platform, arguments=None):
         (f_name, f_ext) = os.path.splitext(script)
         f_ext = f_ext.lower()
         if f_ext == '.ps1':
-            return 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}" {1}'.format(script, arguments).strip()
+            if wrap_args:
+                invocation = '{0} {1}'.format(script, arguments).strip()
+                invocation = '"{0}"'.format(invocation)
+            else:
+                invocation = '"{0}" {1}'.format(script, arguments).strip()
+            return 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command {0}'.format(invocation).strip()
         elif f_ext == '.py':
             py_bin = os.getenv('PYTHON')
             return '{0} "{1}" {2}'.format(py_bin, script, arguments).strip()
