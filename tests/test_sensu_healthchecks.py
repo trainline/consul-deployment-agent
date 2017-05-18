@@ -146,7 +146,9 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         self.assertEqual(check_definition['checks'][unique_check_name]['ticket'], False)
         self.assertEqual(check_definition['checks'][unique_check_name]['timeout'], 120)
 
-    def test_generate_check_definition_with_instance_tags(self):
+    @patch('os.stat')
+    @patch('os.chmod')
+    def test_generate_check_definition_with_instance_tags(self, stat, chmod):
         check = {
             'name': 'sensu-check1',
             'script': 'foo.py',
@@ -187,7 +189,9 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'], '{0}/foo.sh'.format(MOCK_SENSU_PLUGINS))
     
-    def test_generate_linux_local_check_definition_with_command_and_slice_and_no_arguments(self):
+    @patch('os.stat')
+    @patch('os.chmod')
+    def test_generate_linux_local_check_definition_with_command_and_slice_and_no_arguments(self, stat, chmod):
         check = {
             'name': 'sensu-check1',
             'script': 'foo.sh',
@@ -228,7 +232,9 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'], '{0}/foo.sh -o service_name'.format(MOCK_SENSU_PLUGINS))
 
-    def test_generate_linux_local_check_definition_with_command_and_slice_and_arguments(self):
+    @patch('os.stat')
+    @patch('os.chmod')
+    def test_generate_linux_local_check_definition_with_command_and_slice_and_arguments(self, stat, chmod):
         check = {
             'name': 'sensu-check1',
             'script': 'foo.sh',
