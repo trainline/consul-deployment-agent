@@ -133,16 +133,16 @@ def wrap_script_command(script, platform, arguments=None, wrap_args=False):
     if platform == 'windows':
         (f_name, f_ext) = os.path.splitext(script)
         f_ext = f_ext.lower()
+        if wrap_args:
+            invocation = '{0} {1}'.format(script, arguments).strip()
+            invocation = '"{0}"'.format(invocation)
+        else:
+            invocation = '"{0}" {1}'.format(script, arguments).strip()
         if f_ext == '.ps1':
-            if wrap_args:
-                invocation = '{0} {1}'.format(script, arguments).strip()
-                invocation = '"{0}"'.format(invocation)
-            else:
-                invocation = '"{0}" {1}'.format(script, arguments).strip()
             return 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command {0}'.format(invocation).strip()
         elif f_ext == '.py':
             py_bin = os.getenv('PYTHON')
-            return '{0} "{1}" {2}'.format(py_bin, script, arguments).strip()
+            return '{0} {1}'.format(py_bin, invocation).strip()
         else:
             return '{0} {1}'.format(script, arguments).strip()
     else:
