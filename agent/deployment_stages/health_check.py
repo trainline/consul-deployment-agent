@@ -43,7 +43,7 @@ class HealthCheck(object):
 
     def _validate(self, predicate, description):
         if predicate is not True:
-            self.logger.warn('Invalid sensu checK: {0}'.format(description))
+            self.logger.warn('Invalid sensu check: {0}'.format(description))
         return predicate
 
     def get_definition(self):

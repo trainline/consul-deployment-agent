@@ -1,6 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import unittest
+import copy
 from agent.service import Service
 
 class TestService(unittest.TestCase):
@@ -24,6 +25,26 @@ class TestService(unittest.TestCase):
         self.assertEqual(service.name, 'Service-blue')
         self.assertEqual(service.slice, 'blue')
         self.assertEqual(service.version, '1.0.0')
+        self.assertEqual(service.portsConfig['blue'], 12345)
+        self.assertEqual(service.portsConfig['green'], 67890)
+    
+    def test_service_coerces_ports_as_ints(self):
+        svc_copy = copy.deepcopy(self.service_definition)
+        svc_copy['Ports']['blue'] = "87654"
+        svc_copy['Ports']['green'] = "32109"
+        
+        service = Service(svc_copy)
+        self.assertEqual(service.address, '127.0.0.1')
+        self.assertEqual(service.deployment_id, '12345')
+        self.assertEqual(service.id, 'Service-blue')
+        self.assertEqual(service.installation.get('timeout'), 3600)
+        self.assertEqual(service.installation.get('package_bucket'), None)
+        self.assertEqual(service.installation.get('package_key'), None)
+        self.assertEqual(service.name, 'Service-blue')
+        self.assertEqual(service.slice, 'blue')
+        self.assertEqual(service.version, '1.0.0')
+        self.assertEqual(service.portsConfig['blue'], 87654)
+        self.assertEqual(service.portsConfig['green'], 32109)
 
     def test_service_instantiation_from_server_role(self):
         definition = {

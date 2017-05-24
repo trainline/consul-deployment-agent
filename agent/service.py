@@ -16,7 +16,7 @@ class Service(object):
         self.deployment_id = self._extract_tag_with_prefix('deployment_id:')
         self.slice = self._extract_tag_with_prefix('slice:')
         self.port = 0
-        self.portsConfig = definition.get('Ports', {'blue':0, 'green':0})
+        self.portsConfig = self._sanitizePorts(definition)
         self.version = self._extract_tag_with_prefix('version:')
         self._validate()
 
@@ -28,12 +28,9 @@ class Service(object):
             {'id': self.id, 'name': self.name, 'port': self.port,
              'slice': self.slice, 'version': self.version, 'tags': self.tags})
 
-    def _get_port(self, port_config, slice):
-        if port_config is None:
-            return 0
-        if slice is None or slice.lower() == 'none':
-            return 0
-        return port_config.get(slice.lower(), 0)
+    def _sanitizePorts(self, definition):
+        ports = definition.get('Ports', {'blue':0, 'green':0})
+        return { k:int(v) for k, v in ports.items() }
 
     def _extract_tag_with_prefix(self, prefix):
         tag = next((tag for tag in self.tags if tag.startswith(prefix)), None)
