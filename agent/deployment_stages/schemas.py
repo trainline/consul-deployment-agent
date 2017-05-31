@@ -11,7 +11,7 @@ SensuHealthCheckSchema = {
         "timeout": {"type": "number"},
         "occurrences": {"type": "number"},
         "refresh": {"type": "number"},
-
+        "server_script_isfile": {"type", ["string", "boolean"]},
         "tip": {"type": ["string", "boolean"]},
         "runbook": {"type": ["string", "boolean"]},
         "standalone": {"type": "boolean"},
