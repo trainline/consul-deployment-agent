@@ -348,8 +348,6 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         }
         check_definition = RegisterSensuHealthChecks.generate_check_definition(
             HealthCheck.create(check, self.deployment), self.deployment)
-        print("*************************")
-        print check_definition 
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
