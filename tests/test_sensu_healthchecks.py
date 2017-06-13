@@ -5,7 +5,7 @@ from mock import Mock, patch
 from agent.deployment_stages.healthcheck_utils import HealthcheckUtils
 from agent.deployment_stages.health_check import HealthCheck
 from agent.deployment_stages.common import DeploymentError
-from agent.deployment_stages.sensu_healthchecks import RegisterSensuHealthChecks
+from agent.deployment_stages.sensu_healthchecks import RegisterSensuHealthChecks, ValidateSensuHealthChecks
 
 MOCK_PORT = 8899
 MOCK_SENSU_PLUGINS = 'sensu_plugins_path'
@@ -62,7 +62,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             }
         }
         with self.assertRaisesRegexp(DeploymentError, 'Sensu check definitions require unique ids'):
-            RegisterSensuHealthChecks.validate_unique_ids(checks)
+            ValidateSensuHealthChecks.validate_unique_ids(checks)
 
     def test_validate_all_names_unique(self):
         checks = {
@@ -80,7 +80,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             }
         }
         with self.assertRaisesRegexp(DeploymentError, 'Sensu check definitions require unique names'):
-            RegisterSensuHealthChecks.validate_unique_names(checks)
+            ValidateSensuHealthChecks.validate_unique_names(checks)
 
     def test_warning_deprecated_properties(self):
         check = {

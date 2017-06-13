@@ -36,6 +36,40 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
             else:
                 deployment.logger.warning('Could not find file: {0}'.format(check_definition_absolute_path))
 
+
+class ValidateSensuHealthChecks(DeploymentStage):
+    def __init__(self):
+        DeploymentStage.__init__(self, name='ValidateSensuHealthChecks')
+
+    def _run(self, deployment):
+        deployment.logger.info('Validating Sensu checks.')
+        (sensu_checks, scripts_base_dir) = find_healthchecks('sensu', deployment.archive_dir, deployment.appspec, deployment.logger)
+        if sensu_checks is None:
+            deployment.logger.info('No Sensu checks to validate.')
+            return
+
+        ValidateSensuHealthChecks.validate_unique_ids(sensu_checks)
+        ValidateSensuHealthChecks.validate_unique_names(sensu_checks)
+        
+        for check_id, check_data in sensu_checks.iteritems():
+            check = HealthCheck.create(check_data, deployment)
+            if not check.validate():
+                deployment.logger.warn('Sensu check "{0}" is invalid and will not be registered'.format(check_id))
+                raise DeploymentError('Invalid Sensu Check - Installation will be aborted')
+
+    @staticmethod
+    def validate_unique_ids(checks):
+        check_ids = [check_id.lower() for check_id in checks.keys()]
+        if len(check_ids) != len(set(check_ids)):
+            raise DeploymentError('Sensu check definitions require unique ids (case insensitive)')
+
+    @staticmethod
+    def validate_unique_names(checks):
+        check_names = [check['name'] for check in checks.values()]
+        if len(check_names) != len(set(check_names)):
+            raise DeploymentError('Sensu check definitions require unique names (case insensitive)')
+
+
 class RegisterSensuHealthChecks(DeploymentStage):
     def __init__(self):
         DeploymentStage.__init__(self, name='RegisterSensuHealthChecks')
@@ -46,17 +80,10 @@ class RegisterSensuHealthChecks(DeploymentStage):
         if sensu_checks is None:
             deployment.logger.info('No Sensu checks to register.')
             return
-
-        RegisterSensuHealthChecks.validate_unique_ids(sensu_checks)
-        RegisterSensuHealthChecks.validate_unique_names(sensu_checks)
         
         for check_id, check_data in sensu_checks.iteritems():
             check = HealthCheck.create(check_data, deployment)
-            if check.validate():
-                RegisterSensuHealthChecks.register_check(check_id, check, deployment)
-            else:
-                deployment.logger.warn('Sensu check "{0}" is invalid and will not be registered'.format(check_id))
-                raise DeploymentError('Invalid Sensu Check - Installation will be aborted')
+            RegisterSensuHealthChecks.register_check(check_id, check, deployment)
 
     @staticmethod
     def find_sensu_plugin(plugin_paths, script_filename):
@@ -84,17 +111,6 @@ class RegisterSensuHealthChecks(DeploymentStage):
         if not is_success:
             raise DeploymentError('Failed to register Sensu check \'{0}\''.format(check_id))
 
-    @staticmethod
-    def validate_unique_ids(checks):
-        check_ids = [check_id.lower() for check_id in checks.keys()]
-        if len(check_ids) != len(set(check_ids)):
-            raise DeploymentError('Sensu check definitions require unique ids (case insensitive)')
-
-    @staticmethod
-    def validate_unique_names(checks):
-        check_names = [check['name'] for check in checks.values()]
-        if len(check_names) != len(set(check_names)):
-            raise DeploymentError('Sensu check definitions require unique names (case insensitive)')
 
     @staticmethod
     def write_check_definition_file(check_definition, check_definition_absolute_path, deployment):
