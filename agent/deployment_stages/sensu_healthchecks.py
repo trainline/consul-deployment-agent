@@ -56,6 +56,7 @@ class RegisterSensuHealthChecks(DeploymentStage):
                 RegisterSensuHealthChecks.register_check(check_id, check, deployment)
             else:
                 deployment.logger.warn('Sensu check "{0}" is invalid and will not be registered'.format(check_id))
+                raise DeploymentError('Invalid Sensu Check - Installation will be aborted')
 
     @staticmethod
     def find_sensu_plugin(plugin_paths, script_filename):
