@@ -15,11 +15,14 @@ healthchecks = {
     }
 }
 
+MOCK_PORT = 4455
+
 class MockService(object):
     slice = None
 
     def __init__(self):
         self.id = 'my-mock-service'
+        self.port = MOCK_PORT
 
     def set_slice(self, slice):
         self.slice = slice
@@ -85,7 +88,7 @@ class TestHealthChecks(unittest.TestCase):
             'name': 'Missing http'
         }
         self.deployment.set_check('check_failing', check)
-        with self.assertRaisesRegexp(DeploymentError, 'is missing field \'http\''):
+        with self.assertRaisesRegexp(DeploymentError, 'is missing field \'url\''):
             self.tested_fn._run(self.deployment)
 
     def test_case_insensitive_id_conflict(self):
@@ -179,7 +182,6 @@ class TestHealthChecks(unittest.TestCase):
         with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
             self.tested_fn._run(self.deployment)
             self.deployment.consul_api.register_script_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_check', 'test-script', 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "test-script.ps1 blue"', '10')
-
     @patch('os.stat')
     @patch('os.chmod')
     @patch('os.path.exists', return_value=True)
@@ -193,6 +195,21 @@ class TestHealthChecks(unittest.TestCase):
         with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
             self.tested_fn._run(self.deployment)
             self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', 'http://acme.com/healthcheck', '20')
+    
+    @patch('os.stat')
+    @patch('os.chmod')
+    @patch('os.path.exists', return_value=True)
+    def test_script_http_registration_with_port(self, stat, chmod, exists):
+        checks = {
+                'test_http_check': self.create_check(False, 'test-http', 'http://localhost:${PORT}/service/api', '20')
+        }
+        self.deployment.set_checks(checks)
+        self.deployment.consul_api = MagicMock()
+
+        with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
+            self.tested_fn._run(self.deployment)
+            expected_url = 'http://localhost:{0}/service/api'.format(MOCK_PORT)
+            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', expected_url, '20')
     
     @patch('os.stat')   
     @patch('os.chmod')
@@ -217,5 +234,5 @@ class TestHealthChecks(unittest.TestCase):
             check['script'] = value
         else:
             check['type'] = 'http'
-            check['http'] = value
+            check['url'] = value
         return check

@@ -41,10 +41,16 @@ class LifecycleHookExecutionStage(DeploymentStage):
         if location.startswith('/'):
             location = location[1:]
         filepath = os.path.join(deployment.archive_dir, location)
-        env = {'APPLICATION_ID':str(deployment.service.id),
-               'DEPLOYMENT_BASE_DIR':str(deployment.archive_dir),
-               'DEPLOYMENT_ID':str(deployment.id),
-               'LIFECYCLE_EVENT':str(self.lifecycle_event)}
+        env = {
+            'APPLICATION_ID':str(deployment.service.id),
+            'DEPLOYMENT_BASE_DIR':str(deployment.archive_dir),
+            'DEPLOYMENT_ID':str(deployment.id),
+            'LIFECYCLE_EVENT':str(self.lifecycle_event),
+            'EM_SERVICE_SLICE':str(deployment.service.slice),
+            'EM_SERVICE_NAME':str(deployment.service.name),
+            'EM_SERVICE_PORT':str(deployment.service.port),
+            'EM_SERVICE_VERSION':str(deployment.service.version)
+        }
         self._init_script(hook_definition[0], filepath, env, deployment.platform, deployment.timeout)
         self._run_script(deployment.logger)
     def _run_script(self, logger):
@@ -117,9 +123,31 @@ def find_healthchecks(check_type, archive_dir, appspec, logger):
     return (healthchecks, scripts_base_dir)
 
 
-def wrap_script_command(script, platform):
-    if platform == 'windows':
-        return 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}"'.format(script)
+def wrap_script_command(script, platform, arguments=None, wrap_args=False):
+    if arguments is not None:
+        arguments = filter(None, arguments)
+        arguments = ' '.join(arguments)
     else:
-        return script
+        arguments = ''
+
+    if platform == 'windows':
+        (f_name, f_ext) = os.path.splitext(script)
+        f_ext = f_ext.lower()
+        if f_ext == '.ps1':
+            if wrap_args:
+                invocation = '{0} {1}'.format(script, arguments).strip()
+                invocation = '"{0}"'.format(invocation)
+            else:
+                invocation = '"{0}" {1}'.format(script, arguments).strip()
+            return 'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command {0}'.format(invocation).strip()
+        elif f_ext == '.py':
+            py_bin = os.getenv('PYTHON')
+            if wrap_args:
+                return '{0} {1} {2}'.format(py_bin, script, arguments).strip()
+            else:
+                return '{0} "{1}" {2}'.format(py_bin, script, arguments).strip()
+        else:
+            return '{0} {1}'.format(script, arguments).strip()
+    else:
+        return '{0} {1}'.format(script, arguments).strip()
 

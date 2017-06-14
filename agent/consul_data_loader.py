@@ -34,13 +34,17 @@ class ConsulDataLoader(object):
 
                 # If Action isn't specified, we assume it's Install for backward compatibility for now
                 deployment_action = definition.get('Action', 'Install')
-
                 service = self._load_service(environment, deployment_id, name, version, deployment_slice)
                 service.deployment_id = deployment_id
                 service.slice = deployment_slice
                 service.tag('deployment_id:', deployment_id)
                 service.tag('server_role:', environment.server_role)
                 service.tag('slice:', deployment_slice)
+                
+                if deployment_slice is not None and deployment_slice != 'none':
+                    port = service.portsConfig[deployment_slice]
+                    logging.debug('Upgrading port info: {0}, {1}, {2}'.format(name, deployment_slice, port))
+                    service.port = port
 
                 if deployment_action == 'Install':
                     server_role.actions.append(InstallAction(deployment_id, service))

@@ -1,6 +1,7 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import unittest
+import copy
 from agent.service import Service
 
 class TestService(unittest.TestCase):
@@ -9,7 +10,7 @@ class TestService(unittest.TestCase):
             'Address':'127.0.0.1',
             'ID':'Service-blue',
             'Name':'Service',
-            'Port':12345,
+            'Ports': {'blue':12345, 'green':67890},
             'Tags':['version:1.0.0', 'deployment_id:12345', 'slice:blue']
         }
 
@@ -22,16 +23,35 @@ class TestService(unittest.TestCase):
         self.assertEqual(service.installation.get('package_bucket'), None)
         self.assertEqual(service.installation.get('package_key'), None)
         self.assertEqual(service.name, 'Service-blue')
-        self.assertEqual(service.port, 12345)
         self.assertEqual(service.slice, 'blue')
         self.assertEqual(service.version, '1.0.0')
+        self.assertEqual(service.portsConfig['blue'], 12345)
+        self.assertEqual(service.portsConfig['green'], 67890)
+    
+    def test_service_coerces_ports_as_ints(self):
+        svc_copy = copy.deepcopy(self.service_definition)
+        svc_copy['Ports']['blue'] = "87654"
+        svc_copy['Ports']['green'] = "32109"
+        
+        service = Service(svc_copy)
+        self.assertEqual(service.address, '127.0.0.1')
+        self.assertEqual(service.deployment_id, '12345')
+        self.assertEqual(service.id, 'Service-blue')
+        self.assertEqual(service.installation.get('timeout'), 3600)
+        self.assertEqual(service.installation.get('package_bucket'), None)
+        self.assertEqual(service.installation.get('package_key'), None)
+        self.assertEqual(service.name, 'Service-blue')
+        self.assertEqual(service.slice, 'blue')
+        self.assertEqual(service.version, '1.0.0')
+        self.assertEqual(service.portsConfig['blue'], 87654)
+        self.assertEqual(service.portsConfig['green'], 32109)
 
     def test_service_instantiation_from_server_role(self):
         definition = {
             'Address':'127.0.0.1',
             'ID':'Service-blue',
             'Name':'Service',
-            'Port':12345,
+            'Ports': {'blue':12345, 'green':67890},
             'Tags':['version:1.0.0']
         }
         installation_info = {
@@ -47,10 +67,34 @@ class TestService(unittest.TestCase):
         self.assertEqual(service.installation.get('package_bucket'), 'some-bucket')
         self.assertEqual(service.installation.get('package_key'), 'some-key')
         self.assertEqual(service.name, 'Service-blue')
-        self.assertEqual(service.port, 12345)
+        self.assertEqual(service.port, 0)
         self.assertEqual(service.slice, None)
         self.assertEqual(service.version, '1.0.0')
 
+    def test_service_instantiation_from_server_role_with_slice(self):
+        definition = {
+            'Address':'127.0.0.1',
+            'ID':'Service-green',
+            'Name':'Service',
+            'Ports': {'blue':12345, 'green':67890},
+            'Tags':['version:1.0.0', 'deployment_id:12345', 'slice:green']
+        }
+        installation_info = {
+            'InstallationTimeout':60,
+            'PackageBucket':'some-bucket',
+            'PackageKey':'some-key'
+        }
+        service = Service(definition, installation_info)
+        self.assertEqual(service.address, '127.0.0.1')
+        self.assertEqual(service.deployment_id, '12345')
+        self.assertEqual(service.id, 'Service-green')
+        self.assertEqual(service.installation.get('timeout'), 3600)
+        self.assertEqual(service.installation.get('package_bucket'), 'some-bucket')
+        self.assertEqual(service.installation.get('package_key'), 'some-key')
+        self.assertEqual(service.name, 'Service-green')
+        self.assertEqual(service.slice, 'green')
+        self.assertEqual(service.version, '1.0.0')
+    
     def test_service_instantiation_failure(self):
         definition = {
             'Address':None,

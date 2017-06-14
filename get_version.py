@@ -12,7 +12,7 @@ if len(git_info) == 1:
 else:
     build_counter = os.getenv('BUILD_COUNTER')
     git_sha = git_info[2]
-    build_version = '{0}.{1}-{2}'.format(git_tag, build_counter, git_sha)
+    build_version = '{0}.{1}'.format(git_tag, build_counter)
 
 def set_build_version(version):
     print("##teamcity[buildNumber '{0}']".format(version))
