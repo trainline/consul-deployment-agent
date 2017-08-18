@@ -1,6 +1,36 @@
 # consul-deployment-agent
 
-#### Command line options
+A cross platform service that synchronises the set of applications installed on a machine with a manifest stored in a Consul key value store.
+
+## Package Format
+
+consul-deployment-agent installs applications packaged in the AWS [CodeDeploy revision format](http://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file.html). This is a `.zip` file containing your code and an `appspec.yml` file that describes how to install the application.
+
+### Hook Scripts
+
+consul-deployment-agent supports the following subset of the [deployment lifecycle hooks](http://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html):
+
+- BeforeInstall
+- AfterInstall
+- StartApplication
+- ValidateService
+
+#### Hook Script Execution Environment
+
+consul-deployment-agent sets the following variables in the hook script execution environment
+
+| Variable | Value |
+|---|---|
+| APPLICATION_ID | ? |,
+| DEPLOYMENT_BASE_DIR | ? |
+| DEPLOYMENT_ID | Environment Manager deployment ID for this application installation |
+| LIFECYCLE_EVENT | The name of the currently executing lifecycle event. One of _BeforeInstall_, _AfterInstall_, _StartApplication_, _ValidateService_ |
+| EM_SERVICE_SLICE | The slice the service is being installed to. One of _blue_, _green_, _none_ |
+| EM_SERVICE_NAME | The name of the service being installed |
+| EM_SERVICE_PORT | The port on which the service should listen  |
+| EM_SERVICE_VERSION | The version of the service being installed |
+
+## Command line options
 
 ```bash
 $ python agent/core.py -h
@@ -14,7 +44,7 @@ optional arguments:
   -v, --version         show program's version number and exit
 ```
 
-#### Configuration
+## Configuration
 
 Deployment agent supports multiple configuration files. The agent will look for configuration files in the same directory as the executable.
 
@@ -23,13 +53,13 @@ Deployment agent supports multiple configuration files. The agent will look for 
 | config-logging.yml | (optional) Python logging module configuration. If not specified, logs will be sent to stdout with level set to DEBUG. | [sample-config-logging.yml] (https://github.thetrainline.com/PlatformServices/consul-deployment-agent/blob/master/config/sample-config-logging.yml) |
 | config.yml     | (optional) Various configuration settings. See example for supported options. | [sample-config.yml] (https://github.thetrainline.com/PlatformServices/consul-deployment-agent/blob/master/config/sample-config.yml) |
 
-#### Development
+## Development
 
-##### Prerequisites (Linux and Windows)
+### Prerequisites (Linux and Windows)
 1. Python (using 2.7+)
 2. Consul agent
 
-##### Linux development
+### Linux development
 
 First, initialise the dependencies by running:
 ```bash
@@ -52,7 +82,7 @@ Running the tests:
   make test
 ```
 
-##### Windows development
+### Windows development
 
 First, initialise the dependencies by running:
 ```bash
@@ -75,7 +105,7 @@ Running the tests:
   nosetests --verbosity=2 tests
 ```
 
-##### Deployment simulation
+### Deployment simulation
 
 Follow these steps to perform a deployment simulation:
 
