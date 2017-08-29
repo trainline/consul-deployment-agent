@@ -1,5 +1,7 @@
 # consul-deployment-agent
 
+[![Build Status](https://travis-ci.org/trainline/consul-deployment-agent.svg?branch=master)](https://travis-ci.org/trainline/consul-deployment-agent)
+
 A cross platform service that synchronises the set of applications installed on a machine with a manifest stored in a Consul key value store.
 
 ## Package Format
