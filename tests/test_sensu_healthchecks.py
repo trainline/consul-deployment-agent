@@ -2,6 +2,8 @@
 # LICENSE.txt in the project root for license information.
 
 import unittest
+from os import path
+
 from mock import Mock, patch
 from agent.deployment_stages.healthcheck_utils import HealthcheckUtils
 from agent.deployment_stages.health_check import HealthCheck
@@ -214,7 +216,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]
-                         ['command'], '{0}/foo.sh'.format(MOCK_SENSU_PLUGINS))
+                         ['command'], path.join(MOCK_SENSU_PLUGINS, 'foo.sh'))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_linux_check_definition_with_command_and_none_slice_and_no_arguments(self, mock_exists):
@@ -231,7 +233,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]
-                         ['command'], '{0}/foo.sh'.format(MOCK_SENSU_PLUGINS))
+                         ['command'], path.join(MOCK_SENSU_PLUGINS, 'foo.sh'))
 
     @patch('os.stat')
     @patch('os.chmod')
@@ -249,7 +251,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]
-                         ['command'], 'healthchecks/sensu/foo.sh green')
+                         ['command'], '{0} green'.format(path.join('healthchecks', 'sensu', 'foo.sh')))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_linux_server_check_definition_with_command_and_slice_and_no_arguments(self, mock_exists):
@@ -266,7 +268,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]
-                         ['command'], '{0}/foo.sh'.format(MOCK_SENSU_PLUGINS))
+                         ['command'], path.join(MOCK_SENSU_PLUGINS, 'foo.sh'))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_linux_check_definition_with_command_and_arguments(self, mock_exists):
@@ -283,7 +285,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         '{0}/foo.sh -o service_name'.format(MOCK_SENSU_PLUGINS))
+                         '{0} -o service_name'.format(path.join(MOCK_SENSU_PLUGINS, 'foo.sh')))
 
     @patch('os.stat')
     @patch('os.chmod')
@@ -302,7 +304,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]
-                         ['command'], 'healthchecks/sensu/foo.sh -o service_name blue')
+                         ['command'], '{0} -o service_name blue'.format(path.join('healthchecks', 'sensu', 'foo.sh')))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_linux_server_check_definition_with_command_and_slice_and_arguments(self, mock_exists):
@@ -320,7 +322,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         '{0}/foo.sh -o service_name'.format(MOCK_SENSU_PLUGINS))
+                         '{0} -o service_name'.format(path.join(MOCK_SENSU_PLUGINS, 'foo.sh')))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_windows_check_definition_with_command_and_no_arguments(self, mock_exists):
@@ -335,7 +337,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}/foo.ps1"'.format(MOCK_SENSU_PLUGINS))
+                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}"'.format(path.join(MOCK_SENSU_PLUGINS, 'foo.ps1')))
 
     @patch('os.path.exists', return_value=True)
     def test_powershell_is_given_file_rather_than_command(self, mock_exists):
@@ -351,7 +353,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -File "{0}/foo.ps1"'.format(MOCK_SENSU_PLUGINS))
+                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -File "{0}"'.format(path.join(MOCK_SENSU_PLUGINS, 'foo.ps1')))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_windows_check_definition_with_command_and_none_slice_and_no_arguments(self, mock_exists):
@@ -367,7 +369,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}/foo.ps1"'.format(MOCK_SENSU_PLUGINS))
+                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}"'.format(path.join(MOCK_SENSU_PLUGINS, 'foo.ps1')))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_windows_check_definition_with_command_and_arguments(self, mock_exists):
@@ -383,7 +385,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}/check-windows-service.ps1" -ServiceName service_name'.format(MOCK_SENSU_PLUGINS))
+                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}" -ServiceName service_name'.format(path.join(MOCK_SENSU_PLUGINS, 'check-windows-service.ps1')))
 
     def test_generate_local_check_definition_with_command_and_arguments_and_slice(self):
         check = {
@@ -399,7 +401,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "healthchecks/sensu/check-windows-service.ps1" -ServiceName service_name green')
+                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}" -ServiceName service_name green'.format(path.join('healthchecks', 'sensu', 'check-windows-service.ps1')))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_server_check_definition_with_command_and_arguments_and_slice(self, mock_exists):
@@ -416,7 +418,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}/check-windows-service.ps1" -ServiceName service_name'.format(MOCK_SENSU_PLUGINS))
+                         'powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -Command "{0}" -ServiceName service_name'.format(path.join(MOCK_SENSU_PLUGINS, 'check-windows-service.ps1')))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_windows_http_check(self, mock_patch):
@@ -432,7 +434,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         '{0}/ttl-check-http.bat https://localhost/my/service'.format(MOCK_SENSU_PLUGINS))
+                         '{0} https://localhost/my/service'.format(path.join(MOCK_SENSU_PLUGINS, 'ttl-check-http.bat')))
 
     @patch('os.path.exists', return_value=True)
     def test_generate_windows_http_check_with_port(self, mock_patch):
@@ -448,4 +450,4 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
-                         '{0}/ttl-check-http.bat https://localhost:{1}/my/service'.format(MOCK_SENSU_PLUGINS, MOCK_PORT))
+                         '{0} https://localhost:{1}/my/service'.format(path.join(MOCK_SENSU_PLUGINS, 'ttl-check-http.bat'), MOCK_PORT))
