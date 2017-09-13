@@ -123,23 +123,26 @@ Checks are performed by a .bat file provided on each Windows instance
 
 
 class HttpCheck(HealthCheck):
-    PLUGIN_FILE = 'ttl-check-http.bat'
+    WINDOWS_PLUGIN_FILE = 'ttl-check-http.bat'
+    LINUX_PLUGIN_FILE = 'check-http.rb'
 
     def __init__(self, *args, **kwargs):
         super(HttpCheck, self).__init__(*args, **kwargs)
         self.type = HealthcheckTypes.HTTP
         self.url = HealthcheckUtils.get_http_url(
             self.data, self.deployment.service)
+        check_file = HttpCheck.LINUX_PLUGIN_FILE if self.deployment.platform == 'linux' else HttpCheck.WINDOWS_PLUGIN_FILE
         self.http_check_path = self.find_sensu_plugin(
-            self.deployment, HttpCheck.PLUGIN_FILE)
+            self.deployment, check_file)
 
     def get_command(self):
-        return '{0} {1}'.format(self.http_check_path, self.url)
+        if self.deployment.platform == 'linux':
+            return '{0} {1}'.format(self.http_check_path, self.url)
+        else:
+            return '{0} -u {1}'.format(self.http_check_path, self.url)
 
     def validate(self):
-        basic_valid = super(HttpCheck, self).validate()
-        is_valid_os = self.deployment.platform != 'linux'
-        return basic_valid and is_valid_os
+        return super(HttpCheck, self).validate()
 
 
 """
