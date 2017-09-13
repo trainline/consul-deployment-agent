@@ -429,6 +429,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.service.slice = 'none'
+        self.deployment.platform = 'windows'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(
             HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(
@@ -445,9 +446,44 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
             'interval': 10
         }
         self.deployment.service.slice = 'none'
+        self.deployment.platform = 'windows'
         check_definition = RegisterSensuHealthChecks.generate_check_definition(
             HealthCheck.create(check, self.deployment), self.deployment)
         unique_check_name = HealthcheckUtils.get_unique_name(
             check, self.deployment.service)
         self.assertEqual(check_definition['checks'][unique_check_name]['command'],
                          '{0} https://localhost:{1}/my/service'.format(path.join(MOCK_SENSU_PLUGINS, 'ttl-check-http.bat'), MOCK_PORT))
+
+    @patch('os.path.exists', return_value=True)
+    def test_generate_linux_http_check(self, mock_patch):
+        check = {
+            'name': 'sensu-http-linux-check',
+            'type': 'http',
+            'url': 'https://localhost/my/service',
+            'interval': 10
+        }
+        self.deployment.service.slice = 'none'
+        self.deployment.platform = 'linux'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(
+            HealthCheck.create(check, self.deployment), self.deployment)
+        unique_check_name = HealthcheckUtils.get_unique_name(
+            check, self.deployment.service)
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'],
+                         '{0} -u https://localhost/my/service'.format(path.join(MOCK_SENSU_PLUGINS, 'check-http.rb')))
+
+    @patch('os.path.exists', return_value=True)
+    def test_generate_linux_http_check_with_port(self, mock_patch):
+        check = {
+            'name': 'sensu-http-linux-check',
+            'type': 'http',
+            'url': 'https://localhost:${PORT}/my/service',
+            'interval': 10
+        }
+        self.deployment.service.slice = 'none'
+        self.deployment.platform = 'linux'
+        check_definition = RegisterSensuHealthChecks.generate_check_definition(
+            HealthCheck.create(check, self.deployment), self.deployment)
+        unique_check_name = HealthcheckUtils.get_unique_name(
+            check, self.deployment.service)
+        self.assertEqual(check_definition['checks'][unique_check_name]['command'],
+                         '{0} -u https://localhost:{1}/my/service'.format(path.join(MOCK_SENSU_PLUGINS, 'check-http.rb'), MOCK_PORT))

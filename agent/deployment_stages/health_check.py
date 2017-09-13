@@ -137,9 +137,9 @@ class HttpCheck(HealthCheck):
 
     def get_command(self):
         if self.deployment.platform == 'linux':
-            return '{0} {1}'.format(self.http_check_path, self.url)
-        else:
             return '{0} -u {1}'.format(self.http_check_path, self.url)
+        else:
+            return '{0} {1}'.format(self.http_check_path, self.url)
 
     def validate(self):
         return super(HttpCheck, self).validate()
