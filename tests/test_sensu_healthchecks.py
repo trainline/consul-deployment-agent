@@ -161,7 +161,7 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         self.assertEqual(
             check_definition['checks'][unique_check_name]['handlers'], ['default'])
         self.assertEqual(
-            check_definition['checks'][unique_check_name]['notification_email'], 'undefined')
+            check_definition['checks'][unique_check_name]['notification_email'], 'undef')
         self.assertEqual(
             check_definition['checks'][unique_check_name]['occurrences'], 5)
         self.assertEqual(
