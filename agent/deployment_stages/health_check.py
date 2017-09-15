@@ -101,7 +101,7 @@ class HealthCheck(object):
                     'notification_email', None)
         if override_notification_email is not None:
             return ','.join(override_notification_email)
-        return 'undefined'
+        return 'undef'
 
     def get_override_notification_settings(self):
         override_notification_settings = self.data.get(
