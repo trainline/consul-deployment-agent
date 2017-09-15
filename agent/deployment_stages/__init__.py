@@ -7,7 +7,7 @@ from .copy_files import CopyFiles
 from .delete_previous_deployment_files import DeletePreviousDeploymentFiles
 from .download_bundle_from_s3 import DownloadBundleFromS3
 from .register_with_consul import RegisterWithConsul
-from .sensu_healthchecks import DeregisterOldSensuHealthChecks, RegisterSensuHealthChecks
+from .sensu_healthchecks import DeregisterOldSensuHealthChecks, RegisterSensuHealthChecks, ValidateSensuHealthChecks
 from .stop_application import StopApplication
 from .validate_bundle import ValidateBundle
 from .validate_deployment import ValidateDeployment
@@ -23,6 +23,7 @@ __all__ = [
     'DeregisterOldSensuHealthChecks',
     'DownloadBundleFromS3',
     'RegisterConsulHealthChecks',
+    'ValidateSensuHealthChecks',
     'RegisterSensuHealthChecks',
     'RegisterWithConsul',
     'StartApplication',
