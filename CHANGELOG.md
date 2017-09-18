@@ -5,8 +5,20 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+## [2.1.4] 2017-09-18
+
 ### Fixed
 - Unable to copy the contents of multiple directories to one target directory using the `files` section of `appspec.yaml`.
+
+## [2.1.3] 2017-09-15
+
+### Fixed
+- sensu healthcheck registration tests
+
+## [2.1.2] 2017-09-15
+
+### Fixed
+- Notification email check setting
 
 ## [2.1.1] 2017-09-12
 
@@ -14,5 +26,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 - "No such file or directory" error when copying files during application installation.
 - No port number selected for non blue/green deployments.
 
-[Unreleased]: https://github.com/trainline/consul-deployment-agent/compare/2.1.1...HEAD
+[Unreleased]: https://github.com/trainline/consul-deployment-agent/compare/2.1.4...HEAD
+[2.1.4]: https://github.com/trainline/consul-deployment-agent/compare/2.1.3...2.1.4
+[2.1.3]: https://github.com/trainline/consul-deployment-agent/compare/2.1.2...2.1.3
+[2.1.2]: https://github.com/trainline/consul-deployment-agent/compare/2.1.1...2.1.2
 [2.1.1]: https://github.com/trainline/consul-deployment-agent/compare/2.1.0...2.1.1
