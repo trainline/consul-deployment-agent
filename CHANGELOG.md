@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Fixed
+- Unable to copy the contents of multiple directories to one target directory using the `files` section of `appspec.yaml`.
+
 ## [2.1.1] 2017-09-12
 
 ### Fixed

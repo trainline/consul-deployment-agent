@@ -2,6 +2,7 @@
 
 import os
 import shutil
+from agent.tweaked_shutil import mergetree
 from .common import DeploymentStage
 
 class CopyFiles(DeploymentStage):
@@ -21,7 +22,7 @@ class CopyFiles(DeploymentStage):
                     source = os.path.join(deployment.archive_dir, file['source'])
                 if os.path.isdir(source):
                     deployment.logger.debug('Moving content of {0} directory recursively to {1}.'.format(source, file['destination']))
-                    shutil.copytree(source, file['destination'])
+                    mergetree(source, file['destination'])
                 else:
                     if not os.path.isdir(file['destination']):
                         deployment.logger.debug('Creating missing directory {0}.'.format(file['destination']))
