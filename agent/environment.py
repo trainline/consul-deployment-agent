@@ -11,12 +11,13 @@ class Environment(object):
         logging.debug('Detecting if current instance is running in AWS.')
         if boto.utils.get_instance_metadata(timeout=1, num_retries=1) == {}:
             logging.debug('Not running in AWS, using default environment values.')
-            self.instance_tags = {'Environment': 'local', 'EnvironmentType': 'local', 'aws:autoscaling:groupName': 'local_asg_name'}
-            self.environment_name = self.environment_type = 'local'
-            self.cluster = 'test_cluster'
+            self.instance_tags = {'Environment': 'c50', 'EnvironmentType': 'Cluster', 'aws:autoscaling:groupName': 'c50-in-DaveTest'}
+            self.environment_name = 'c50'
+            self.environment_type = 'cluster'
+            self.cluster = 'Infra'
             self.instance_id = socket.gethostname()
             self.ip_address = [l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1], [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0]
-            self.server_role = 'test'
+            self.server_role = 'DaveTest'
         else:
             logging.debug('Running in AWS, will attempt to retrieve environment information from EC2 instance metadata.')
             self._populate_from_ec2()
