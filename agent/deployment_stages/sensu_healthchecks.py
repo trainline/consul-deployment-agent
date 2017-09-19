@@ -1,6 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import json, os, sys
+import json, os, sys, subprocess
 from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec
 from .health_check import HealthCheck
 
@@ -35,6 +35,10 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
                 os.remove(check_definition_absolute_path)
             else:
                 deployment.logger.warning('Could not find file: {0}'.format(check_definition_absolute_path))
+        
+        if deployment.platform == 'linux':
+            command = ['systemctl', 'restart', 'sensu-client']
+            subprocess.call(command, shell=False)
 
 class RegisterSensuHealthChecks(DeploymentStage):
     def __init__(self):
@@ -56,6 +60,10 @@ class RegisterSensuHealthChecks(DeploymentStage):
                 RegisterSensuHealthChecks.register_check(check_id, check, deployment)
             else:
                 deployment.logger.warn('Sensu check "{0}" is invalid and will not be registered'.format(check_id))
+
+        if deployment.platform == 'linux':
+            command = ['systemctl', 'restart', 'sensu-client']
+            subprocess.call(command, shell=False)
 
     @staticmethod
     def find_sensu_plugin(plugin_paths, script_filename):
