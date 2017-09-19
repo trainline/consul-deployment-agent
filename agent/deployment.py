@@ -175,8 +175,8 @@ class Deployment(object):
         self.logger.info('Installing service: {0}'.format(self.service))
         self.logger.info('Configuration: {0}'.format(self))
         self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
-        stages = [ValidateDeployment(), StopApplication(), DeregisterOldConsulHealthChecks(),
-                  DeregisterOldSensuHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
+        stages = [ValidateDeployment(), DeregisterOldConsulHealthChecks(),
+                  DeregisterOldSensuHealthChecks(), StopApplication(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
                   CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
                   RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(), DeletePreviousDeploymentFiles()]
         for stage in stages:
