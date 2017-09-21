@@ -3,7 +3,10 @@
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.1.6] 2017-09-21
+
+### Fixed
+- Sensu health checks are not alerted during long deployments
 
 ## [2.1.5] 2017-09-18
 
