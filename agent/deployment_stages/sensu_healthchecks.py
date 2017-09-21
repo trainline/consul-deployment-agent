@@ -1,6 +1,6 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import json, os, sys, subprocess, win32serviceutil
+import json, os, sys, subprocess
 from .common import DeploymentError, DeploymentStage, find_healthchecks, get_previous_deployment_appspec
 from .health_check import HealthCheck
 
@@ -40,7 +40,8 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
             command = ['systemctl', 'restart', 'sensu-client']
             subprocess.call(command, shell=False)
         else:
-            win32serviceutil.RestartService('Sensu Client')
+            subprocess.call('sc stop "Sensu Client"', shell=False)
+            subprocess.call('sc start "Sensu Client"', shell=False)
 
 class RegisterSensuHealthChecks(DeploymentStage):
     def __init__(self):
@@ -67,7 +68,8 @@ class RegisterSensuHealthChecks(DeploymentStage):
             command = ['systemctl', 'restart', 'sensu-client']
             subprocess.call(command, shell=False)
         else:
-            win32serviceutil.RestartService('Sensu Client')
+            subprocess.call('sc stop "Sensu Client"', shell=False)
+            subprocess.call('sc start "Sensu Client"', shell=False)
 
     @staticmethod
     def find_sensu_plugin(plugin_paths, script_filename):
