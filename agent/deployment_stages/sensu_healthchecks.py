@@ -35,15 +35,14 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
                 os.remove(check_definition_absolute_path)
             else:
                 deployment.logger.warning('Could not find file: {0}'.format(check_definition_absolute_path))
-        
-        deployment.logger.info('Restarting Sensu Client')
 
         if deployment.platform == 'linux':
-            command = ['systemctl', 'restart', 'sensu-client']
-            subprocess.call(command, shell=False)
+            deployment.logger.info('Restarting Linux Sensu Client')
+            subprocess.call(['systemctl', 'restart', 'sensu-client'], shell=False)
         else:
-            command = 'net stop "Sensu Client" & net start "Sensu Client"'
-            subprocess.call(command, shell=False)
+            deployment.logger.info('Restarting Windows Sensu Client')
+            subprocess.call(['net', 'stop', 'Sensu Client'], shell=False)
+            subprocess.call(['net', 'start', 'Sensu Client'], shell=False)
 
 class RegisterSensuHealthChecks(DeploymentStage):
     def __init__(self):
@@ -67,11 +66,12 @@ class RegisterSensuHealthChecks(DeploymentStage):
                 deployment.logger.warn('Sensu check "{0}" is invalid and will not be registered'.format(check_id))
 
         if deployment.platform == 'linux':
-            command = ['systemctl', 'restart', 'sensu-client']
-            subprocess.call(command, shell=False)
+            deployment.logger.info('Restarting Linux Sensu Client')
+            subprocess.call(['systemctl', 'restart', 'sensu-client'], shell=False)
         else:
-            command = 'net stop "Sensu Client" & net start "Sensu Client"'
-            subprocess.call(command, shell=False)
+            deployment.logger.info('Restarting Windows Sensu Client')
+            subprocess.call(['net', 'stop', 'Sensu Client'], shell=False)
+            subprocess.call(['net', 'start', 'Sensu Client'], shell=False)
 
     @staticmethod
     def find_sensu_plugin(plugin_paths, script_filename):
