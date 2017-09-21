@@ -36,12 +36,14 @@ class DeregisterOldSensuHealthChecks(DeploymentStage):
             else:
                 deployment.logger.warning('Could not find file: {0}'.format(check_definition_absolute_path))
         
+        deployment.logger.info('Restarting Sensu Client')
+
         if deployment.platform == 'linux':
             command = ['systemctl', 'restart', 'sensu-client']
             subprocess.call(command, shell=False)
         else:
-            subprocess.call('sc stop "Sensu Client"', shell=False)
-            subprocess.call('sc start "Sensu Client"', shell=False)
+            command = 'net stop "Sensu Client" & net start "Sensu Client"'
+            subprocess.call(command, shell=False)
 
 class RegisterSensuHealthChecks(DeploymentStage):
     def __init__(self):
@@ -68,8 +70,8 @@ class RegisterSensuHealthChecks(DeploymentStage):
             command = ['systemctl', 'restart', 'sensu-client']
             subprocess.call(command, shell=False)
         else:
-            subprocess.call('sc stop "Sensu Client"', shell=False)
-            subprocess.call('sc start "Sensu Client"', shell=False)
+            command = 'net stop "Sensu Client" & net start "Sensu Client"'
+            subprocess.call(command, shell=False)
 
     @staticmethod
     def find_sensu_plugin(plugin_paths, script_filename):
