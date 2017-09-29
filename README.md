@@ -58,8 +58,12 @@ Deployment agent supports multiple configuration files. The agent will look for 
 ## Development
 
 ### Prerequisites (Linux and Windows)
-1. Python (using 2.7+)
-2. Consul agent
+
+Please make sure you have downloaded and setup the following first. You might also need to update your path 
+environment variables for this to work.
+
+1. [Python 2.7.X](https://www.python.org/downloads/)
+2. [Consul agent](https://www.consul.io/)
 
 ### Linux development
 
