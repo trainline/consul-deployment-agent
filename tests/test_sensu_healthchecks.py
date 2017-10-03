@@ -169,9 +169,9 @@ class TestRegisterSensuHealthChecks(unittest.TestCase):
         self.assertEqual(
             check_definition['checks'][unique_check_name]['project'], False)
         self.assertEqual(
-            check_definition['checks'][unique_check_name]['realert_every'], 30)
+            check_definition['checks'][unique_check_name]['realert_every'], 0)
         self.assertEqual(
-            check_definition['checks'][unique_check_name]['slack_channel'], 'undefined')
+            check_definition['checks'][unique_check_name]['slack_channel'], 'undef')
         self.assertEqual(
             check_definition['checks'][unique_check_name]['standalone'], True)
         self.assertEqual(
