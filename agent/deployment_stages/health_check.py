@@ -62,7 +62,7 @@ class HealthCheck(object):
             'occurrences': self.data.get('occurrences', 5),
             'page': self.data.get('paging_enabled', False),
             'project': self.data.get('project', False),
-            'realert_every': self.data.get('realert_every', 30),
+            'realert_every': self.data.get('realert_every', 0),
             'runbook': self.data.get('runbook', 'Please provide useful information to resolve alert'),
             'sla': self.data.get('sla', 'No SLA defined'),
             'slack_channel': self.get_override_chat_channel(),
@@ -88,7 +88,7 @@ class HealthCheck(object):
         override_chat_channel = self.data.get('override_chat_channel', None)
         if override_chat_channel is not None:
             return ','.join(override_chat_channel)
-        return 'undefined'
+        return 'undef'
 
     def get_override_notification_email(self):
         override_notification_email = self.data.get(
