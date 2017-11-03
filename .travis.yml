@@ -3,6 +3,7 @@ python:
   - "2.7"
 install:
   - make init-test
+  - make init-lint
 script:
+  - make lint
   - make test
-

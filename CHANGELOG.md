@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 
 ## [Unreleased]
 
+### Changed
+- Only the most recent two deployment directories are retained.
+
 ### Fixed
 
 - No output returned when a script does not complete before its timeout.
