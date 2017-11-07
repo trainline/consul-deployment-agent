@@ -18,26 +18,25 @@ class Script(object):
         self.timeout = timeout
     def execute(self, logger):
         def run():
-            self.stdout = ''
-            while self.process.poll() is None:
-                output = self.process.stdout.readline()
-                self.stdout += output
-            output = self.process.communicate()[0]
-            self.stdout += output
-            self.return_code = self.process.returncode
+            child_stdout, _ = self.process.communicate()
+            self.stdout = child_stdout
+
         logger.info('Starting execution of {0}. Will timeout after {1} seconds if not completed.'.format(self.filepath, self.timeout))
         process_thread = Thread(target=run)
         process_thread.start()
         process_thread.join(self.timeout)
         if process_thread.is_alive():
+            logger.error('Process #%d killed after %d seconds' % (self.process.pid, self.timeout))
             # Process still running - kill it and raise timeout error
             try:
                 self.process.kill()
             except OSError:
                 # The process finished between the `is_alive()` and `kill()`
-                self.return_code = self.process.returncode
-            raise SubprocessTimeoutError('Process #%d killed after %d seconds' % (self.process.pid, self.timeout))
-        return (self.return_code, self.stdout)
+                pass
+        # Allow a short while for the process to terminate
+        process_thread.join(timeout=1)
+        code = self.process.returncode
+        return 1 if code is None else code, self.stdout
 
 class ShellScript(Script):
     def __init__(self, filepath, env={}, run_as=None, timeout=3600):
