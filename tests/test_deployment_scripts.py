@@ -24,21 +24,21 @@ def from_file(filename):
 class TestDeploymentScripts(TestCase):
 
     def test_returns_partial_output_after_timeout(self):
-        script = CREATE_SCRIPT(from_file('test_deployment_scripts'), timeout=2)
+        script = CREATE_SCRIPT(from_file('scripts/wait_a_while'), timeout=3)
         logger = MagicMock()
         exit_code, stdout = script.execute(logger)
         self.assertNotEqual(exit_code, 0)
         self.assertEqual(stdout, 'Started' + linesep)
 
     def test_returns_full_output_after_completion(self):
-        script = CREATE_SCRIPT(from_file('test_deployment_scripts'), timeout=5)
+        script = CREATE_SCRIPT(from_file('scripts/write_a_little_to_stdout'), timeout=2)
         logger = MagicMock()
         exit_code, stdout = script.execute(logger)
         self.assertEqual(exit_code, 0)
         self.assertEqual(stdout, 'Started' + linesep + 'Finished' + linesep)
 
     def test_returns_big_output(self):
-        script = CREATE_SCRIPT(from_file('test_deployment_scripts_big_output'), timeout=10)
+        script = CREATE_SCRIPT(from_file('scripts/write_a_lot_to_stdout'), timeout=10)
         logger = MagicMock()
         result = script.execute(logger)
         _, stdout = result

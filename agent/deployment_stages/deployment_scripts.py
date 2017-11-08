@@ -1,7 +1,9 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import os, stat, subprocess
-from threading import Thread
+import os
+import stat
+import subprocess
+from threading import Timer
 
 class SubprocessTimeoutError(RuntimeError):
     pass
@@ -17,24 +19,21 @@ class Script(object):
         self.stdout = None
         self.timeout = timeout
     def execute(self, logger):
-        def run():
-            child_stdout, _ = self.process.communicate()
-            self.stdout = child_stdout
-
-        logger.info('Starting execution of {0}. Will timeout after {1} seconds if not completed.'.format(self.filepath, self.timeout))
-        process_thread = Thread(target=run)
-        process_thread.start()
-        process_thread.join(self.timeout)
-        if process_thread.is_alive():
-            logger.error('Process #%d killed after %d seconds' % (self.process.pid, self.timeout))
-            # Process still running - kill it and raise timeout error
+        def kill():
             try:
+                logger.error('Process #%d killed after %d seconds' % (self.process.pid, self.timeout))
                 self.process.kill()
             except OSError:
-                # The process finished between the `is_alive()` and `kill()`
                 pass
-        # Allow a short while for the process to terminate
-        process_thread.join(timeout=1)
+
+        logger.info('Starting execution of {0}. Will timeout after {1} seconds if not completed.'.format(self.filepath, self.timeout))
+        timer = Timer(self.timeout, kill)
+        try:
+            timer.start()
+            stdout, _ = self.process.communicate()
+        finally:
+            timer.cancel()
+        self.stdout = stdout
         code = self.process.returncode
         return 1 if code is None else code, self.stdout
 
