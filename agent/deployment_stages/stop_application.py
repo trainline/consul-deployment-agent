@@ -25,6 +25,7 @@ class StopApplication(LifecycleHookExecutionStage):
                 env = {'APPLICATION_ID':str(deployment.service.id),
                        'DEPLOYMENT_BASE_DIR':str(deployment.last_archive_dir),
                        'DEPLOYMENT_ID':str(deployment.last_id),
+                       'EM_SERVICE_NAME':str(deployment.service.name),
                        'LIFECYCLE_EVENT':str(self.lifecycle_event)}
                 self._init_script(hook_definition[0], script_filepath, env, appspec['os'].lower(), deployment.timeout)
                 self._run_script(deployment.logger)
