@@ -5,6 +5,7 @@ from consul_api import ConsulError
 from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeregisterOldSensuHealthChecks, RegisterSensuHealthChecks, DeletePreviousDeploymentFiles
 from s3_file_manager import S3FileManager
 from version import semantic_version
+from find_deployment import find_deployment_dir_win
 
 class Deployment(object):
     def __init__(self, config={}, consul_api=None, aws_config={}):
@@ -34,16 +35,21 @@ class Deployment(object):
         self.number_of_attempts = 0
         if self.platform == 'linux':
             base_dir = '/opt/consul-deployment-agent/deployments'
+            self.base_dir = base_dir
             self.dir = os.path.join(base_dir, self.service.id, self.id)
             if self.last_id is not None:
                 self.last_dir = os.path.join(base_dir, self.service.id, self.last_id)
                 self.last_archive_dir = os.path.join(self.last_dir, 'archive')
         else:
             base_dir = 'C:\TLDeploy'
-            self.dir = os.path.join(base_dir, self.id)
+            self.base_dir = base_dir
+            self.dir = os.path.join(base_dir, self.service.id, self.id)
             if self.last_id is not None:
-                self.last_dir = os.path.join(base_dir, self.last_id)
-                self.last_archive_dir = os.path.join(self.last_dir, 'archive')
+                self.last_dir = find_deployment_dir_win(self.base_dir, self.service.id, self.last_id)
+                if self.last_dir is None:
+                    self.last_id = None
+                else:
+                    self.last_archive_dir = os.path.join(self.last_dir, 'archive')
         self.archive_dir = os.path.join(self.dir, 'archive')
 
     def __str__(self):
