@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [2.1.9] 2017-11-10
+
+### Fixed
+
+- Added missing EM_SERVICE_NAME environment variable for application stop lifecycle scripts
+
 ## [2.1.8] 2017-11-08
 
 ### Changed
@@ -47,7 +53,8 @@ This project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html
 - "No such file or directory" error when copying files during application installation.
 - No port number selected for non blue/green deployments.
 
-[Unreleased]: https://github.com/trainline/consul-deployment-agent/compare/2.1.8...HEAD
+[Unreleased]: https://github.com/trainline/consul-deployment-agent/compare/2.1.9...HEAD
+[2.1.9]: https://github.com/trainline/consul-deployment-agent/compare/2.1.8...2.1.9
 [2.1.8]: https://github.com/trainline/consul-deployment-agent/compare/2.1.7...2.1.8
 [2.1.7]: https://github.com/trainline/consul-deployment-agent/compare/2.1.6...2.1.7
 [2.1.6]: https://github.com/trainline/consul-deployment-agent/compare/2.1.5...2.1.6
