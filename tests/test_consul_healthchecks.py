@@ -194,7 +194,20 @@ class TestHealthChecks(unittest.TestCase):
 
         with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
             self.tested_fn._run(self.deployment)
-            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', 'http://acme.com/healthcheck', '20')
+            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', 'http://acme.com/healthcheck', False, '20')
+    @patch('os.stat')
+    @patch('os.chmod')
+    @patch('os.path.exists', return_value=True)
+    def test_script_http_registration_with_tls_skip_verify(self, stat, chmod, exists):
+        checks = {
+            'test_http_check': self.create_check(False, 'test-http', 'http://acme.com/healthcheck', '20', True)
+        }
+        self.deployment.set_checks(checks)
+        self.deployment.consul_api = MagicMock()
+
+        with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
+            self.tested_fn._run(self.deployment)
+            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', 'http://acme.com/healthcheck', True, '20')
     
     @patch('os.stat')
     @patch('os.chmod')
@@ -209,7 +222,7 @@ class TestHealthChecks(unittest.TestCase):
         with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
             self.tested_fn._run(self.deployment)
             expected_url = 'http://localhost:{0}/service/api'.format(MOCK_PORT)
-            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', expected_url, '20')
+            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', expected_url, False, '20')
     
     @patch('os.stat')   
     @patch('os.chmod')
@@ -225,9 +238,9 @@ class TestHealthChecks(unittest.TestCase):
         # Slice value should not affect http value
         with patch('agent.deployment_stages.consul_healthchecks.find_healthchecks', return_value=(checks, '')):
             self.tested_fn._run(self.deployment)
-            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', 'http://acme.com/healthcheck', '20')
+            self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:test_http_check', 'test-http', 'http://acme.com/healthcheck', False, '20')
     
-    def create_check(self, is_script, name, value, interval):
+    def create_check(self, is_script, name, value, interval, tls_skip_verify):
         check = { 'name':name, 'interval':interval }
         if is_script:
             check['type'] = 'script'
@@ -235,4 +248,5 @@ class TestHealthChecks(unittest.TestCase):
         else:
             check['type'] = 'http'
             check['url'] = value
+            check['tls_skip_verify'] = tls_skip_verify
         return check
