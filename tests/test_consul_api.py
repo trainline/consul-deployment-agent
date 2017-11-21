@@ -72,10 +72,10 @@ class TestConsulApi(unittest.TestCase):
         self.assertEqual(is_success, True)
         
     @responses.activate
-    def test_register_http_check_succeeds(self):
+    def test_register_http_check_with_tls_skip_verify_on_succeeds(self):
         responses.add(responses.PUT, 'http://localhost:8500/v1/agent/check/register', status=200)
         consul_api = ConsulApi(consul_config)
-        is_success = consul_api.register_http_check('Ping', id='http_check', name='Ping', url='http://127.0.0.1:8080/ping', tls_skip_verify=False, interval='10s')
+        is_success = consul_api.register_http_check('Ping', id='http_check', name='Ping', url='http://127.0.0.1:8080/ping', tls_skip_verify=True, interval='10s')
         self.assertEqual(is_success, True)
 
     @responses.activate
