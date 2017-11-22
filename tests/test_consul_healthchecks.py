@@ -91,6 +91,31 @@ class TestHealthChecks(unittest.TestCase):
         with self.assertRaisesRegexp(DeploymentError, 'is missing field \'url\''):
             self.tested_fn._run(self.deployment)
 
+    def test_missing_http_tls_skip_verify_field(self):
+        check = {
+            'type': 'http',
+            'name': 'Missing tls_skip_verify',
+            'url': 'http://localhost',
+            'interval': 10
+        }
+        self.deployment.set_check('check_successful', check)
+        self.deployment.consul_api = MagicMock()
+        self.tested_fn._run(self.deployment)
+        self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:check_successful', 'Missing tls_skip_verify', 'http://localhost', 10, False)
+        
+    def test_http_tls_skip_verify_field(self):
+        check = {
+            'type': 'http',
+            'name': 'Test tls_skip_verify',
+            'url': 'http://localhost',
+            'interval': 10,
+            'tls_skip_verify': True
+        }
+        self.deployment.set_check('check_successful', check)
+        self.deployment.consul_api = MagicMock()
+        self.tested_fn._run(self.deployment)
+        self.deployment.consul_api.register_http_check.assert_called_once_with('my-mock-service', 'my-mock-service:check_successful', 'Test tls_skip_verify', 'http://localhost', 10, True)
+
     def test_case_insensitive_id_conflict(self):
         checks = {
             'check_1': {
