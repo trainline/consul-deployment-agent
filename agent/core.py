@@ -8,6 +8,7 @@ from deployment import Deployment
 from environment import Environment, EnvironmentError
 from retrying import retry, RetryError
 from actions import InstallAction, IgnoreAction, UninstallAction
+from block_check import BlockCheckService
 
 try:
     from version import semantic_version
@@ -162,6 +163,9 @@ def main():
 
     if config['startup']['wait_for_instance_readiness']:
         wait_for_instance_readiness(config)
+
+    b = BlockCheckService()
+    b.register_block()
 
     if converge(consul_api, environment):
         logging.info('Initialisation completed.')
