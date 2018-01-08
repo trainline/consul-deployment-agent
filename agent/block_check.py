@@ -3,6 +3,7 @@
 import platform
 import urllib2
 import json
+import base64
 
 PLATFORM = platform.system().lower()
 
@@ -15,30 +16,50 @@ RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value' | base64 --decode)
 
 if [ "$RESULT" == "true" ]
 then
-        exit 1
+        exit 2
 else
         exit 0
 fi"""
 
-WINDOWS_SCRIPT = "exit 1"
 
-OLD_WINDOWS_SCRIPT = """
-$AWS_ID = Invoke-RestMethod "http://169.254.169.254/latest/meta-data/instance-id" -UseBasicParsing
-
-$CONSUL_ENDPOINT="http://127.0.0.1:8500/v1/kv/nodes/$AWS_ID/cold-standby"
-
+WINDOWS_SCRIPT_MULTI = """
 Try {
-    $RESULT = Invoke-RestMethod "$CONSUL_ENDPOINT" -UseBasicParsing
-    $VALUE_DECODED = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($RESULT))
+$c = Invoke-WebRequest "http://169.254.169.254/latest/meta-data/instance-id" -usebasicparsing
+write-output "above"
+write-output $c
+write-output "below"
+$AWSID = $c.Content
+write-output "got id"
+write-output $AWSID
+write-output "above is the id... right? RIGHT DAVE?!?!?!"
+
+$CONSUL_ENDPOINT="http://127.0.0.1:8500/v1/kv/nodes/$AWSID/cold-standby"
+
+write-output "got endpoint"
+	write-output "trying"
+	write-output $CONSUL_ENDPOINT
+    $RESULT=(Invoke-WebRequest "$CONSUL_ENDPOINT" -usebasicparsing).Content
+	write-output "RESULT"
+    $RESULT_JSON = ConvertFrom-Json $RESULT
+	write-output $RESULT_JSON
+    $VALUE = $RESULT_JSON[0].Value
+	write-output $VALUE
+    $VALUE_DECODED = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($VALUE))
+	write-output "here"
+	write-output $VALUE_DECODED
     if ($VALUE_DECODED -eq "true") {
-        exit 1
+        [Environment]::exit(2)
     }
-    exit 0
+    [Environment]::exit(0)
 }
 Catch {
-    exit 0
+write-output "IT ALL WENT BANG"
+write-output $_.Exception.Message
+    [Environment]::exit(0)
 }"""
 
+encoded = base64.b64encode(WINDOWS_SCRIPT_MULTI.encode('utf-16LE'))
+WINDOWS_SCRIPT = "powershell -EncodedCommand {0}".format(encoded)
 
 class BlockCheckService(object):
     def __init__(self, platform=PLATFORM):
@@ -48,6 +69,7 @@ class BlockCheckService(object):
         if self.platform == 'linux':
             return LINUX_SCRIPT
         if self.platform == 'windows':
+            print WINDOWS_SCRIPT
             return WINDOWS_SCRIPT
         else:
             raise Exception("Invalid Platform")
@@ -55,11 +77,10 @@ class BlockCheckService(object):
     def register_block(self):
         r = RequestService()
         d = {}
-        d["Name"] = "kangaroo"
+        d["Name"] = "block-check"
         d["Interval"] = "3s"
         d["Script"] = self.get_platform_script()
-        r.put("http://localhost:8500/v1/agent/check/register",
-              json.dumps(d))
+        r.put("http://localhost:8500/v1/agent/check/register", json.dumps(d))
 
 
 class RequestService(object):
@@ -71,7 +92,8 @@ class RequestService(object):
         request = urllib2.Request(url, data=data)
         request.add_header("Content-Type", "application/json")
         request.get_method = lambda: "PUT"
-        opener.open(request)
+        url=opener.open(request)
+        print url.readlines()
 
 
 def main():
