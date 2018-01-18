@@ -25,36 +25,20 @@ fi"""
 WINDOWS_SCRIPT_MULTI = """
 Try {
 $c = Invoke-WebRequest "http://169.254.169.254/latest/meta-data/instance-id" -usebasicparsing
-write-output "above"
-write-output $c
-write-output "below"
 $AWSID = $c.Content
-write-output "got id"
-write-output $AWSID
-write-output "above is the id... right? RIGHT DAVE?!?!?!"
 
 $CONSUL_ENDPOINT="http://127.0.0.1:8500/v1/kv/nodes/$AWSID/cold-standby"
 
-write-output "got endpoint"
-	write-output "trying"
-	write-output $CONSUL_ENDPOINT
     $RESULT=(Invoke-WebRequest "$CONSUL_ENDPOINT" -usebasicparsing).Content
-	write-output "RESULT"
     $RESULT_JSON = ConvertFrom-Json $RESULT
-	write-output $RESULT_JSON
     $VALUE = $RESULT_JSON[0].Value
-	write-output $VALUE
     $VALUE_DECODED = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($VALUE))
-	write-output "here"
-	write-output $VALUE_DECODED
     if ($VALUE_DECODED -eq "true") {
         [Environment]::exit(2)
     }
     [Environment]::exit(0)
 }
 Catch {
-write-output "IT ALL WENT BANG"
-write-output $_.Exception.Message
     [Environment]::exit(0)
 }"""
 
