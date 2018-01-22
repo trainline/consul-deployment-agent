@@ -7,6 +7,8 @@ import base64
 
 PLATFORM = platform.system().lower()
 
+# These scripts are executed by Consul with 'sh'.
+# Please avoid any 'bashisms' within your scripts.
 LINUX_SCRIPT = """
 AWS_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
@@ -14,7 +16,7 @@ CONSUL_ENDPOINT="http://localhost:8500/v1/kv/nodes/$AWS_ID/cold-standby"
 
 RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value' | base64 --decode) 
 
-if [ "$RESULT" == "true" ]
+if [ "$RESULT" = "true" ]
 then
         exit 2
 else
