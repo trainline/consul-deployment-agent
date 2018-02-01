@@ -210,7 +210,7 @@ class Deployment(object):
             self._finalise_log()
             self._finalise_report()
             return {'id': self.id, 'is_success': self._is_success}
-        except:
+        finally:
             logging.exception(sys.exc_info()[1])
             self.logger.error('Deployment has failed.')
             self._finalise_log()
