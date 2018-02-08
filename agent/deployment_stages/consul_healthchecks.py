@@ -92,7 +92,7 @@ class RegisterConsulHealthChecks(DeploymentStage):
 
             elif check_type == HealthcheckTypes.HTTP:
                 check_url = HealthcheckUtils.get_http_url(check, deployment.service)
-                is_success = deployment.consul_api.register_http_check(deployment.service.id, service_check_id, check['name'], check_url, check['interval'])
+                is_success = deployment.consul_api.register_http_check(deployment.service.id, service_check_id, check['name'], check_url, check['interval'], check.get('tls_skip_verify', False))
             else:
                 is_success = False
 
