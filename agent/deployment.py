@@ -2,10 +2,14 @@
 
 import datetime, json, key_naming_convention, logging, os, sys
 from consul_api import ConsulError
-from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeregisterOldSensuHealthChecks, RegisterSensuHealthChecks, DeletePreviousDeploymentFiles
+from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, \
+    CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, \
+    DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeregisterOldSensuHealthChecks, \
+    RegisterSensuHealthChecks, DeletePreviousDeploymentFiles
 from s3_file_manager import S3FileManager
 from version import semantic_version
 from find_deployment import find_deployment_dir_win
+
 
 class Deployment(object):
     def __init__(self, config={}, consul_api=None, aws_config={}):
@@ -13,7 +17,7 @@ class Deployment(object):
             raise ValueError('config must be specified.')
         if consul_api is None:
             raise ValueError('consul_api must be specified.')
-        
+
         print('DEPLOYMENT: {0}'.format(config))
 
         self._validate_config(config)
@@ -54,13 +58,13 @@ class Deployment(object):
 
     def __str__(self):
         return json.dumps(
-            {'id':self.id,
-             'service_id':self.service.id,
-             'dir':self.dir,
-             'last_id':self.last_id,
-             'number_of_attempts':self.number_of_attempts,
-             'max_number_of_attempts':self.max_number_of_attempts,
-             'timeout':self.timeout})
+            {'id': self.id,
+             'service_id': self.service.id,
+             'dir': self.dir,
+             'last_id': self.last_id,
+             'number_of_attempts': self.number_of_attempts,
+             'max_number_of_attempts': self.max_number_of_attempts,
+             'timeout': self.timeout})
 
     def _initialise_log(self):
         try:
@@ -82,9 +86,11 @@ class Deployment(object):
 
     def _finalise_log(self):
         def is_log_shipping_configured(aws_config):
-            if 'deployment_logs' not in aws_config or aws_config['deployment_logs']['bucket_name'] is None or aws_config['deployment_logs']['key_prefix'] is None:
+            if 'deployment_logs' not in aws_config or aws_config['deployment_logs']['bucket_name'] is None or \
+                    aws_config['deployment_logs']['key_prefix'] is None:
                 return False
             return True
+
         logging.debug('Finalising deployment logs.')
         for handler in self.logger.handlers[:]:
             try:
@@ -96,12 +102,14 @@ class Deployment(object):
             if os.path.isfile(self._log_filepath):
                 bucket_name = self._aws_config['deployment_logs']['bucket_name']
                 key_prefix = self._aws_config['deployment_logs']['key_prefix']
-                key = '{0}/{1}/{2}/{3}'.format(key_prefix, self._environment.environment_name, self.service.id, self._log_filename)
-                logging.debug('Uploading deployment logs to S3 bucket \'{0}\' with key \'{1}\'.'.format(bucket_name, key))
+                key = '{0}/{1}/{2}/{3}'.format(key_prefix, self._environment.environment_name, self.service.id,
+                                               self._log_filename)
+                logging.debug(
+                    'Uploading deployment logs to S3 bucket \'{0}\' with key \'{1}\'.'.format(bucket_name, key))
                 logfile_url = self.s3_file_manager.upload_file(bucket_name, key, self._log_filepath)
                 if logfile_url:
                     logging.debug('Deployment logs uploaded to S3. URL: {0}.'.format(logfile_url))
-                    self._update_report({'log':logfile_url})
+                    self._update_report({'log': logfile_url})
                 else:
                     logging.debug('Deployment logs failed to upload to S3.')
             else:
@@ -130,7 +138,7 @@ class Deployment(object):
 
     def _finalise_report(self):
         logging.debug('Finalising deployment report for Consul.')
-        updates = {'end_time':datetime.datetime.utcnow().isoformat(), 'number_of_attempts':self.number_of_attempts}
+        updates = {'end_time': datetime.datetime.utcnow().isoformat(), 'number_of_attempts': self.number_of_attempts}
         if self._is_success is None:
             updates['status'] = 'In Progress'
         elif self._is_success:
@@ -144,6 +152,7 @@ class Deployment(object):
         def update_if_specified(report, key, value):
             if value is not None:
                 report[key] = value
+
         logging.debug('Updating report with: %s' % updates)
         if self._report is None:
             self._report = {}
@@ -167,6 +176,7 @@ class Deployment(object):
         def check_not_none(property_name, dictionary):
             if dictionary.get(property_name) is None:
                 raise ValueError('%s must be specified.' % property_name)
+
         check_not_none('cause', config)
         check_not_none('deployment_id', config)
         check_not_none('environment', config)
@@ -175,25 +185,35 @@ class Deployment(object):
         check_not_none('sensu', config)
 
     def run(self):
-        self._initialise_report()
-        self._initialise_log()
-        self.logger.info('consul-deployment-agent version: {0}'.format(semantic_version))
-        self.logger.info('Installing service: {0}'.format(self.service))
-        self.logger.info('Configuration: {0}'.format(self))
-        self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
-        stages = [ValidateDeployment(), DeregisterOldConsulHealthChecks(),
-                  DeregisterOldSensuHealthChecks(), StopApplication(), DownloadBundleFromS3(), ValidateBundle(), BeforeInstall(),
-                  CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
-                  RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(), DeletePreviousDeploymentFiles()]
-        for stage in stages:
-            success = stage.run(self)
-            self._update_report({'last_completed_stage':stage.name})
-            if not success:
-                self.logger.error('Deployment has failed.')
-                self._is_success = False
-                break
-        if self._is_success is None:
-            self._is_success = True
-        self._finalise_log()
-        self._finalise_report()
-        return {'id': self.id, 'is_success': self._is_success}
+        try:
+            self._initialise_report()
+            self._initialise_log()
+            self.logger.info('consul-deployment-agent version: {0}'.format(semantic_version))
+            self.logger.info('Installing service: {0}'.format(self.service))
+            self.logger.info('Configuration: {0}'.format(self))
+            self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
+            stages = [ValidateDeployment(), DeregisterOldConsulHealthChecks(),
+                      DeregisterOldSensuHealthChecks(), StopApplication(), DownloadBundleFromS3(), ValidateBundle(),
+                      BeforeInstall(),
+                      CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
+                      RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(),
+                      DeletePreviousDeploymentFiles()]
+            for stage in stages:
+                success = stage.run(self)
+                self._update_report({'last_completed_stage': stage.name})
+                if not success:
+                    self.logger.error('Deployment has failed.')
+                    self._is_success = False
+                    break
+            if self._is_success is None:
+                self._is_success = True
+            self._finalise_log()
+            self._finalise_report()
+            return {'id': self.id, 'is_success': self._is_success}
+        finally:
+            logging.exception(sys.exc_info()[1])
+            self.logger.error('Deployment has failed.')
+            self._finalise_log()
+            self._finalise_report()
+            self._is_success = False
+            return {'id': self.id, 'is_success': self._is_success}
