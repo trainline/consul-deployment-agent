@@ -3,7 +3,6 @@
 import ctypes
 import os
 import platform
-import sys
 from .common import DeploymentError, DeploymentStage
 
 
