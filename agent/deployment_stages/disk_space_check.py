@@ -20,7 +20,7 @@ class CheckDiskSpace(DeploymentStage):
         for x in root:
             if get_free_space_mb(x) < 2000:
                 raise DeploymentError(
-                    'The disk space on the machine is less than 500MB.')
+                    'The disk space on the machine is less than 2GB.')
 
 
 def get_free_space_mb(dirname):
