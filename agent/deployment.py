@@ -193,7 +193,7 @@ class Deployment(object):
             self.logger.info('Configuration: {0}'.format(self))
             self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
             stages = [CheckDiskSpace(), ValidateDeployment(), DeregisterOldConsulHealthChecks(),
-                      DeregisterOldSensuHealthChecks(), StopApplication(), DownloadBundleFromS3(), ValidateBundle(),
+                      DeregisterOldSensuHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), StopApplication(), 
                       BeforeInstall(),
                       CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
                       RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(),
