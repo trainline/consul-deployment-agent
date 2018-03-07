@@ -11,6 +11,7 @@ from .sensu_healthchecks import DeregisterOldSensuHealthChecks, RegisterSensuHea
 from .stop_application import StopApplication
 from .validate_bundle import ValidateBundle
 from .validate_deployment import ValidateDeployment
+from .disk_space_check import CheckDiskSpace
 
 __all__ = [
     'AfterInstall',
@@ -29,5 +30,6 @@ __all__ = [
     'StopApplication',
     'ValidateBundle',
     'ValidateDeployment',
-    'ValidateService']
+    'ValidateService',
+    'CheckDiskSpace']
     

@@ -2,7 +2,7 @@
 
 import datetime, json, key_naming_convention, logging, os, sys
 from consul_api import ConsulError
-from deployment_stages import ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, \
+from deployment_stages import CheckDiskSpace, ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, \
     CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, \
     DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeregisterOldSensuHealthChecks, \
     RegisterSensuHealthChecks, DeletePreviousDeploymentFiles
@@ -192,8 +192,8 @@ class Deployment(object):
             self.logger.info('Installing service: {0}'.format(self.service))
             self.logger.info('Configuration: {0}'.format(self))
             self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
-            stages = [ValidateDeployment(), DeregisterOldConsulHealthChecks(),
-                      DeregisterOldSensuHealthChecks(), StopApplication(), DownloadBundleFromS3(), ValidateBundle(),
+            stages = [CheckDiskSpace(), ValidateDeployment(), DeregisterOldConsulHealthChecks(),
+                      DeregisterOldSensuHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), StopApplication(), 
                       BeforeInstall(),
                       CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
                       RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(),
