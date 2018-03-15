@@ -122,3 +122,4 @@ Follow these steps to perform a deployment simulation:
 ```bash
   ./scripts/deploy_service.py -n <service_name> -p <service_port> -v <version> -s <slice_name> -t <environment_type> -c <cluster_name> -b tl-deployment-sandbox -k <s3_object_key>
 ```
+ 
