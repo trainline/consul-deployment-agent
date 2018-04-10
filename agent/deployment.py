@@ -1,6 +1,11 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
-import datetime, json, key_naming_convention, logging, os, sys
+import datetime
+import json
+import key_naming_convention
+import logging
+import os
+import sys
 from consul_api import ConsulError
 from deployment_stages import CheckDiskSpace, ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, \
     CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, \
@@ -37,23 +42,45 @@ class Deployment(object):
         self.timeout = self.service.installation['timeout']
         self._is_success = self.logger = self._log_filename = self._log_filepath = self._report = self._report_key = None
         self.number_of_attempts = 0
+
+        self.stages = [CheckDiskSpace(),
+                       ValidateDeployment(),
+                       DeregisterOldConsulHealthChecks(),
+                       DeregisterOldSensuHealthChecks(),
+                       DownloadBundleFromS3(),
+                       ValidateBundle(),
+                       StopApplication(),
+                       BeforeInstall(),
+                       CopyFiles(),
+                       ApplyPermissions(),
+                       AfterInstall(),
+                       StartApplication(),
+                       ValidateService(),
+                       RegisterWithConsul(),
+                       RegisterConsulHealthChecks(),
+                       RegisterSensuHealthChecks(),
+                       DeletePreviousDeploymentFiles()]
+
         if self.platform == 'linux':
             base_dir = '/opt/consul-deployment-agent/deployments'
             self.base_dir = base_dir
             self.dir = os.path.join(base_dir, self.service.id, self.id)
             if self.last_id is not None:
-                self.last_dir = os.path.join(base_dir, self.service.id, self.last_id)
+                self.last_dir = os.path.join(
+                    base_dir, self.service.id, self.last_id)
                 self.last_archive_dir = os.path.join(self.last_dir, 'archive')
         else:
             base_dir = 'C:\TLDeploy'
             self.base_dir = base_dir
             self.dir = os.path.join(base_dir, self.service.id, self.id)
             if self.last_id is not None:
-                self.last_dir = find_deployment_dir_win(self.base_dir, self.service.id, self.last_id)
+                self.last_dir = find_deployment_dir_win(
+                    self.base_dir, self.service.id, self.last_id)
                 if self.last_dir is None:
                     self.last_id = None
                 else:
-                    self.last_archive_dir = os.path.join(self.last_dir, 'archive')
+                    self.last_archive_dir = os.path.join(
+                        self.last_dir, 'archive')
         self.archive_dir = os.path.join(self.dir, 'archive')
 
     def __str__(self):
@@ -68,17 +95,22 @@ class Deployment(object):
 
     def _initialise_log(self):
         try:
-            self._log_filename = 'deployment-{0}-{1}.log'.format(self._environment.instance_id, self.id)
-            self._log_filepath = '{0}/logs/{1}'.format(self.dir, self._log_filename)
-            logging.debug('Initialising deployment log file at {0}.'.format(self._log_filepath))
+            self._log_filename = 'deployment-{0}-{1}.log'.format(
+                self._environment.instance_id, self.id)
+            self._log_filepath = '{0}/logs/{1}'.format(
+                self.dir, self._log_filename)
+            logging.debug(
+                'Initialising deployment log file at {0}.'.format(self._log_filepath))
             log_directory = os.path.dirname(self._log_filepath)
             if not os.path.isdir(log_directory):
-                logging.debug('Creating log directory {0}.'.format(log_directory))
+                logging.debug(
+                    'Creating log directory {0}.'.format(log_directory))
                 os.makedirs(log_directory)
             self.logger = logging.getLogger(self.id)
             fh = logging.FileHandler(self._log_filepath)
             fh.setLevel(logging.DEBUG)
-            fh.setFormatter(logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s'))
+            fh.setFormatter(logging.Formatter(
+                '[%(asctime)s] [%(levelname)s] %(message)s'))
             self.logger.addHandler(fh)
         except:
             logging.error('Failed to initialise deployment log file.')
@@ -106,25 +138,31 @@ class Deployment(object):
                                                self._log_filename)
                 logging.debug(
                     'Uploading deployment logs to S3 bucket \'{0}\' with key \'{1}\'.'.format(bucket_name, key))
-                logfile_url = self.s3_file_manager.upload_file(bucket_name, key, self._log_filepath)
+                logfile_url = self.s3_file_manager.upload_file(
+                    bucket_name, key, self._log_filepath)
                 if logfile_url:
-                    logging.debug('Deployment logs uploaded to S3. URL: {0}.'.format(logfile_url))
+                    logging.debug(
+                        'Deployment logs uploaded to S3. URL: {0}.'.format(logfile_url))
                     self._update_report({'log': logfile_url})
                 else:
                     logging.debug('Deployment logs failed to upload to S3.')
             else:
-                logging.error('No known deployment log file, skipping log shipping.')
+                logging.error(
+                    'No known deployment log file, skipping log shipping.')
         else:
-            logging.debug('Deployment logs shipping is not configured, skipping log shipping.')
+            logging.debug(
+                'Deployment logs shipping is not configured, skipping log shipping.')
 
     def _initialise_report(self):
         logging.debug('Initialising deployment report for Consul.')
-        self._report_key = key_naming_convention.get_instance_deployment_key(self._environment, self.id)
+        self._report_key = key_naming_convention.get_instance_deployment_key(
+            self._environment, self.id)
         existing_report = {}
         if self.consul_api.key_exists(self._report_key):
             logging.debug('Loading existing report from Consul.')
             existing_report = self.consul_api.get_value(self._report_key)
-            self.number_of_attempts = existing_report.get('NumberOfAttempts', 0)
+            self.number_of_attempts = existing_report.get(
+                'NumberOfAttempts', 0)
         logging.debug('Creating deployment report.')
         self._update_report({
             'cause': self._cause,
@@ -138,7 +176,8 @@ class Deployment(object):
 
     def _finalise_report(self):
         logging.debug('Finalising deployment report for Consul.')
-        updates = {'end_time': datetime.datetime.utcnow().isoformat(), 'number_of_attempts': self.number_of_attempts}
+        updates = {'end_time': datetime.datetime.utcnow().isoformat(
+        ), 'number_of_attempts': self.number_of_attempts}
         if self._is_success is None:
             updates['status'] = 'In Progress'
         elif self._is_success:
@@ -158,10 +197,13 @@ class Deployment(object):
             self._report = {}
         update_if_specified(self._report, 'Cause', updates.get('cause'))
         update_if_specified(self._report, 'EndTime', updates.get('end_time'))
-        update_if_specified(self._report, 'LastCompletedStage', updates.get('last_completed_stage'))
+        update_if_specified(self._report, 'LastCompletedStage',
+                            updates.get('last_completed_stage'))
         update_if_specified(self._report, 'Log', updates.get('log'))
-        update_if_specified(self._report, 'NumberOfAttempts', updates.get('number_of_attempts'))
-        update_if_specified(self._report, 'StartTime', updates.get('start_time'))
+        update_if_specified(self._report, 'NumberOfAttempts',
+                            updates.get('number_of_attempts'))
+        update_if_specified(self._report, 'StartTime',
+                            updates.get('start_time'))
         update_if_specified(self._report, 'Status', updates.get('status'))
         logging.debug('Report updated: %s' % self._report)
         if write_to_consul:
@@ -188,25 +230,16 @@ class Deployment(object):
         try:
             self._initialise_report()
             self._initialise_log()
-            self.logger.info('consul-deployment-agent version: {0}'.format(semantic_version))
+            self.logger.info(
+                'consul-deployment-agent version: {0}'.format(semantic_version))
             self.logger.info('Installing service: {0}'.format(self.service))
             self.logger.info('Configuration: {0}'.format(self))
-            self.logger.info('Attempt number: {0}'.format(self.number_of_attempts + 1))
-            stages = [CheckDiskSpace(), ValidateDeployment(), DeregisterOldConsulHealthChecks(),
-                      DeregisterOldSensuHealthChecks(), DownloadBundleFromS3(), ValidateBundle(), StopApplication(), 
-                      BeforeInstall(),
-                      CopyFiles(), ApplyPermissions(), AfterInstall(), StartApplication(), ValidateService(),
-                      RegisterWithConsul(), RegisterConsulHealthChecks(), RegisterSensuHealthChecks(),
-                      DeletePreviousDeploymentFiles()]
-            for stage in stages:
-                success = stage.run(self)
-                self._update_report({'last_completed_stage': stage.name})
-                if not success:
-                    self.logger.error('Deployment has failed.')
-                    self._is_success = False
-                    break
-            if self._is_success is None:
-                self._is_success = True
+            self.logger.info('Attempt number: {0}'.format(
+                self.number_of_attempts + 1))
+
+            self._is_success = run_stages(
+                self.stages, self, self._update_report, self.logger)
+
             self._finalise_log()
             self._finalise_report()
             return {'id': self.id, 'is_success': self._is_success}
@@ -217,3 +250,33 @@ class Deployment(object):
             self._finalise_report()
             self._is_success = False
             return {'id': self.id, 'is_success': self._is_success}
+
+
+def run_stages(stages, deployment, reporter, logger):
+    success = False
+    for stage in stages:
+        success = stage.run(deployment)
+        reporter({'last_completed_stage': stage.name})
+        if not success:
+            logger.error('Deployment stage ' + stage.name +
+                         ' has encountered an error.')
+            logger.error(
+                'Attempting to run Application Stop script for cleanup...')
+            break
+    if not success:
+        _cleanup_on_failure(stages, deployment, logger)
+    return success
+
+
+def _cleanup_on_failure(stages, deployment, logger):
+    for x in stages:
+        if x.name == "StopApplication":
+            cleanup_success = x.run(deployment)
+            if not cleanup_success:
+                logger.error(
+                    'Running Stop Application script as part of cleanup process failed.')
+                logger.error(
+                    'This could be caused by the application being in an "unstoppable" state from the failed deployment.')
+            else:
+                logger.info(
+                    'Application Stop script run as part of cleanup process. Successful.')
