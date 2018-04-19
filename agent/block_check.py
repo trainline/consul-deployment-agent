@@ -10,17 +10,18 @@ PLATFORM = platform.system().lower()
 # These scripts are executed by Consul with 'sh'.
 # Please avoid any 'bashisms' within your scripts.
 LINUX_SCRIPT = """
+#!/usr/bin/env bash
 AWS_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
 CONSUL_ENDPOINT="http://localhost:8500/v1/kv/nodes/$AWS_ID/cold-standby"
 
 RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value' | base64 --decode) 
 
-if [ "$RESULT" = "true" ]
+if [ "${RESULT// }" = "" ]
 then
-        exit 2
-else
         exit 0
+else
+        exit 2
 fi"""
 
 
@@ -35,10 +36,10 @@ $CONSUL_ENDPOINT="http://127.0.0.1:8500/v1/kv/nodes/$AWSID/cold-standby"
     $RESULT_JSON = ConvertFrom-Json $RESULT
     $VALUE = $RESULT_JSON[0].Value
     $VALUE_DECODED = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($VALUE))
-    if ($VALUE_DECODED -eq "true") {
-        [Environment]::exit(2)
+    if ($VALUE_DECODED -eq "") {
+        [Environment]::exit(0)
     }
-    [Environment]::exit(0)
+    [Environment]::exit(2)
 }
 Catch {
     [Environment]::exit(0)
