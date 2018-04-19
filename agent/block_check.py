@@ -3,6 +3,7 @@
 import platform
 import urllib2
 import json
+import os
 import base64
 
 PLATFORM = platform.system().lower()
@@ -54,7 +55,10 @@ class BlockCheckService(object):
 
     def get_platform_script(self):
         if self.platform == 'linux':
-            return LINUX_SCRIPT
+            with open("/usr/share/block_check", "w") as file:
+                file.write(LINUX_SCRIPT)
+            os.chmod("/usr/share/block_check", 755)
+            return "/usr/share/block_check"
         if self.platform == 'windows':
             print WINDOWS_SCRIPT
             return WINDOWS_SCRIPT
