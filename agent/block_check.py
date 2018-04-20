@@ -10,7 +10,6 @@ PLATFORM = platform.system().lower()
 # These scripts are executed by Consul with 'sh'.
 # Please avoid any 'bashisms' within your scripts.
 LINUX_SCRIPT = """
-#!/usr/bin/env bash
 AWS_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
 CONSUL_ENDPOINT="http://localhost:8500/v1/kv/nodes/$AWS_ID/cold-standby"
