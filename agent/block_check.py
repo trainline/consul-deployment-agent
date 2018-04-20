@@ -17,10 +17,16 @@ CONSUL_ENDPOINT="http://localhost:8500/v1/kv/nodes/$AWS_ID/cold-standby"
 
 RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value' | base64 --decode) 
 
+echo RESULT
+echo $RESULT
+echo END RESULT
+
 if [ "$RESULT" = "" ]
 then
+        echo PASS
         exit 0
 else
+        echo FAIL
         exit 2
 fi"""
 
