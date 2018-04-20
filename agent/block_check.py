@@ -15,19 +15,15 @@ AWS_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
 CONSUL_ENDPOINT="http://localhost:8500/v1/kv/nodes/$AWS_ID/cold-standby"
 
-RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value' | base64 --decode) 
+ENCODED_RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value')
 
-echo RESULT
-echo $RESULT
-echo END RESULT
-
-if [ "$RESULT" = "" ]
+if [ "$ENCODED_RESULT" = null ]
 then
-        echo PASS
-        exit 0
+    exit 0
 else
-        echo FAIL
-        exit 2
+    RESULT=$(echo $ENCODED_RESULT | base64 --decode)
+    echo Failed: $RESULT
+    exit 2
 fi"""
 
 
@@ -53,6 +49,7 @@ Catch {
 
 encoded = base64.b64encode(WINDOWS_SCRIPT_MULTI.encode('utf-16LE'))
 WINDOWS_SCRIPT = "powershell -EncodedCommand {0}".format(encoded)
+
 
 class BlockCheckService(object):
     def __init__(self, platform=PLATFORM):
@@ -85,7 +82,7 @@ class RequestService(object):
         request = urllib2.Request(url, data=data)
         request.add_header("Content-Type", "application/json")
         request.get_method = lambda: "PUT"
-        url=opener.open(request)
+        url = opener.open(request)
         print url.readlines()
 
 
