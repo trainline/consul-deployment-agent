@@ -3,7 +3,6 @@
 import platform
 import urllib2
 import json
-import os
 import base64
 
 PLATFORM = platform.system().lower()
@@ -18,7 +17,7 @@ CONSUL_ENDPOINT="http://localhost:8500/v1/kv/nodes/$AWS_ID/cold-standby"
 
 RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value' | base64 --decode) 
 
-if [ "${RESULT// }" = "" ]
+if [ "$RESULT" = "" ]
 then
         exit 0
 else
@@ -55,10 +54,7 @@ class BlockCheckService(object):
 
     def get_platform_script(self):
         if self.platform == 'linux':
-            with open("/usr/share/block_check", "w") as file:
-                file.write(LINUX_SCRIPT)
-            os.chmod("/usr/share/block_check", 755)
-            return "/usr/share/block_check"
+            return LINUX_SCRIPT
         if self.platform == 'windows':
             print WINDOWS_SCRIPT
             return WINDOWS_SCRIPT
