@@ -10,18 +10,19 @@ PLATFORM = platform.system().lower()
 # These scripts are executed by Consul with 'sh'.
 # Please avoid any 'bashisms' within your scripts.
 LINUX_SCRIPT = """
+#!/usr/bin/env bash
 AWS_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
-
 CONSUL_ENDPOINT="http://localhost:8500/v1/kv/nodes/$AWS_ID/cold-standby"
-
 ENCODED_RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value')
 
-if [ "$ENCODED_RESULT" = null ]
+if [ -z "$ENCODED_RESULT" ] || [ $ENCODED_RESULT = null ]
 then
+    echo "HEALTHY: Key is null or empty."
     exit 0
 else
-    RESULT=$(echo $ENCODED_RESULT | base64 --decode)
-    echo Failed: $RESULT
+    echo "UNHEALTHY: Key exists with value..."
+    DECODED_RESULT=$(echo $ENCODED_RESULT | base64 --decode)
+    echo $DECODED_RESULT
     exit 2
 fi"""
 
