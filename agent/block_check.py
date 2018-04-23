@@ -11,9 +11,9 @@ PLATFORM = platform.system().lower()
 # Please avoid any 'bashisms' within your scripts.
 LINUX_SCRIPT = """
 #!/usr/bin/env bash
-AWS_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
+AWS_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
 CONSUL_ENDPOINT="http://localhost:8500/v1/kv/nodes/$AWS_ID/cold-standby"
-ENCODED_RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value')
+ENCODED_RESULT=$(curl -s $CONSUL_ENDPOINT | jq -r '.[].Value')
 
 if [ -z "$ENCODED_RESULT" ] || [ $ENCODED_RESULT = null ]
 then
@@ -39,11 +39,15 @@ $CONSUL_ENDPOINT="http://127.0.0.1:8500/v1/kv/nodes/$AWSID/cold-standby"
     $VALUE = $RESULT_JSON[0].Value
     $VALUE_DECODED = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($VALUE))
     if ($VALUE_DECODED -eq "") {
+        write-host "HEALTHY: No value against key"
         [Environment]::exit(0)
     }
+    write-host "UNHEALTHY: Key exists with value..."
+    write-host $VALUE_DECODED
     [Environment]::exit(2)
 }
 Catch {
+    write-host "HEALTHY: No key"
     [Environment]::exit(0)
 }"""
 
