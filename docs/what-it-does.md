@@ -2,7 +2,7 @@
 
 ## On startup
 
-- Waits for puppet to drop file to signal instance readiness before proceeding.
+- Waits for puppet to drop file to signal instance readiness before proceeding (if instructed to do so in the config file).
 
 - Loads consul and standard configuration from the local config.yml file.
 
