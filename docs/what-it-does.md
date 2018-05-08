@@ -59,9 +59,9 @@
 	- StartApplication
 	- ValidateService
 
-- The location of the script files in the package are specified by the appspec.yml.
+- The location of the script files in the package are specified by the appspec.yml. You can add `runas: username`, `timeout: seconds` and `location: path` to each script entry in the appspec.yml file. 
 
-- They are executed in the above order.
+- They are executed in the above order. 
 
 - The StopApplication stage is special in that it's the StopApplication script from the previous deployment that is run (not the current deployment). This is why we keep the previous deployment files.
 
