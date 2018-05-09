@@ -4,6 +4,8 @@
 
 A cross platform service that synchronises the set of applications installed on a machine with a manifest stored in a Consul key value store.
 
+See this [Overview](docs/what-it-does.md) for more information about what exactly the CDA does.
+
 ## Package Format
 
 consul-deployment-agent installs applications packaged in the AWS [CodeDeploy revision format](http://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file.html). This is a `.zip` file containing your code and an `appspec.yml` file that describes how to install the application.
