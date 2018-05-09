@@ -31,7 +31,7 @@ class LifecycleHookExecutionStage(DeploymentStage):
         if platform == 'linux':
             self.script = ShellScript(filepath, env, hook_definition.get('runas'), hook_definition.get('timeout', default_timeout))
         else:
-            self.script = PowershellScript(filepath, env, hook_definition.get('runas'), hook_definition.get('timeout', default_timeout))
+            self.script = PowershellScript(filepath, env, hook_definition.get('runas'), hook_definition.get('timeout', default_timeout), hook_definition.get('arch'))
     def _run(self, deployment):
         hook_definition = deployment.appspec['hooks'].get(self.lifecycle_event)
         if hook_definition is None:
