@@ -65,6 +65,29 @@ environment variables for this to work.
 1. [Python 2.7.X](https://www.python.org/downloads/)
 2. [Consul agent](https://www.consul.io/)
 
+### Setting up your PYTHONPATH
+
+If you are checking this out for the first time you will need to make sure that you have setup your PYTHONPATH
+environment variable.
+
+For example if you have checked out this project to: 
+
+    C:\code\consul-deployment-agent
+
+OR
+
+    ~/code/consul-deployment-agent
+
+Then you would need to make sure you set this exact path as a value.
+
+For windows:
+
+    SET PYTHONPATH=C:\code\consul-deployment-agent
+
+For linux: 
+
+    export PYTHONPATH=~/code/consul-deployment-agent
+
 ### Linux development
 
 First, initialise the dependencies by running:
