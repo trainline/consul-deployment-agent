@@ -28,8 +28,11 @@
     - `environments/{ENVIRONMENT}/services/{SERVICE_NAME}/{VERSION}/installation`
     - `deployments/{DEPLOYMENT_ID}`
   - Figures out which serviceSlices are not present or have the wrong version.
-  - Filters serviceSlices which are in 'Ignore' state or which have beenpreviously quarantened.
+  - Filters serviceSlices which are in *'Ignore' state or which have been previously *&ast;quarantined.
   - Deploys each serviceSlice in sequence (see [Deployment](#deployment) below).
+
+*'Ignore' state means that the service has been disabled from Environment Manager
+*&ast; Quanrantined means that the service installation has been attempted and failed too many times
 
 <a id="deployment"></a>
 
