@@ -10,17 +10,20 @@ PLATFORM = platform.system().lower()
 # These scripts are executed by Consul with 'sh'.
 # Please avoid any 'bashisms' within your scripts.
 LINUX_SCRIPT = """
-AWS_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
-
+#!/usr/bin/env bash
+AWS_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
 CONSUL_ENDPOINT="http://localhost:8500/v1/kv/nodes/$AWS_ID/cold-standby"
+ENCODED_RESULT=$(curl -s $CONSUL_ENDPOINT | jq -r '.[].Value')
 
-RESULT=$(curl $CONSUL_ENDPOINT | jq -r '.[].Value' | base64 --decode) 
-
-if [ "$RESULT" = "true" ]
+if [ -z "$ENCODED_RESULT" ] || [ $ENCODED_RESULT = null ]
 then
-        exit 2
+    echo "HEALTHY: Key is null or empty."
+    exit 0
 else
-        exit 0
+    echo "UNHEALTHY: Key exists with value..."
+    DECODED_RESULT=$(echo $ENCODED_RESULT | base64 --decode)
+    echo $DECODED_RESULT
+    exit 2
 fi"""
 
 
@@ -35,17 +38,22 @@ $CONSUL_ENDPOINT="http://127.0.0.1:8500/v1/kv/nodes/$AWSID/cold-standby"
     $RESULT_JSON = ConvertFrom-Json $RESULT
     $VALUE = $RESULT_JSON[0].Value
     $VALUE_DECODED = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($VALUE))
-    if ($VALUE_DECODED -eq "true") {
-        [Environment]::exit(2)
+    if ($VALUE_DECODED -eq "") {
+        write-host "HEALTHY: No value against key"
+        [Environment]::exit(0)
     }
-    [Environment]::exit(0)
+    write-host "UNHEALTHY: Key exists with value..."
+    write-host $VALUE_DECODED
+    [Environment]::exit(2)
 }
 Catch {
+    write-host "HEALTHY: No key"
     [Environment]::exit(0)
 }"""
 
 encoded = base64.b64encode(WINDOWS_SCRIPT_MULTI.encode('utf-16LE'))
 WINDOWS_SCRIPT = "powershell -EncodedCommand {0}".format(encoded)
+
 
 class BlockCheckService(object):
     def __init__(self, platform=PLATFORM):
@@ -78,7 +86,7 @@ class RequestService(object):
         request = urllib2.Request(url, data=data)
         request.add_header("Content-Type", "application/json")
         request.get_method = lambda: "PUT"
-        url=opener.open(request)
+        url = opener.open(request)
         print url.readlines()
 
 
