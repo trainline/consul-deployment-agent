@@ -15,7 +15,11 @@ SensuHealthCheckSchema = {
         "tip": {"type": ["string", "boolean"]},
         "runbook": {"type": ["string", "boolean"]},
         "standalone": {"type": "boolean"},
-        "aggregate": {"type": "boolean"},
+        "aggregate": {"type": ["boolean", "string"]},
+        "aggregates": {
+            "type": "array",
+            "items": {"type": "string"}
+        },
         "ticketing_enabled": {"type": "boolean"},
         "paging_enabled": {"type": "boolean"},
         "project": {"type": "boolean"},
