@@ -1,0 +1,2 @@
+#!/bin/sh
+/usr/bin/python "/opt/consul-deployment-agent/agent/core.py" "$@"
