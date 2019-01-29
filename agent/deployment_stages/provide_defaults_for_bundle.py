@@ -19,6 +19,9 @@ class ProvideDefaultsForBundle(DeploymentStage):
         appspec_stream = file(os.path.join(
             deployment.archive_dir, 'appspec.yml'), 'r')
         deployment.appspec = yaml.load(appspec_stream)
+        self._provide_defaults_if_no_hooks(deployment)
+
+    def _provide_defaults_if_no_hooks(self, deployment):
         if not deployment.appspec.get('hooks'):
             skel = 'skel'
             app_spec_os = deployment.appspec.get('os')
