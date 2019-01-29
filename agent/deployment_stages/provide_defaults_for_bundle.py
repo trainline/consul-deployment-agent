@@ -1,10 +1,9 @@
 # Copyright (c) Trainline Limited, 2016-2017. All rights reserved. See LICENSE.txt in the project root for license information.
 
 import os
-import zipfile
 import shutil
 import yaml
-from .common import DeploymentError, DeploymentStage
+from .common import DeploymentStage
 
 
 class ProvideDefaultsForBundle(DeploymentStage):
