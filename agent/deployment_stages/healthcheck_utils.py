@@ -49,7 +49,7 @@ class HealthcheckUtils(object):
     def get_http_url(check, service):
         url = check.get('url', '')
         port = service.port
-        if port is not None and port is not 0:
+        if port is not None and port != 0:
             url = url.replace('${PORT}', str(port))
         return url
 
