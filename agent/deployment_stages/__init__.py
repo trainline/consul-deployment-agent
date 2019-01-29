@@ -23,6 +23,7 @@ __all__ = [
     'DeregisterOldConsulHealthChecks',
     'DeregisterOldSensuHealthChecks',
     'DownloadBundleFromS3',
+    'ProvideDefaultsForBundle',
     'RegisterConsulHealthChecks',
     'RegisterSensuHealthChecks',
     'RegisterWithConsul',
