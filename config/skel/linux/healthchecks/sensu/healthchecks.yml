@@ -1,0 +1,6 @@
+sensu_healthchecks:
+  http_check:
+    type: http
+    name: http-health-check
+    url: http://localhost:40665/api/diagnostics/healthcheck
+    interval: 10

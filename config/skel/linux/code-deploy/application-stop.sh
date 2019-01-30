@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
-echo "application stop script run" > application-stop.log
+
+if systemctl is-active test-orchestrator | grep "^active$"; then
+  systemctl stop test-orchestrator
+fi
