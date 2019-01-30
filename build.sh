@@ -35,7 +35,7 @@ echo "Copying $PWD/config/config-logging-linux.yml to $OUTPUT_DIR/config-logging
 cp $PWD/config/config-logging-linux.yml $PACKAGE_DIR/config-logging.yml
 
 echo "Copying Skeleton files to $OUTPUT_DIR/skel/"
-cp -R $PWD/skel $PACKAGE_DIR/
+cp -R $PWD/config/skel $PACKAGE_DIR/
 
 if [ -s $TCHOME ]; then
     MYHOME="."
