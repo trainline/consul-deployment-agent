@@ -1,5 +1,20 @@
-version: 0.0
 os: linux
 files:
   - source: /
-    destination: /tmp/test-orchestrator
+    destination: /tmp/code-deploy.skeleton
+hooks:
+  ApplicationStop:
+    - location: code-deploy/application-stop.sh
+      runas: root
+  BeforeInstall:
+    - location: code-deploy/before-install.sh
+      runas: root
+  AfterInstall:
+    - location: code-deploy/on-after-install.sh
+      runas: root
+  ApplicationStart:
+    - location: code-deploy/application-start.sh
+      runas: root
+  ValidateService:
+    - location: code-deploy/validate-service.sh
+      runas: root
