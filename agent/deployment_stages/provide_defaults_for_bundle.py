@@ -39,7 +39,7 @@ class ProvideDefaultsForBundle(DeploymentStage):
             code_deploy_scripts = os.listdir(
                 os.path.join(skel_dir, 'code-deploy'))
             for f in code_deploy_scripts:
-                shutil.copy(f, os.path.join(
+                shutil.copy(os.path.join(skel_dir, 'code-deploy', f), os.path.join(
                     deployment.archive_dir, 'code-deploy'))
 
             if not os.path.exists(os.path.join(deployment.archive_dir, 'healthchecks')):
@@ -53,7 +53,7 @@ class ProvideDefaultsForBundle(DeploymentStage):
             sensu_health_checks = os.listdir(os.path.join(
                 skel_dir, 'healthchecks', 'sensu'))
             for f in sensu_health_checks:
-                shutil.copy(f, os.path.join(
+                shutil.copy(os.path.join(skel_dir, 'code-deploy', f), os.path.join(
                     deployment.archive_dir, 'healthchecks', 'sensu'))
 
             if not os.path.exists(os.path.join(deployment.archive_dir, 'healthchecks', 'consul')):
@@ -63,7 +63,7 @@ class ProvideDefaultsForBundle(DeploymentStage):
             consul_health_checks = os.listdir(os.path.join(
                 skel_dir, 'healthchecks', 'consul'))
             for f in consul_health_checks:
-                shutil.copy(f, os.path.join(
+                shutil.copy(os.path.join(skel_dir, 'code-deploy', f), os.path.join(
                     deployment.archive_dir, 'healthchecks', 'consul'))
 
             if not os.path.exists(os.path.join(deployment.archive_dir, 'misc')):
@@ -72,4 +72,4 @@ class ProvideDefaultsForBundle(DeploymentStage):
             misc_files = os.listdir(os.path.join(
                 skel_dir, 'misc'))
             for f in misc_files:
-                shutil.copy(f, os.path.join(deployment.archive_dir, 'misc'))
+                shutil.copy(os.path.join(skel_dir, 'code-deploy', f), os.path.join(deployment.archive_dir, 'misc'))
