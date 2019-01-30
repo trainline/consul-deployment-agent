@@ -36,10 +36,10 @@ class ProvideDefaultsForBundle(DeploymentStage):
                 os.makedirs(os.path.join(
                     deployment.archive_dir, 'code-deploy'))
 
-            code_deploy_scripts = os.listdir(
-                os.path.join(skel_dir, 'code-deploy'))
-            for f in code_deploy_scripts:
-                shutil.copy(os.path.join(skel_dir, 'code-deploy', f), os.path.join(
+            skel_code_deploy = os.path.join(skel_dir, 'code-deploy')
+            skel_code_deploy_scripts = os.listdir(skel_code_deploy)
+            for f in skel_code_deploy_scripts:
+                shutil.copy(os.path.join(skel_code_deploy, f), os.path.join(
                     deployment.archive_dir, 'code-deploy'))
 
             if not os.path.exists(os.path.join(deployment.archive_dir, 'healthchecks')):
@@ -50,26 +50,26 @@ class ProvideDefaultsForBundle(DeploymentStage):
                 os.makedirs(os.path.join(
                     deployment.archive_dir, 'healthchecks', 'sensu'))
 
-            sensu_health_checks = os.listdir(os.path.join(
-                skel_dir, 'healthchecks', 'sensu'))
-            for f in sensu_health_checks:
-                shutil.copy(os.path.join(skel_dir, 'code-deploy', f), os.path.join(
+            skel_sensu = os.path.join(skel_dir, 'healthchecks', 'sensu')
+            skel_sensu_health_checks = os.listdir(skel_sensu)
+            for f in skel_sensu_health_checks:
+                shutil.copy(os.path.join(skel_sensu, f), os.path.join(
                     deployment.archive_dir, 'healthchecks', 'sensu'))
 
             if not os.path.exists(os.path.join(deployment.archive_dir, 'healthchecks', 'consul')):
                 os.makedirs(os.path.join(
                     deployment.archive_dir, 'healthchecks', 'consul'))
 
-            consul_health_checks = os.listdir(os.path.join(
-                skel_dir, 'healthchecks', 'consul'))
-            for f in consul_health_checks:
-                shutil.copy(os.path.join(skel_dir, 'code-deploy', f), os.path.join(
+            skel_consul = os.path.join(skel_dir, 'healthchecks', 'consul')
+            skel_consul_health_checks = os.listdir(skel_consul)
+            for f in skel_consul_health_checks:
+                shutil.copy(os.path.join(skel_consul, f), os.path.join(
                     deployment.archive_dir, 'healthchecks', 'consul'))
 
             if not os.path.exists(os.path.join(deployment.archive_dir, 'misc')):
                 os.makedirs(os.path.join(deployment.archive_dir, 'misc'))
 
-            misc_files = os.listdir(os.path.join(
-                skel_dir, 'misc'))
-            for f in misc_files:
-                shutil.copy(os.path.join(skel_dir, 'code-deploy', f), os.path.join(deployment.archive_dir, 'misc'))
+            skel_misc = os.path.join(skel_dir, 'misc')
+            skel_misc_files = os.listdir(skel_misc)
+            for f in skel_misc_files:
+                shutil.copy(os.path.join(skel_misc, f), os.path.join(deployment.archive_dir, 'misc'))
