@@ -24,7 +24,9 @@ class ProvideDefaultsForBundle(DeploymentStage):
         if not deployment.appspec.get('hooks'):
             skel = 'skel'
             app_spec_os = deployment.appspec.get('os')
-            skel_dir = os.path.join(skel, app_spec_os,)
+            skel_dir = os.path.join(os.getcwd(), skel, app_spec_os,)
+
+            deployment.logger.info('Skeleton Directory: ' + skel_dir)
 
             shutil.copy(os.path.join(skel_dir, 'appspec.yml'),
                         deployment.archive_dir)
