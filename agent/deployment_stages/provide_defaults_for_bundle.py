@@ -24,8 +24,8 @@ class ProvideDefaultsForBundle(DeploymentStage):
         if not deployment.appspec.get('hooks'):
             skel = 'skel'
             app_spec_os = deployment.appspec.get('os')
-            deployment.logger.info('Defaults directory: ' + deployment.base_dir
-            skel_dir = os.path.join(deployment.base_dir, skel, app_spec_os,)
+            deployment.logger.info('Defaults directory: ' + deployment.base_dir)
+            skel_dir = os.path.join(deployment.base_dir, skel, app_spec_os)
 
             deployment.logger.info('Skeleton Directory: ' + skel_dir)
 
