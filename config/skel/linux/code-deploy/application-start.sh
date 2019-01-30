@@ -1,2 +1,4 @@
 #!/usr/bin/env bash
-echo "application start script run" > application-start.log
+
+systemctl enable test-orchestrator
+systemctl start test-orchestrator

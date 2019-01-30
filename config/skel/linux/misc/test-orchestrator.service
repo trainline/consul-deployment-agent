@@ -1,0 +1,13 @@
+[Service]
+WorkingDirectory=/opt/test-orchestrator/src
+ExecStart=/opt/test-orchestrator/src/TestOrchestrator.Web
+EnvironmentFile=/etc/test-orchestrator.env
+
+Restart=always
+RestartSec=3
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=test-orchestrator
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+consul_healthchecks:
+  http_check:
+    type: http
+    name: HTTP health check
+    url: http://localhost:40665/api/diagnostics/healthcheck
+    interval: 10s
