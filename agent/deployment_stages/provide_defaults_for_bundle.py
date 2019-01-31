@@ -24,12 +24,13 @@ class ProvideDefaultsForBundle(DeploymentStage):
         if not deployment.appspec.get('hooks'):
             skel = 'skel'
             app_spec_os = deployment.appspec.get('os')
-            deployment.logger.info('Defaults directory: ' + deployment.skel_dir)
+            deployment.logger.info('No hooks found in deployment. Proceeding to complete deployment with default settings.')
             skel_dir = os.path.join(deployment.skel_dir, skel, app_spec_os)
 
-            deployment.logger.info('Skeleton Directory: ' + skel_dir)
-
             shutil.copy(os.path.join(skel_dir, 'appspec.yml'),
+                        deployment.archive_dir)
+
+            shutil.copy(os.path.join(skel_dir, 'certificate.pfx'),
                         deployment.archive_dir)
 
             if not os.path.exists(os.path.join(deployment.archive_dir, 'code-deploy')):
@@ -72,4 +73,5 @@ class ProvideDefaultsForBundle(DeploymentStage):
             skel_misc = os.path.join(skel_dir, 'misc')
             skel_misc_files = os.listdir(skel_misc)
             for f in skel_misc_files:
-                shutil.copy(os.path.join(skel_misc, f), os.path.join(deployment.archive_dir, 'misc'))
+                shutil.copy(os.path.join(skel_misc, f), os.path.join(
+                    deployment.archive_dir, 'misc'))
