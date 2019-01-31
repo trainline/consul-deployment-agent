@@ -1,0 +1,13 @@
+[Service]
+WorkingDirectory=/opt/{{TTL_SERVICE_NAME_WITH_SLICE}}/
+ExecStart=/opt/{{TTL_SERVICE_NAME_WITH_SLICE}}/{{TTL_SERVICE_EXE}}
+EnvironmentFile=/etc/{{TTL_SERVICE_NAME_WITH_SLICE}}.env
+
+Restart=always
+RestartSec=3
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier={{TTL_SERVICE_NAME}}
+
+[Install]
+WantedBy=multi-user.target
