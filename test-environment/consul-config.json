@@ -1,0 +1,5 @@
+{
+    "disable_remote_exec": true,
+    "enable_local_script_checks": true,
+    "enable_script_checks": true
+}

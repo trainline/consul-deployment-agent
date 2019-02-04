@@ -23,7 +23,7 @@ class S3FileManager(object):
         s3_key.get_contents_to_filename(output_path)
 
     def _init_connection(self):
-        self._s3_connection = S3Connection(aws_access_key_id=self._access_key_id, aws_secret_access_key=self._aws_secret_access_key)
+        self._s3_connection = S3Connection()
 
     @retry(wait_fixed=5000, stop_max_attempt_number=3)
     def _upload_file(self, bucket_name, key, filepath):
