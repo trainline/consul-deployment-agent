@@ -1,6 +1,6 @@
 [Service]
 WorkingDirectory=/opt/{{TTL_SERVICE_NAME_WITH_SLICE}}/
-ExecStart=/opt/{{TTL_SERVICE_NAME_WITH_SLICE}}/{{TTL_SERVICE_EXE}}
+ExecStart=/opt/{{TTL_SERVICE_NAME_WITH_SLICE}}/start
 EnvironmentFile=/etc/{{TTL_SERVICE_NAME_WITH_SLICE}}.env
 
 Restart=always
