@@ -70,6 +70,26 @@ create_environment_file() {
   replace_env_vars $TARGET_FILE
 }
 
+create_systemd_unit_execstart_script() {
+
+  local SRC_FILE=${DEPLOYMENT_BASE_DIR}/misc/start.sh
+  local TARGET_FILE=/opt/${TTL_SERVICE_NAME_WITH_SLICE}/start
+
+  cp -f "${SRC_FILE}" "${TARGET_FILE}"
+  chmod 755 "${TARGET_FILE}"
+  chown root.root "${TARGET_FILE}"
+  replace_env_vars "${TARGET_FILE}"
+}
+
+install_tlcrypt() {
+  local SRC_FILE=${DEPLOYMENT_BASE_DIR}/tools/tlcrypt/tlcrypt
+  local TARGET_FILE=/usr/local/bin/tlcrypt
+
+  chmod 755 "${SRC_FILE}"
+  chown root.root "${SRC_FILE}"
+  ln -f -s "${SRC_FILE}" "${TARGET_FILE}"
+}
+
 copy_certificates
 copy_source_files
 create_environment_file
