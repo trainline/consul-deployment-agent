@@ -1,6 +1,6 @@
 consul_healthchecks:
-  http_check:
-    type: http
-    name: HTTP health check
-    url: http://localhost:40665/api/diagnostics/healthcheck
-    interval: 10s
+  healthcheck:
+    type: script
+    name: {{TTL_SERVICE_NAME}}_{{TTL_SERVICE_SLICE}}_check
+    script: validate-service.sh
+    interval: 5s

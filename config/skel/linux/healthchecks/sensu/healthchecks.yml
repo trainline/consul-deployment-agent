@@ -1,6 +1,6 @@
 sensu_healthchecks:
-  http_check:
-    type: http
-    name: http-health-check
-    url: http://localhost:40665/api/diagnostics/healthcheck
+  {{TTL_SERVICE_NAME}}_{{TTL_SERVICE_SLICE}}_check:
+    type: script
+    name: {{TTL_SERVICE_NAME}}_{{TTL_SERVICE_SLICE}}_check
+    script: validate-service.sh
     interval: 10
