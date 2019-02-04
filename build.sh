@@ -59,6 +59,7 @@ echo " ==> Using branch name $BUILD_TARGET"
 VERSION_TIMESTAMP=$(date +%Y%m%d_%H%M)
 
 echo "Changing permissions on package content."
+chmod 755 $PACKAGE_DIR/consul-deployment-agent
 find $PACKAGE_DIR/consul-deployment-agent -type f -exec chmod 755 {} \;
 find $PACKAGE_DIR/*.yml -type f -exec chmod 644 {} \;
 
