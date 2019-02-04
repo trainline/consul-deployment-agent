@@ -9,7 +9,7 @@ echo "Verifying the installation"
 url="https://127.0.0.1:$TTL_SERVICE_PORT/diagnostics/healthcheck"
 echo "Service URL=$url"
 
-max_retries=20
+max_retries=50
 retries=0
 
 while [[ $retries -lt $max_retries ]]

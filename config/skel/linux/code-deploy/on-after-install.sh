@@ -55,6 +55,7 @@ copy_source_files() {
   mkdir $TARGET_DIR
   cp -rf $SRC_DIR/* $TARGET_DIR
   chmod +x $TARGET_DIR/code-deploy/*.sh
+  chmod -R +x $TARGET_DIR/healthchecks/*.sh
 }
 
 create_environment_file() {
