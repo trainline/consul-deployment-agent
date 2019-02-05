@@ -71,8 +71,8 @@ create_environment_file() {
 }
 
 create_systemd_unit_execstart_script() {
-
-  local SRC_FILE=${DEPLOYMENT_BASE_DIR}/misc/start.sh
+  # TODO: fix hard-coded path below
+  local SRC_FILE=/opt/consul-deployment-agent/skel/linux/misc/start.sh
   local TARGET_FILE=/opt/${TTL_SERVICE_NAME_WITH_SLICE}/start
 
   cp -f "${SRC_FILE}" "${TARGET_FILE}"
@@ -82,7 +82,8 @@ create_systemd_unit_execstart_script() {
 }
 
 install_tlcrypt() {
-  local SRC_FILE=${DEPLOYMENT_BASE_DIR}/tools/tlcrypt/tlcrypt
+  # TODO: fix hard-coded path below
+  local SRC_FILE=/opt/consul-deployment-agent/tools/tlcrypt/tlcrypt
   local TARGET_FILE=/usr/local/bin/tlcrypt
 
   chmod 755 "${SRC_FILE}"
@@ -93,7 +94,9 @@ install_tlcrypt() {
 copy_certificates
 copy_source_files
 create_environment_file
+create_systemd_unit_execstart_script
 create_systemd_unit_file
+install_tlcrypt
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/healthchecks.yml
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/validate-service.sh
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/sensu/healthchecks.yml
