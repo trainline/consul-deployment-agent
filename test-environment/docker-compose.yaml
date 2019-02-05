@@ -4,7 +4,7 @@ services:
     build:
       context: ".."
       dockerfile: "test-environment/Dockerfile"
-    command: consul agent -dev -config-dir /consul/config
+    command: agent -dev -config-dir /consul/config
     environment:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
