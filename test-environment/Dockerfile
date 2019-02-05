@@ -16,7 +16,7 @@ WORKDIR /opt/consul-deployment-agent
 COPY "." "./"
 COPY "test-environment/consul-config.json" "/consul/config/"
 COPY "test-environment/bin" "bin"
-RUN make init
+RUN make init && ln -s "config/skel" "skel"
 ENV CONSUL_BIND_INTERFACE "eth0"
 ENV PATH "/opt/consul-deployment-agent/bin:${PATH}"
 ENV PYTHONPATH "/opt/consul-deployment-agent"
