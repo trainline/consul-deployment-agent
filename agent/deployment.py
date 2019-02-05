@@ -7,7 +7,7 @@ import logging
 import os
 import sys
 from consul_api import ConsulError
-from deployment_stages import CheckDiskSpace, ValidateDeployment, StopApplication, DownloadBundleFromS3, ValidateBundle, BeforeInstall, \
+from deployment_stages import CheckDiskSpace, ValidateDeployment, StopApplication, DownloadBundleFromS3, ProvideDefaultsForBundle, ValidateBundle, BeforeInstall, \
     CopyFiles, ApplyPermissions, AfterInstall, StartApplication, ValidateService, RegisterWithConsul, \
     DeregisterOldConsulHealthChecks, RegisterConsulHealthChecks, DeregisterOldSensuHealthChecks, \
     RegisterSensuHealthChecks, DeletePreviousDeploymentFiles
@@ -48,6 +48,7 @@ class Deployment(object):
                        DeregisterOldConsulHealthChecks(),
                        DeregisterOldSensuHealthChecks(),
                        DownloadBundleFromS3(),
+                       ProvideDefaultsForBundle(),
                        ValidateBundle(),
                        StopApplication(),
                        BeforeInstall(),
@@ -63,6 +64,7 @@ class Deployment(object):
 
         if self.platform == 'linux':
             base_dir = '/opt/consul-deployment-agent/deployments'
+            self.skel_dir = '/opt/consul-deployment-agent'
             self.base_dir = base_dir
             self.dir = os.path.join(base_dir, self.service.id, self.id)
             if self.last_id is not None:

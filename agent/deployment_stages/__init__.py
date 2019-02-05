@@ -6,6 +6,7 @@ from .consul_healthchecks import DeregisterOldConsulHealthChecks, RegisterConsul
 from .copy_files import CopyFiles
 from .delete_previous_deployment_files import DeletePreviousDeploymentFiles
 from .download_bundle_from_s3 import DownloadBundleFromS3
+from .provide_defaults_for_bundle import ProvideDefaultsForBundle
 from .register_with_consul import RegisterWithConsul
 from .sensu_healthchecks import DeregisterOldSensuHealthChecks, RegisterSensuHealthChecks
 from .stop_application import StopApplication
@@ -23,6 +24,7 @@ __all__ = [
     'DeregisterOldConsulHealthChecks',
     'DeregisterOldSensuHealthChecks',
     'DownloadBundleFromS3',
+    'ProvideDefaultsForBundle',
     'RegisterConsulHealthChecks',
     'RegisterSensuHealthChecks',
     'RegisterWithConsul',

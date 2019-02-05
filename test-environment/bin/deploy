@@ -1,0 +1,66 @@
+#!/bin/sh
+
+set -e
+
+USAGE="deploy [-b S3 bucket] [-k S3 key] service version [slice]"
+
+while getopts 'b:k:' opt
+do
+    case $opt in
+        b) BUCKET="${OPTARG}" ;;
+        k) KEY="${OPTARG}" ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+BUCKET=${BUCKET:-tl-deployment-test}
+SERVICE=${1:?${USAGE}}
+SLICE=${3:-none}
+VERSION=${2:?${USAGE}}
+KEY=${KEY:-"${TTL_ENVIRONMENT}/${SERVICE}/${SERVICE}-${VERSION}.zip"}
+
+if [ 'none' = "${SLICE}" ]; then
+    SUFFIX=""
+else
+    SUFFIX="-${SLICE}"
+fi
+
+consul kv put "environments/${TTL_ENVIRONMENT}/roles/${TTL_ROLE}/services/${SERVICE}/${SLICE}" - <<-EOF
+{
+    "Name":"${SERVICE}",
+    "Version":"${VERSION}",
+    "Slice":"${SLICE}",
+    "DeploymentId":"b831be60-1a7e-11e9-8236-2fac8b2be693",
+    "InstanceIds":[],
+    "Action":"Install"
+}
+EOF
+
+consul kv put "environments/${TTL_ENVIRONMENT}/services/${SERVICE}/${VERSION}/definition" - <<-EOF
+{
+    "Service": {
+        "Name": "${TTL_ENVIRONMENT}-${SERVICE}${SUFFIX}",
+        "ID": "${TTL_ENVIRONMENT}-${SERVICE}${SUFFIX}",
+        "Address": "",
+        "Ports": {
+            "blue":0,
+            "green":0
+        },
+        "Tags": [
+            "environment_type:Cluster",
+            "environment:${TTL_ENVIRONMENT}",
+            "owning_cluster:Infra",
+            "version:${VERSION}"
+        ]
+    }
+}
+EOF
+
+consul kv put "environments/${TTL_ENVIRONMENT}/services/${SERVICE}/${VERSION}/installation" - <<-EOF
+{
+    "PackageBucket": "${BUCKET}",
+    "PackageKey": "${KEY}",
+    "InstallationTimeout": 5
+}
+EOF

@@ -1,0 +1,6 @@
+consul_healthchecks:
+  healthcheck:
+    type: script
+    name: {{TTL_SERVICE_NAME}}_{{TTL_SERVICE_SLICE}}_check
+    script: validate-service.sh
+    interval: 5s
