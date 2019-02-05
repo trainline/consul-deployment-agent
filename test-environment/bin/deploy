@@ -37,7 +37,7 @@ consul kv put "environments/${TTL_ENVIRONMENT}/roles/${TTL_ROLE}/services/${SERV
 }
 EOF
 
-consul kv put "environments/local/services/${SERVICE}/${VERSION}/definition" - <<-EOF
+consul kv put "environments/${TTL_ENVIRONMENT}/services/${SERVICE}/${VERSION}/definition" - <<-EOF
 {
     "Service": {
         "Name": "${TTL_ENVIRONMENT}-${SERVICE}${SUFFIX}",
@@ -57,7 +57,7 @@ consul kv put "environments/local/services/${SERVICE}/${VERSION}/definition" - <
 }
 EOF
 
-consul kv put "environments/local/services/${SERVICE}/${VERSION}/installation" - <<-EOF
+consul kv put "environments/${TTL_ENVIRONMENT}/services/${SERVICE}/${VERSION}/installation" - <<-EOF
 {
     "PackageBucket": "${BUCKET}",
     "PackageKey": "${KEY}",

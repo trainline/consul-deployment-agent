@@ -11,9 +11,9 @@ services:
       AWS_SECURITY_TOKEN: ${AWS_SESSION_TOKEN} # boto 2.x uses this instead of AWS_SESSION_TOKEN
       AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
       CONSUL_BIND_INTERFACE: eth0 # Required by Consul dev agent
-      TL_ENVIRONMENT_NAME: local # should be consistent with default in agent/environment.py
+      TL_ENVIRONMENT_NAME: ${TTL_ENVIRONMENT:-local} # should be consistent with default in agent/environment.py
       TL_SERVER_ROLE: test # should be consistent with default in agent/environment.py
-      TTL_ENVIRONMENT: local # should be consistent with default in agent/environment.py
-      TTL_ENVIRONMENT_TYPE: local # should be consistent with default in agent/environment.py
+      TTL_ENVIRONMENT: ${TTL_ENVIRONMENT:-local} # should be consistent with default in agent/environment.py
+      TTL_ENVIRONMENT_TYPE: ${TTL_ENVIRONMENT_TYPE:-local} # should be consistent with default in agent/environment.py
       TTL_ROLE: test # should be consistent with default in agent/environment.py
       TTL_SECURITY_ZONE: Other
