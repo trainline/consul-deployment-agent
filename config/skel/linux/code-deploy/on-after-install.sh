@@ -62,14 +62,22 @@ copy_source_files() {
 create_environment_file() {
   echo "Creating config file" >&2
 
-  local SRC_FILE=$TTL_INSTALL_SRC_DIR/misc/service.env
-  local TARGET_FILE=/etc/$TTL_SERVICE_NAME_WITH_SLICE.env
+  local TARGET_FILE="/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
   
-  cp -f $SRC_FILE $TARGET_FILE
-  find $TTL_INSTALL_SRC_DIR -name '*.env' ! -name 'service.env' -exec cat {} \; >> /etc/$TTL_SERVICE_NAME_WITH_SLICE.env
+  cat "${TTL_INSTALL_SRC_DIR}/misc/service.env" \
+    "${TTL_INSTALL_SRC_DIR}/config/config.env" \
+    "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}/config.env" \
+    > "${TARGET_FILE}"
   chmod 644 $TARGET_FILE
   chown root.root $TARGET_FILE
   replace_env_vars $TARGET_FILE
+}
+
+link_encrypted_secret_file() {
+  local SECRETS="${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}/secret.sec"
+  if [ -f "${SECRETS}" ]; then
+    ln -fs "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}/secret.sec" "/opt/${TTL_SERVICE_NAME_WITH_SLICE}/secret.env"
+  fi
 }
 
 create_systemd_unit_execstart_script() {
@@ -99,6 +107,7 @@ create_environment_file
 create_systemd_unit_execstart_script
 create_systemd_unit_file
 install_tlcrypt
+link_encrypted_secret_file
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/healthchecks.yml
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/validate-service.sh
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/sensu/healthchecks.yml
