@@ -7,18 +7,18 @@ echo "Verifying the installation"
 url="https://127.0.0.1:{{TTL_SERVICE_PORT}}/diagnostics/healthcheck"
 echo "Service URL=$url"
 
-max_retries=1000
-retries=0
+MAX_RETRIES=1000
+RETRIES=0
 
-while [[ $retries -lt $max_retries ]]
-do
+while [[ $RETRIES -lt $MAX_RETRIES ]]; do
 	if curl -ik $url | grep "OK"; then
 		echo "Success!"
  		exit 0
 	fi
 	sleep 10
-	((retries++))
+	let RETRIES=$RETRIES+1
 done
 
-echo "max retries ($max_retries) reached, installation check failed"
+echo "max retries ($MAX_RETRIES) reached, installation check failed"
 exit 1
+
