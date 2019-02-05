@@ -20,7 +20,7 @@ SLICE=${3:-none}
 VERSION=${2:?${USAGE}}
 KEY=${KEY:-"${TTL_ENVIRONMENT}/${SERVICE}/${SERVICE}-${VERSION}.zip"}
 
-if [[ 'none' == "${SLICE}" ]]; then
+if [ 'none' = "${SLICE}" ]; then
     SUFFIX=""
 else
     SUFFIX="-${SLICE}"
