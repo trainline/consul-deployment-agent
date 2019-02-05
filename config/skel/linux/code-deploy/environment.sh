@@ -2,7 +2,7 @@
 
 # source $(pwd)/code-deploy/environment.props
 
-export TTL_SERVICE_EXE=TestOrchestrator.Web
+export $(find ./ -iname '*.env' ! -name 'service.env' -exec cat {} \;)
 export TTL_IAM_ROLE=$TTL_ROLE
 export TTL_SERVICE_PORT=$EM_SERVICE_PORT
 export TTL_SERVICE_SLICE=$EM_SERVICE_SLICE

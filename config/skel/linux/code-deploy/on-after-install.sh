@@ -55,6 +55,8 @@ copy_source_files() {
   mkdir $TARGET_DIR
   cp -rf $SRC_DIR/* $TARGET_DIR
   chmod +x $TARGET_DIR/code-deploy/*.sh
+  # Scripts needs to be read and execute for the consul user to work with them
+  find $SRC_DIR/healthchecks -name "*.sh" -exec chmod 775 {} \;
 }
 
 create_environment_file() {

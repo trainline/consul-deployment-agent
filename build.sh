@@ -59,6 +59,7 @@ echo " ==> Using branch name $BUILD_TARGET"
 VERSION_TIMESTAMP=$(date +%Y%m%d_%H%M)
 
 echo "Changing permissions on package content."
+chmod 755 $OUTPUT_DIR/consul-deployment-agent
 find $PACKAGE_DIR/consul-deployment-agent -type f -exec chmod 755 {} \;
 find $PACKAGE_DIR/*.yml -type f -exec chmod 644 {} \;
 
@@ -69,4 +70,4 @@ DEB_VERSION_TIMESTAMP=`echo $VERSION_TIMESTAMP | tr "_" "."`
 
 # We use FPM to build our package
 echo " ==> Building DEB package"
-fpm -s dir -t deb -a all -n consul-deployment-agent-$BUILD_TARGET -v $VERSION --iteration $DEB_VERSION_TIMESTAMP --deb-no-default-config-files --description "Consul Deployment Agent $BUILD_TARGET branch" --deb-user root --deb-group root --prefix /opt/consul-deployment-agent --package "$MYHOME/globalpackage" -C $PACKAGE_DIR .
+fpm -s dir -t deb --deb-use-file-permissions -a all -n consul-deployment-agent-$BUILD_TARGET -v $VERSION --iteration $DEB_VERSION_TIMESTAMP --deb-no-default-config-files --description "Consul Deployment Agent $BUILD_TARGET branch" --deb-user root --deb-group root --prefix /opt/consul-deployment-agent --package "$MYHOME/globalpackage" -C $PACKAGE_DIR .
