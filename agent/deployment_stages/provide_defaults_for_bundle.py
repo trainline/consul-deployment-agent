@@ -25,6 +25,7 @@ class ProvideDefaultsForBundle(DeploymentStage):
 
     def _provide_defaults_if_no_hooks(self, deployment):
         skel = 'skel'
+        app_spec_os = deployment.platform
 
         deployment.logger.info(
             'No hooks found in deployment. Proceeding to complete deployment with default settings.')
@@ -32,10 +33,8 @@ class ProvideDefaultsForBundle(DeploymentStage):
         skel_dir = os.path.join(deployment.skel_dir, skel, app_spec_os)
 
         appspec_stream = file(os.path.join(skel_dir, 'appspec.yml'), 'r')
-        
-        deployment.appspec = yaml.load(appspec_stream)
 
-        app_spec_os = deployment.appspec.get('os')
+        deployment.appspec = yaml.load(appspec_stream)
 
         shutil.copy(os.path.join(skel_dir, 'appspec.yml'),
                     deployment.archive_dir)
