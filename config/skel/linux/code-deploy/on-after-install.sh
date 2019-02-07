@@ -87,10 +87,10 @@ create_environment_file() {
 }
 
 link_encrypted_secret_file() {
-  local SECRETS="${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.sec"
+  local SECRETS="${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env"
   if [ -f "${SECRETS}" ]; then
-    echo >> "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.sec"
-    ln -fs "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.sec" "/opt/${TTL_SERVICE_NAME_WITH_SLICE}/secret.env"
+    echo >> "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env"
+    ln -fs "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env" "/opt/${TTL_SERVICE_NAME_WITH_SLICE}/secret.env"
   fi
 }
 
@@ -122,6 +122,7 @@ create_systemd_unit_execstart_script
 create_systemd_unit_file
 install_tlcrypt
 link_encrypted_secret_file
+
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/healthchecks.yml
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/validate-service.sh
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/sensu/healthchecks.yml
