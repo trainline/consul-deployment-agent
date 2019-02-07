@@ -87,10 +87,9 @@ create_environment_file() {
 }
 
 link_encrypted_secret_file() {
-  local SECRETS="${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env"
+  local SECRETS="/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
   if [ -f "${SECRETS}" ]; then
-    echo >> "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env"
-    ln -fs "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env" "/opt/${TTL_SERVICE_NAME_WITH_SLICE}/secret.env"
+    ln -fs "/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env" "/opt/${TTL_SERVICE_NAME_WITH_SLICE}/secret.env"
   fi
 }
 
