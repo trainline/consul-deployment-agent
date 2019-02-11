@@ -1,2 +1,3 @@
 #!/bin/sh
 dotnet "$(dirname "$(realpath "$0")")/tlcrypt.dll" "$@"
+

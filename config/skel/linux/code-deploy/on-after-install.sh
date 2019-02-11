@@ -2,7 +2,12 @@
 
 set -xe
 
-. $DEPLOYMENT_BASE_DIR/code-deploy/environment.sh
+set -o allexport
+echo "Sourcing environment and configuration"
+source $DEPLOYMENT_BASE_DIR/code-deploy/environment.sh
+printenv
+set +o allexport
+
 
 replace_env_vars() {
   local TARGET_FILE=$1

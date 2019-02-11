@@ -5,15 +5,18 @@
 export TTL_INSTALL_SRC_DIR=$DEPLOYMENT_BASE_DIR
 
 if [ -f "${TTL_INSTALL_SRC_DIR}/config/defaults.env" ]; then
-  export $(find ./ -iname "${TTL_INSTALL_SRC_DIR}/config/defaults.env" ! -name "service.env" -exec cat {} \;)
+  echo "Found defaults.env!!!!"
+  source "${TTL_INSTALL_SRC_DIR}/config/defaults.env"
 fi
 
 if [ -f "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env" ]; then
-  export $(find ./ -iname "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env" ! -name "service.env" -exec cat {} \;)
+  echo "Found ${TTL_ENVIRONMENT_TYPE}.env!!!!"
+  source "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env"
 fi
 
 if [ -f "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env" ]; then
-  export $(find ./ -iname "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env" ! -name "service.env" -exec cat {} \;)
+  echo "Found ${TTL_ENVIRONMENT}.env!!!!"
+  source "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env"
 fi
   
 export TTL_IAM_ROLE=$TTL_ROLE
