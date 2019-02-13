@@ -2,7 +2,12 @@
 
 set -xe
 
-. $DEPLOYMENT_BASE_DIR/code-deploy/environment.sh
+set -o allexport
+echo "Sourcing environment and configuration"
+source $DEPLOYMENT_BASE_DIR/code-deploy/environment.sh
+printenv
+set +o allexport
+
 
 replace_env_vars() {
   local TARGET_FILE=$1
@@ -63,20 +68,33 @@ create_environment_file() {
   echo "Creating config file" >&2
 
   local TARGET_FILE="/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
+
+  cat "${TTL_INSTALL_SRC_DIR}/misc/service.env" > "${TARGET_FILE}"
+
+  if [ -f "${TTL_INSTALL_SRC_DIR}/config/defaults.env" ]; then
+    echo >> "${TTL_INSTALL_SRC_DIR}/config/defaults.env"
+    cat "${TTL_INSTALL_SRC_DIR}/config/defaults.env" >> "${TARGET_FILE}"
+  fi
   
-  cat "${TTL_INSTALL_SRC_DIR}/misc/service.env" \
-    "${TTL_INSTALL_SRC_DIR}/config/config.env" \
-    "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}/config.env" \
-    > "${TARGET_FILE}"
+  if [ -f "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env" ]; then
+    echo >> "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env"
+    cat "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env" >> "${TARGET_FILE}"
+  fi
+  
+  if [ -f "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env" ]; then
+    echo >> "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env"
+    cat "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env" >> "${TARGET_FILE}"
+  fi
+  
   chmod 644 $TARGET_FILE
   chown root.root $TARGET_FILE
   replace_env_vars $TARGET_FILE
 }
 
 link_encrypted_secret_file() {
-  local SECRETS="${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}/secret.sec"
+  local SECRETS="/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
   if [ -f "${SECRETS}" ]; then
-    ln -fs "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}/secret.sec" "/opt/${TTL_SERVICE_NAME_WITH_SLICE}/secret.env"
+    ln -fs "/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env" "/opt/${TTL_SERVICE_NAME_WITH_SLICE}/secret.env"
   fi
 }
 
@@ -108,6 +126,7 @@ create_systemd_unit_execstart_script
 create_systemd_unit_file
 install_tlcrypt
 link_encrypted_secret_file
+
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/healthchecks.yml
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/validate-service.sh
 replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/sensu/healthchecks.yml

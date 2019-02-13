@@ -37,6 +37,9 @@ cp $PWD/config/config-logging-linux.yml $PACKAGE_DIR/config-logging.yml
 echo "Copying Skeleton files to $OUTPUT_DIR/skel/"
 cp -R $PWD/config/skel $PACKAGE_DIR/
 
+echo "Copying tools files to $OUTPUT_DIR/tools/"
+cp -R $PWD/tools $PACKAGE_DIR/
+
 if [ -s $TCHOME ]; then
     MYHOME="."
 else
