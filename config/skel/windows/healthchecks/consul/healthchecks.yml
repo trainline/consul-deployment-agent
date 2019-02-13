@@ -1,0 +1,6 @@
+consul_healthchecks:
+  healthcheck:
+    type: script
+    name: "{{TTL_SERVICE_NAME}}_{{TTL_SERVICE_SLICE}}_check"
+    script: diagnostics_check.ps1
+    interval: 5s

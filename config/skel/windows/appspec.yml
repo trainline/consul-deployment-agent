@@ -1,21 +1,18 @@
 version: 0.0
 os: windows
-files:
-  - source: /
-    destination: /tmp/code-deploy.skeleton
 hooks:
   ApplicationStop:
     - location: code-deploy/application-stop.ps1
-      runas: root
+      timeout: 90
   BeforeInstall:
     - location: code-deploy/before-install.ps1
-      runas: root
+      timeout: 600
   AfterInstall:
-    - location: code-deploy/on-after-install.ps1
-      runas: root
+    - location: code-deploy/after-install.ps1
+      timeout: 1200
   ApplicationStart:
     - location: code-deploy/application-start.ps1
-      runas: root
+      timeout: 180
   ValidateService:
     - location: code-deploy/validate-service.ps1
-      runas: root
+      timeout: 600
