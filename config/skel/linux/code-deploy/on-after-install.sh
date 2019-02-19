@@ -110,7 +110,14 @@ create_systemd_unit_execstart_script() {
 }
 
 install_tlcrypt() {
-  # TODO: fix hard-coded path below
+
+  if [ -f "/etc/ssl/ttl/dev.key" ]; then
+    echo "TTL_ENCRYPT_KEY_FILE=/etc/ssl/ttl/dev.key" >> "/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
+  fi
+  if [ -f "/etc/ssl/ttl/prod.key" ]; then
+    echo "TTL_ENCRYPT_KEY_FILE=/etc/ssl/ttl/dev.key" >> "/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
+  fi
+
   local SRC_FILE=/opt/consul-deployment-agent/tools/tlcrypt/tlcrypt
   local TARGET_FILE=/usr/local/bin/tlcrypt
 
