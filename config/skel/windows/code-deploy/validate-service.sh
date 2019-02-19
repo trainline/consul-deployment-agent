@@ -1,1 +1,0 @@
-echo "validate service script run" > validate-service.log

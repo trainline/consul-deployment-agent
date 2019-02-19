@@ -1,1 +1,0 @@
-echo "application stop script run" > application-stop.log
