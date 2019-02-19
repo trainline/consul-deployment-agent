@@ -30,7 +30,7 @@ class ProvideDefaultsForBundle(DeploymentStage):
         deployment.logger.info(
             'No hooks found in deployment. Proceeding to complete deployment with default settings.')
 
-        skel_dir = os.path.join(deployment.skel_dir, skel, app_spec_os)
+        skel_dir = os.path.join(deployment.cda_dir, skel, app_spec_os)
 
         appspec_stream = file(os.path.join(skel_dir, 'appspec.yml'), 'r')
 

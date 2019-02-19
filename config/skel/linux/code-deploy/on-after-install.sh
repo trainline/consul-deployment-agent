@@ -99,8 +99,7 @@ link_encrypted_secret_file() {
 }
 
 create_systemd_unit_execstart_script() {
-  # TODO: fix hard-coded path below
-  local SRC_FILE=/opt/consul-deployment-agent/skel/linux/misc/start.sh
+  local SRC_FILE=${$TTL_CDA_DIR}/skel/linux/misc/start.sh
   local TARGET_FILE=/opt/${TTL_SERVICE_NAME_WITH_SLICE}/start
 
   cp -f "${SRC_FILE}" "${TARGET_FILE}"

@@ -64,7 +64,7 @@ class Deployment(object):
 
         if self.platform == 'linux':
             base_dir = '/opt/consul-deployment-agent/deployments'
-            self.skel_dir = '/opt/consul-deployment-agent'
+            self.cda_dir = '/opt/consul-deployment-agent'
             self.base_dir = base_dir
             self.dir = os.path.join(base_dir, self.service.id, self.id)
             if self.last_id is not None:
