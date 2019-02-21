@@ -24,6 +24,6 @@ done
 echo "max retries ($MAX_RETRIES) reached, installation check failed"
 
 echo "Last logs from the service:"
-cat /var/log/syslog | grep "$TTL_SERVICE_NAME_WITH_SLICE\\[" | tail
+journalctl -u "$TTL_SERVICE_NAME_WITH_SLICE.service" | tail
 
 exit 1
