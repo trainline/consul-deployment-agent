@@ -22,4 +22,8 @@ while [[ $RETRIES -lt $MAX_RETRIES ]]; do
 done
 
 echo "max retries ($MAX_RETRIES) reached, installation check failed"
+
+echo "Last logs from the service:"
+cat /var/log/syslog | grep "$TTL_SERVICE_NAME_WITH_SLICE\\[" | tail
+
 exit 1

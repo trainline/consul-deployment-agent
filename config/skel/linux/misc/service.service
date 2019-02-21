@@ -7,7 +7,7 @@ Restart=always
 RestartSec=3
 StandardOutput=syslog
 StandardError=syslog
-SyslogIdentifier={{TTL_SERVICE_NAME}}
+SyslogIdentifier={{TTL_SERVICE_NAME_WITH_SLICE}}
 
 [Install]
 WantedBy=multi-user.target
