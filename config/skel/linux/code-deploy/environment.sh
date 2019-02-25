@@ -5,21 +5,11 @@
 export TTL_INSTALL_SRC_DIR=$DEPLOYMENT_BASE_DIR
 export TTL_ENVIRONMENT_TYPE=$(echo "$TTL_ENVIRONMENT_TYPE" | tr '[:upper:]' '[:lower:]')
 
-if [ -f "${TTL_INSTALL_SRC_DIR}/config/defaults.env" ]; then
-  echo "Found defaults.env!!!!"
-  source <(sudo cat "${TTL_INSTALL_SRC_DIR}/config/defaults.env")
+if [ -f "${TTL_INSTALL_SRC_DIR}/configuration.env" ]; then
+  echo "Found configuration.env!!!!"
+  source <(sudo cat "${TTL_INSTALL_SRC_DIR}/configuration.env")
 fi
 
-if [ -f "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env" ]; then
-  echo "Found ${TTL_ENVIRONMENT_TYPE}.env!!!!"
-  source <(sudo cat "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env")
-fi
-
-if [ -f "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env" ]; then
-  echo "Found ${TTL_ENVIRONMENT}.env!!!!"
-  source <(sudo cat "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env")
-fi
-  
 export TTL_IAM_ROLE=$TTL_ROLE
 export TTL_SERVICE_PORT=$EM_SERVICE_PORT
 export TTL_SERVICE_SLICE=$EM_SERVICE_SLICE

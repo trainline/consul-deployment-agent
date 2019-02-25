@@ -71,21 +71,11 @@ create_environment_file() {
 
   cat "${TTL_INSTALL_SRC_DIR}/misc/service.env" > "${TARGET_FILE}"
 
-  if [ -f "${TTL_INSTALL_SRC_DIR}/config/defaults.env" ]; then
-    echo >> "${TTL_INSTALL_SRC_DIR}/config/defaults.env"
-    cat "${TTL_INSTALL_SRC_DIR}/config/defaults.env" >> "${TARGET_FILE}"
+  if [ -f "${TTL_INSTALL_SRC_DIR}/configuration.env" ]; then
+    echo "Found configuration.env!!!!"
+    source <(sudo cat "${TTL_INSTALL_SRC_DIR}/configuration.env")
   fi
-  
-  if [ -f "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env" ]; then
-    echo >> "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env"
-    cat "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT_TYPE}.env" >> "${TARGET_FILE}"
-  fi
-  
-  if [ -f "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env" ]; then
-    echo >> "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env"
-    cat "${TTL_INSTALL_SRC_DIR}/config/${TTL_ENVIRONMENT}.env" >> "${TARGET_FILE}"
-  fi
-  
+
   chmod 644 $TARGET_FILE
   chown root.root $TARGET_FILE
   replace_env_vars $TARGET_FILE
