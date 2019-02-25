@@ -49,7 +49,8 @@ class LifecycleHookExecutionStage(DeploymentStage):
             'EM_SERVICE_SLICE':str(deployment.service.slice),
             'EM_SERVICE_NAME':str(deployment.service.name),
             'EM_SERVICE_PORT':str(deployment.service.port),
-            'EM_SERVICE_VERSION':str(deployment.service.version)
+            'EM_SERVICE_VERSION':str(deployment.service.version),
+            'TTL_CDA_DIR':str(deployment.cda_dir)
         }
         self._init_script(hook_definition[0], filepath, env, deployment.platform, deployment.timeout)
         self._run_script(deployment.logger)

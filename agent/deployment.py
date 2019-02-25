@@ -63,8 +63,9 @@ class Deployment(object):
                        DeletePreviousDeploymentFiles()]
 
         if self.platform == 'linux':
-            base_dir = '/opt/consul-deployment-agent/deployments'
-            self.skel_dir = '/opt/consul-deployment-agent'
+            dir_path = os.path.dirname(os.path.realpath(__file__))
+            base_dir = os.path.join(dir_path, 'deployments')
+            self.cda_dir = dir_path
             self.base_dir = base_dir
             self.dir = os.path.join(base_dir, self.service.id, self.id)
             if self.last_id is not None:
