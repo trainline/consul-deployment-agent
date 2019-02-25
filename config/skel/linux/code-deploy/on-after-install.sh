@@ -72,8 +72,8 @@ create_environment_file() {
   cat "${TTL_INSTALL_SRC_DIR}/misc/service.env" > "${TARGET_FILE}"
 
   if [ -f "${TTL_INSTALL_SRC_DIR}/configuration.env" ]; then
-    echo "Found configuration.env!!!!"
-    source <(sudo cat "${TTL_INSTALL_SRC_DIR}/configuration.env")
+    echo >> "${TTL_INSTALL_SRC_DIR}/configuration.env"
+    cat "${TTL_INSTALL_SRC_DIR}/configuration.env" >> "${TARGET_FILE}"
   fi
 
   chmod 644 $TARGET_FILE
@@ -89,7 +89,8 @@ link_encrypted_secret_file() {
 }
 
 create_systemd_unit_execstart_script() {
-  local SRC_FILE=${TTL_CDA_DIR}/skel/linux/misc/start.sh
+  # TODO: fix hard-coded path below
+  local SRC_FILE=/opt/consul-deployment-agent/skel/linux/misc/start.sh
   local TARGET_FILE=/opt/${TTL_SERVICE_NAME_WITH_SLICE}/start
 
   cp -f "${SRC_FILE}" "${TARGET_FILE}"
