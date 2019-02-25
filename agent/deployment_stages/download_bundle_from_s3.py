@@ -25,3 +25,8 @@ class DownloadBundleFromS3(DeploymentStage):
             z.extract(name, deployment.archive_dir)
         bundle_fh.close()
         deployment.logger.info('Bundle downloaded and extracted to {0}.'.format(deployment.archive_dir))
+
+        package_config_key = 'CONFIGURATION/{0}.config'.format(deployment.id)
+        package_config_path = os.path.join(deployment.archive_dir, 'configuration.env')
+        if deployment.s3_file_manager.download_file(package_bucket, package_config_key, package_config_path):
+            deployment.logger.info('Found configuration, downloaded from {0}/{1} to {2}'.format(package_bucket, package_config_key, package_config_path))
