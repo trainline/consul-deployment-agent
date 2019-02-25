@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# source $(pwd)/code-deploy/environment.props
-
 export TTL_INSTALL_SRC_DIR=$DEPLOYMENT_BASE_DIR
 export TTL_ENVIRONMENT_TYPE=$(echo "$TTL_ENVIRONMENT_TYPE" | tr '[:upper:]' '[:lower:]')
 

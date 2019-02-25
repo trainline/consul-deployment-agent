@@ -66,9 +66,7 @@ copy_source_files() {
 
 create_environment_file() {
   echo "Creating config file" >&2
-
   local TARGET_FILE="/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
-
   cat "${TTL_INSTALL_SRC_DIR}/misc/service.env" > "${TARGET_FILE}"
 
   if [ -f "${TTL_INSTALL_SRC_DIR}/configuration.env" ]; then
