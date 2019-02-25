@@ -52,29 +52,7 @@ class ProvideDefaultsForBundle(DeploymentStage):
             shutil.copy(os.path.join(skel_code_deploy, f), os.path.join(
                 deployment.archive_dir, 'code-deploy'))
 
-        if not os.path.exists(os.path.join(deployment.archive_dir, 'healthchecks')):
-            os.makedirs(os.path.join(
-                deployment.archive_dir, 'healthchecks'))
-
-        if not os.path.exists(os.path.join(deployment.archive_dir, 'healthchecks', 'sensu')):
-            os.makedirs(os.path.join(
-                deployment.archive_dir, 'healthchecks', 'sensu'))
-
-        skel_sensu = os.path.join(skel_dir, 'healthchecks', 'sensu')
-        skel_sensu_health_checks = os.listdir(skel_sensu)
-        for f in skel_sensu_health_checks:
-            shutil.copy(os.path.join(skel_sensu, f), os.path.join(
-                deployment.archive_dir, 'healthchecks', 'sensu'))
-
-        if not os.path.exists(os.path.join(deployment.archive_dir, 'healthchecks', 'consul')):
-            os.makedirs(os.path.join(
-                deployment.archive_dir, 'healthchecks', 'consul'))
-
-        skel_consul = os.path.join(skel_dir, 'healthchecks', 'consul')
-        skel_consul_health_checks = os.listdir(skel_consul)
-        for f in skel_consul_health_checks:
-            shutil.copy(os.path.join(skel_consul, f), os.path.join(
-                deployment.archive_dir, 'healthchecks', 'consul'))
+        shutil.copytree(skel_dir, os.path.join(deployment.dir, 'defaults'))
 
         if not os.path.exists(os.path.join(deployment.archive_dir, 'misc')):
             os.makedirs(os.path.join(deployment.archive_dir, 'misc'))

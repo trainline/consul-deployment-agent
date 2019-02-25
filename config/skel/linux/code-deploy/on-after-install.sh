@@ -114,6 +114,67 @@ install_tlcrypt() {
   ln -f -s "${SRC_FILE}" "${TARGET_FILE}"
 }
 
+################################################################################
+# Create healthchecks by merging user-supplied healthcheck definitions with
+# default healthcheck definitions. Any template expressions in the healthcheck
+# definitions (healthchecks.yml) and in any supporting files such as check
+# scripts are expanded.
+#
+# Globals:
+#   DEPLOYMENT_BASE_DIR: the root directory of the unpacked deployment archive.
+# Arguments:
+#   CHECK_TYPE: one of {"consul", "sensu"}
+# Returns:
+#   None
+#
+# TODO(merlint): This implementation does not parse or validate the user-
+#   supplied healthcheck definition files. It assumes that the checks are
+#   found between the first unindented line and the next unindented line or
+#   EOF.
+################################################################################
+create_healthchecks() {
+  local CHECK_TYPE="${1}"
+  local BASE_DIR=$(dirname "${DEPLOYMENT_BASE_DIR}")
+  local ARCHIVE_DIR="${DEPLOYMENT_BASE_DIR}"
+  local DEFAULTS_DIR="${BASE_DIR}/defaults"
+  local WORK_DIR="${BASE_DIR}/work"
+
+  local DEFAULTS="${DEFAULTS_DIR}/healthchecks/${CHECK_TYPE}/healthchecks.yml"
+  local OUT_DIR="${WORK_DIR}/out/healthchecks/${CHECK_TYPE}"
+  local USER_DIR="${ARCHIVE_DIR}/healthchecks/${CHECK_TYPE}"
+
+  # Create a healthcheck.yml file by merging the default and user-supplied
+  # files.
+  local OUT="${OUT_DIR}/healthchecks.yml"
+  local USER="${USER_DIR}/healthchecks.yml"
+  mkdir -p "${OUT_DIR}"
+  for FILE in "${DEFAULTS}" "${USER}";
+  do
+    if [ -f "${FILE}" ]; then
+      # The user may not have supplied a healthcheck file. 
+      sed -nE "/^${CHECK_TYPE}_healthchecks/,/^[^ ]/ p" "${FILE}";
+    fi
+  done | sed -E '/^[^ ]/ d' | sed -E "1 i ${CHECK_TYPE}_healthchecks:" \
+    > "${OUT}"
+
+  # Replace any template expressions in the generated healthcheck.yml.
+  replace_env_vars "${OUT}"
+  # Create or replace the user-supplied healthcheck.yml with a link to the
+  # merge of the default and user-supplied healthcheck.yml files
+  mkdir -p "${USER_DIR}" && ln -fs "${OUT}" "${USER}"
+
+  # Copy check script files from the defaults directory to the runtime directory
+  # Do not overwrite any that are already present as these are user-supplied.
+  cp -Rn ${DEFAULTS_DIR}/healthchecks/${CHECK_TYPE}/* \
+    "${ARCHIVE_DIR}/healthchecks/${CHECK_TYPE}/"
+
+  # Replace any template expressions in check script files.
+  for FILE in $(find ${ARCHIVE_DIR}/healthchecks/${CHECK_TYPE}/ -type f);
+  do
+    replace_env_vars "${FILE}";
+  done
+}
+
 copy_certificates
 copy_source_files
 create_environment_file
@@ -122,10 +183,8 @@ create_systemd_unit_file
 install_tlcrypt
 link_encrypted_secret_file
 
-replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/healthchecks.yml
-replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/consul/validate-service.sh
-replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/sensu/healthchecks.yml
-replace_env_vars $TTL_INSTALL_SRC_DIR/healthchecks/sensu/validate-service.sh
+create_healthchecks 'consul'
+create_healthchecks 'sensu'
 
 cd /opt/$TTL_SERVICE_NAME_WITH_SLICE
 echo "Allowing execution of $TTL_SERVICE_NAME start script" >&2
