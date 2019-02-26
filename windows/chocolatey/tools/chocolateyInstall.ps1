@@ -48,6 +48,7 @@ try {
     Add-Content $LogFile "Copying files from $PackageDirectory to $InstallDirectory..."
     Copy-Item $PackageDirectory\data\*.exe $InstallDirectory -Force
     Copy-Item $PackageDirectory\data\*.yml $InstallDirectory -Force
+    Copy-Item $PackageDirectory\data\skel $InstallDirectory -Force -Recurse
 
     $NssmExe = "$InstallDirectory\nssm.exe"
     if ($Service) {

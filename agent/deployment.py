@@ -75,6 +75,7 @@ class Deployment(object):
         else:
             base_dir = 'C:\TLDeploy'
             self.base_dir = base_dir
+            self.cda_dir = os.path.join(base_dir, 'consul-deployment-agent')
             self.dir = os.path.join(base_dir, self.service.id, self.id)
             if self.last_id is not None:
                 self.last_dir = find_deployment_dir_win(
