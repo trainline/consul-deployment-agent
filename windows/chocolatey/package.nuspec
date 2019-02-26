@@ -18,6 +18,6 @@
   <files>
     <file src="tools\**" target="tools" />
     <file src="data\**" target="data" />
-    <file src="..\..\config\skel\windows\**" target="data\skel" />
+    <file src="..\..\config\skel\**" target="data\skel" />
   </files>
 </package>
