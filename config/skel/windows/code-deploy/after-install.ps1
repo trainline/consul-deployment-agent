@@ -2,6 +2,55 @@
 $ErrorActionPreference = "Stop"
 LoadServiceEnvVariables
 
+function create_healthchecks($checkType)
+{
+    $defaultsDir="${env:TTL_DEPLOYMENT_DIR}\..\defaults\healthchecks\$checkType"
+    $workDir="${env:TTL_DEPLOYMENT_DIR}\..\work"
+    $userDir="${env:TTL_DEPLOYMENT_DIR}\healthchecks\$checkType"
+
+    $defaultYml = "$defaultsDir\healthchecks.yml"
+    $userYml = "$userDir\healthchecks.yml"
+    $workYml = "$workDir\healthchecks.yml"
+
+    # Copy to work dir
+    rm -Recurse $workDir -ErrorAction SilentlyContinue
+    cp -Recurse $defaultsDir $workDir
+    if (Test-Path $userDir){ cp -Recurse "$userDir\*" $workDir }
+
+    # merge yaml
+    [string[]] $lines = Get-Content $defaultYml
+    $userLines = (LoadFileIfExists $userYml) -split "\r\n"
+
+    $inBlock=$false;
+    foreach($line in $userLines)
+    {
+        if((-not $inBlock) -and ($line.StartsWith("$($checkType)_healthchecks:"))) # entering block
+        {
+            $inBlock = $true;
+        }
+        elseif ($inBlock -and (-not $line.StartsWith(" "))) # leaving block
+        {
+            break;
+        }
+        elseif ($inBlock) # merging
+        {
+            $lines += $line;
+        }
+    }
+
+    Set-Content -Path $workYml -Value $lines
+
+    # Replace env variables
+    Get-ChildItem -Recurse -File -Path $workDir | %{
+        ReplaceEnvVarsInFile $_.FullName
+    }
+
+    # Apply changes
+    rm -Recurse $userDir -ErrorAction SilentlyContinue
+    mkdir "$userDir\.." -ErrorAction SilentlyContinue | Out-null
+    mv $workDir $userDir
+}
+
 ## Copy bin
 $targetDir = $env:TTL_INSTALL_DIR
 Write-Output "Copying source files to $targetDir..."
@@ -11,10 +60,8 @@ cp -Recurse "${env:DEPLOYMENT_BASE_DIR}\*" $targetDir
 
 ## Generate health checks
 Write-Output "Generating health checks..."
-ReplaceEnvVarsInFile "${env:TTL_DEPLOYMENT_DIR}\healthchecks\sensu\diagnostics_check.ps1"
-ReplaceEnvVarsInFile "${env:TTL_DEPLOYMENT_DIR}\healthchecks\sensu\healthchecks.yml"
-ReplaceEnvVarsInFile "${env:TTL_DEPLOYMENT_DIR}\healthchecks\consul\diagnostics_check.ps1"
-ReplaceEnvVarsInFile "${env:TTL_DEPLOYMENT_DIR}\healthchecks\consul\healthchecks.yml"
+create_healthchecks "sensu"
+create_healthchecks "consul"
 
 ## Installing Windows Service
 Write-Output "Installing Windows Service ${env:TTL_WINDOWS_SERVICE_NAME}..."

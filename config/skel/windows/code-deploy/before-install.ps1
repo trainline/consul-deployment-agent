@@ -5,9 +5,7 @@ $ErrorActionPreference = "Stop"
 ## Generate service.env file
 Write-Output "Generating ${env:TTL_DEPLOYMENT_DIR}\service.env file..."
 [string[]] $content = ReplaceEnvVars (Get-Content -Raw "${env:TTL_DEPLOYMENT_DIR}\misc\service.env")
-$content += LoadFileIfExists "${env:TTL_DEPLOYMENT_DIR}\config\defaults.env"
-$content += LoadFileIfExists "${env:TTL_DEPLOYMENT_DIR}\config\${env:TTL_ENVIRONMENT_TYPE}.env"
-$content += LoadFileIfExists "${env:TTL_DEPLOYMENT_DIR}\config\${env:TTL_ENVIRONMENT}.env"
+$content += LoadFileIfExists "${env:TTL_DEPLOYMENT_DIR}\configuration.env"
 Set-Content -Path "${env:TTL_DEPLOYMENT_DIR}\service.env" -Value $content
 cat ${env:TTL_DEPLOYMENT_DIR}\service.env
 
