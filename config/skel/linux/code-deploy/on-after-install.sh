@@ -105,7 +105,7 @@ install_tlcrypt() {
     echo "TTL_ENCRYPT_KEY_FILE=/etc/ssl/ttl/dev.key" >> "/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
   fi
   if [ -f "/etc/ssl/ttl/prod.key" ]; then
-    echo "TTL_ENCRYPT_KEY_FILE=/etc/ssl/ttl/dev.key" >> "/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
+    echo "TTL_ENCRYPT_KEY_FILE=/etc/ssl/ttl/prod.key" >> "/etc/${TTL_SERVICE_NAME_WITH_SLICE}.env"
   fi
 
   local SRC_FILE=/opt/consul-deployment-agent/tools/tlcrypt/tlcrypt
