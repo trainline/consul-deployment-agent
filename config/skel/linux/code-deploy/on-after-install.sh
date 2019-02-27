@@ -164,7 +164,6 @@ create_healthchecks() {
   echo "Made output directory success"
   for FILE in "${DEFAULTS}" "${USER}";
   do
-    echo "Working with file: ${FILE}"
     if [ -f "${FILE}" ]; then
       echo "${FILE} is a file"
       # The user may not have supplied a healthcheck file. 
