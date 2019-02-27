@@ -207,7 +207,7 @@ install_tlcrypt
 link_encrypted_secret_file
 
 create_healthchecks 'consul'
-create_healthchecks 'sensu'
+# create_healthchecks 'sensu'
 
 cd /opt/$TTL_SERVICE_NAME_WITH_SLICE
 echo "Allowing execution of $TTL_SERVICE_NAME start script" >&2
