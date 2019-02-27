@@ -52,7 +52,7 @@ class ProvideDefaultsForBundle(DeploymentStage):
             shutil.copy(os.path.join(skel_code_deploy, f), os.path.join(
                 deployment.archive_dir, 'code-deploy'))
 
-        shutil.copytree(skel_dir, os.path.join(deployment.archive_dir, 'defaults'))
+        shutil.copytree(skel_dir, os.path.join(deployment.dir, 'defaults'))
 
         if not os.path.exists(os.path.join(deployment.archive_dir, 'misc')):
             os.makedirs(os.path.join(deployment.archive_dir, 'misc'))
