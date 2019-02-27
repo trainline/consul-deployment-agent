@@ -194,8 +194,7 @@ create_healthchecks() {
   do
     echo "Working with ${FILE} from ${ARCHIVE_DIR}"
     replace_env_vars "${FILE}";
-    chmod 755 "${FILE}"
-    chown root.root "${FILE}"
+    chmod 777 "${FILE}"
   done
 }
 
