@@ -30,9 +30,14 @@ copy_certificates() {
   local SRC_FILE=$TTL_INSTALL_SRC_DIR/certificate.pfx
   local TARGET_FILE=/etc/$TTL_SERVICE_NAME.pfx
 
-  cp -f $SRC_FILE $TARGET_FILE
-  chmod 644 $TARGET_FILE
-  chown root.root $TARGET_FILE
+  if [ -f "${SRC_FILE}" ]; then
+    echo "found certificate at ${SRC_FILE}"
+    cp -f $SRC_FILE $TARGET_FILE
+    chmod 644 $TARGET_FILE
+    chown root.root $TARGET_FILE
+  else
+    echo "no certificate found at ${SRC_FILE}"
+  fi
 }
 
 create_systemd_unit_file() {
@@ -137,62 +142,51 @@ install_tlcrypt() {
 create_healthchecks() {
   echo "Creating health checks"
   local CHECK_TYPE="${1}"
-  echo "Health check type: ${CHECK_TYPE}"
   local BASE_DIR=$(dirname "${DEPLOYMENT_BASE_DIR}")
-  echo "Base directory: ${BASE_DIR}"
   local ARCHIVE_DIR="${DEPLOYMENT_BASE_DIR}"
-  echo "Archive directory: ${ARCHIVE_DIR}"
-  local DEFAULTS_DIR="${BASE_DIR}/defaults"
-  echo "Defaults directory: ${DEFAULTS_DIR}"
+  local DEFAULTS_DIR="${BASE_DIR}/defaults/healthchecks/${CHECK_TYPE}"
   local WORK_DIR="${BASE_DIR}/work"
-  echo "Work directory: ${WORK_DIR}"
-
-  local DEFAULTS="${DEFAULTS_DIR}/healthchecks/${CHECK_TYPE}/healthchecks.yml"
-  echo "Defaults: ${DEFAULTS}"
-  local OUT_DIR="${WORK_DIR}/out/healthchecks/${CHECK_TYPE}"
-  echo "Out directory: ${OUT_DIR}"
+  
+  local DEFAULTS="${DEFAULTS_DIR}/healthchecks.yml"
+  local WORK_IN_DEFAULT_DIR="${WORK_DIR}/in/default/healthchecks/${CHECK_TYPE}"
+  local WORK_IN_USER_DIR="${WORK_DIR}/in/user/healthchecks/${CHECK_TYPE}"
+  local WORK_OUT_DIR="${WORK_DIR}/out/healthchecks/${CHECK_TYPE}"
   local USER_DIR="${ARCHIVE_DIR}/healthchecks/${CHECK_TYPE}"
-  echo "User directory: ${USER_DIR}"
 
   # Create a healthcheck.yml file by merging the default and user-supplied
   # files.
-  local OUT="${OUT_DIR}/healthchecks.yml"
-  echo "Out: ${OUT}"
+  local OUT="${WORK_OUT_DIR}/healthchecks.yml"
   local USER="${USER_DIR}/healthchecks.yml"
-  echo "User: ${USER}"
-  mkdir -p "${OUT_DIR}"
-  echo "Made output directory success"
-  for FILE in "${DEFAULTS}" "${USER}";
+
+  mkdir -p "${WORK_IN_DEFAULT_DIR}"
+  cp "${DEFAULTS_DIR}/healthchecks.yml" "${WORK_IN_DEFAULT_DIR}/"
+  if [ -f "${USER}" ]; then
+    mkdir -p "${WORK_IN_USER_DIR}"
+    cp "${USER}" "${WORK_IN_USER_DIR}/"
+  fi
+
+  mkdir -p "${WORK_OUT_DIR}"
+  for FILE in "${WORK_IN_DEFAULT_DIR}/healthchecks.yml" "${WORK_IN_USER_DIR}/healthchecks.yml";
   do
+    replace_env_vars "${FILE}"
     if [ -f "${FILE}" ]; then
-      echo "${FILE} is a file"
       # The user may not have supplied a healthcheck file. 
-      sed -nE "/^${CHECK_TYPE}_healthchecks/,/^[^ ]/ p" "${FILE}";
+      sed -nE "/^${CHECK_TYPE}_healthchecks/,/^[^ ]/ p" "${FILE}" | sed -E '$ a \\n';
     fi
   done | sed -E '/^[^ ]/ d' | sed -E "1 i ${CHECK_TYPE}_healthchecks:" \
     > "${OUT}"
 
-  echo "Done with file replacement."
-
-  # Replace any template expressions in the generated healthcheck.yml.
-  replace_env_vars "${OUT}"
-  echo "Done with environment variable replacement."
   # Create or replace the user-supplied healthcheck.yml with a link to the
   # merge of the default and user-supplied healthcheck.yml files
   mkdir -p "${USER_DIR}" && ln -fs "${OUT}" "${USER}"
-  echo "Done making directories and linking out to user."
 
   # Copy check script files from the defaults directory to the runtime directory
   # Do not overwrite any that are already present as these are user-supplied.
-  cp -Rn ${DEFAULTS_DIR}/healthchecks/${CHECK_TYPE}/* \
-    "${ARCHIVE_DIR}/healthchecks/${CHECK_TYPE}/"
-
-  echo "Done copying from ${DEFAULTS_DIR} to ${ARCHIVE_DIR}."
+  cp -Rn ${DEFAULTS_DIR}/* "${USER_DIR}/"
 
   # Replace any template expressions in check script files.
-  for FILE in $(find ${ARCHIVE_DIR}/healthchecks/${CHECK_TYPE}/ -type f);
+  for FILE in $(find "${USER_DIR}" -type f);
   do
-    echo "Working with ${FILE} from ${ARCHIVE_DIR}"
     replace_env_vars "${FILE}";
     chmod 777 "${FILE}"
   done
