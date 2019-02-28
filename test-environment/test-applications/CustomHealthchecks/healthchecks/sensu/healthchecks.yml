@@ -1,0 +1,13 @@
+sensu_healthchecks:
+  user_check_1:
+    name: user_check_1
+    local_script: pass.sh
+    interval: 30
+    alert_after: 10
+    notification_email: ransom@thetrainline.com
+  user_check_2:
+    name: user_check_2
+    local_script: pass.sh
+    interval: 100
+    alert_after: 30
+    notification_email: ransom@thetrainline.com
