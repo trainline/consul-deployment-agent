@@ -42,6 +42,6 @@ COPY "test-applications" "test-applications"
 COPY "tests" "tests"
 ENV PATH "/opt/consul-deployment-agent/bin:${PATH}"
 RUN make lint init-test
-RUN nosetests tests/* integration-tests/*
+RUN nosetests --verbosity=2 tests/* integration-tests/*
 
 FROM build AS run
