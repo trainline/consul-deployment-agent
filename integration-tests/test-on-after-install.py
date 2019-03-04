@@ -80,7 +80,7 @@ def deployment_dir(deployment_id, package_name):
     return path.join('/opt/consul-deployment-agent/deployments', package_name, deployment_id)
 
 def package_dir(package_name):
-    return path.join('/opt/consul-deployment-agent/test-applications/', package_name)
+    return path.join('/test-applications/', package_name)
 
 def deploy(deployment_id, package_name):
     def copy_files(deployment_id, package_name):

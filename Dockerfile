@@ -1,3 +1,5 @@
+ARG BUILD_NUMBER=${BUILD_NUMBER}
+ARG BUILD_TARGET=${BUILD_TARGET}
 ARG CONSUL_VERSION=0.9.4
 ARG PYTHON_VERSION=2.7
 
@@ -14,34 +16,44 @@ RUN wget -q "https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CO
     && unzip -d /artifacts/consul "consul_${CONSUL_VERSION}_linux_amd64.zip"
 
 FROM microsoft/dotnet:2.1-runtime AS build
+ARG BUILD_NUMBER
+ARG BUILD_TARGET
 ARG CONSUL_VERSION
 ARG PYTHON_VERSION
-COPY --from=download /artifacts/consul/consul /usr/local/bin/
 RUN apt-get update && apt-get install -y \
     make \
-    python-pip
-WORKDIR /opt/consul-deployment-agent
+    python-pip \
+    ruby-full
+RUN pip install pyinstaller
+RUN gem install fpm
+WORKDIR /src
 COPY "agent" "agent"
 COPY "config" "config"
+COPY "tests" "tests"
 COPY "tools" "tools"
 COPY "lint-requirements.txt" "./"
 COPY "Makefile" "./"
 COPY "requirements.txt" "./"
 COPY "test-requirements.txt" "./"
-RUN make init \
-    && ln -s "config/skel" "skel"
-ENV CONSUL_BIND_INTERFACE "eth0"
-ENV PYTHONPATH "/opt/consul-deployment-agent"
-ENTRYPOINT [ "consul" ]
-
-FROM build AS test
-COPY "test-environment/consul-config.json" "/consul/config/"
-COPY "test-environment/bin" "bin"
+COPY "build.sh" "./"
+RUN make lint init-test
+RUN nosetests --verbosity=2 tests/*
+# Build the .deb Debian package
+RUN ./build.sh ${BUILD_TARGET}
+# Install the .deb package and run the integration tests
+WORKDIR /out
+RUN mv /src/*.deb ./ && ls | xargs dpkg -i
+WORKDIR /
 COPY "integration-tests" "integration-tests"
 COPY "test-applications" "test-applications"
-COPY "tests" "tests"
-ENV PATH "/opt/consul-deployment-agent/bin:${PATH}"
-RUN make lint init-test
-RUN nosetests --verbosity=2 tests/* integration-tests/*
+RUN nosetests --verbosity=2 integration-tests/*
 
-FROM build AS run
+FROM microsoft/dotnet:2.1-runtime AS test
+COPY --from=download /artifacts/consul/consul /usr/local/bin/
+WORKDIR /tmp
+COPY --from=build "/out" "consul-deployment-agent"
+WORKDIR /tmp/consul-deployment-agent
+RUN ls | xargs dpkg -i
+COPY "test-environment/consul-config.json" "/consul/config/"
+ENV CONSUL_BIND_INTERFACE "eth0"
+ENTRYPOINT [ "consul" ]
