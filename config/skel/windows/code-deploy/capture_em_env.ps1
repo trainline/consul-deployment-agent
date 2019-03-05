@@ -13,7 +13,7 @@ $env:TTL_DEPLOYMENT_DIR=$env:DEPLOYMENT_BASE_DIR
 # $env:TTL_INSTANCE_ID=$env:EC2_INSTANCE_ID #missing
 
 # Windows specific
-$env:TTL_SERVICE_EXE="Trainline.${env:TTL_SERVICE_NAME}.exe"
+$env:TTL_SERVICE_EXE="${env:TTL_SERVICE_NAME}.exe"
 $env:TTL_INSTALL_DIR="d:\Trainline\Apps\${env:TTL_SERVICE_NAME_WITH_SLICE}\"
 $env:TTL_LOG_DIR="d:\Trainline\Logs\${env:TTL_SERVICE_NAME_WITH_SLICE}\"
 $env:TTL_WINDOWS_SERVICE_NAME = "Trainline.${env:TTL_SERVICE_NAME_WITH_SLICE}"
