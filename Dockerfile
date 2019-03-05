@@ -48,6 +48,15 @@ COPY "integration-tests" "integration-tests"
 COPY "test-applications" "test-applications"
 RUN nosetests --verbosity=2 integration-tests/*
 
+FROM build AS publisher
+RUN gem install aptly_cli
+WORKDIR /
+COPY "aptly-cli.conf" "/etc/"
+COPY "publish.sh" "publish.sh"
+COPY --from=build "/out" "/out"
+WORKDIR /out
+ENTRYPOINT [ "/publish.sh" ]
+
 FROM microsoft/dotnet:2.1-runtime AS test
 COPY --from=download /artifacts/consul/consul /usr/local/bin/
 WORKDIR /tmp
