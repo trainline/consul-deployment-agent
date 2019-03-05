@@ -48,12 +48,13 @@ COPY "integration-tests" "integration-tests"
 COPY "test-applications" "test-applications"
 RUN nosetests --verbosity=2 integration-tests/*
 
-FROM build AS publisher
+FROM build AS publish
 RUN gem install aptly_cli
 WORKDIR /
 COPY "aptly-cli.conf" "/etc/"
 COPY "publish.sh" "publish.sh"
 COPY --from=build "/out" "/out"
+RUN chmod 755 "publish.sh"
 WORKDIR /out
 ENTRYPOINT [ "/publish.sh" ]
 
