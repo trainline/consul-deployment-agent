@@ -2,7 +2,7 @@ version: "3"
 services:
   cda:
     build:
-      context: ".."
+      context: "."
       dockerfile: "test-environment/Dockerfile"
     command: agent -dev -config-dir /consul/config
     environment:

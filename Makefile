@@ -8,7 +8,7 @@ init-test:
 	pip install -r test-requirements.txt
 
 lint: init init-lint
-	pyflakes .
+	pyflakes agent tests
 
 test: init init-test
 	nosetests --verbosity=2 tests/*

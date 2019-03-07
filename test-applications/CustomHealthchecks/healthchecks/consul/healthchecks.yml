@@ -1,0 +1,11 @@
+consul_healthchecks:
+  user_check_1:
+    type: script
+    name: user_check_1
+    script: pass.py
+    interval: 5s
+  user_check_2:
+    type: http
+    name: user_check_2
+    http: http://localhost:{{TTL_SERVICE_PORT}}/diagnostics/healthcheck
+    interval: 10s
