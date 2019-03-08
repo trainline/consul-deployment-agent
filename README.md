@@ -1,6 +1,6 @@
 # consul-deployment-agent
 
-[![Build Status](https://travis-ci.org/trainline/consul-deployment-agent.svg?branch=master)](https://travis-ci.org/trainline/consul-deployment-agent)
+[![Build Status](https://ransom.tools.trainline.com/guestAuth/app/rest/builds/buildType:(id:PlatformServices_ConsulDeploymentAgent2_CreateRelease)/statusIcon.svg)](https://ransom.tools.trainline.com/admin/editProject.html?projectId=PlatformServices_ConsulDeploymentAgent2)
 
 A cross platform service that synchronises the set of applications installed on a machine with a manifest stored in a Consul key value store.
 
