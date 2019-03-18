@@ -8,7 +8,7 @@ source $DEPLOYMENT_BASE_DIR/code-deploy/environment.sh
 printenv
 set +o allexport
 
-id -u $TTL_SERVICE_NAME &>/dev/null || useradd $TTL_SERVICE_NAME --force-badname
+id -u $TTL_SERVICE_NAME &>/dev/null || useradd $TTL_SERVICE_NAME
 
 replace_env_vars() {
   local TARGET_FILE=$1
