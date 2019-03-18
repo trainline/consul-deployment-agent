@@ -48,7 +48,7 @@ create_systemd_unit_file() {
   local TARGET_FILE=/lib/systemd/system/$TTL_SERVICE_NAME_WITH_SLICE.service
 
   cp -f $SRC_FILE $TARGET_FILE
-  sed -i "s/{{USER_ID}}/${$TTL_SERVICE_NAME}/g" $TARGET_FILE
+  sed -i "s/{{USER_ID}}/${TTL_SERVICE_NAME}/g" $TARGET_FILE
 
   chmod 644 $TARGET_FILE
   chown root.root $TARGET_FILE
