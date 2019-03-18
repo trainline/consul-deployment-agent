@@ -8,6 +8,7 @@ source $DEPLOYMENT_BASE_DIR/code-deploy/environment.sh
 printenv
 set +o allexport
 
+id -u $TTL_SERVICE_NAME &>/dev/null || useradd $TTL_SERVICE_NAME
 
 replace_env_vars() {
   local TARGET_FILE=$1
@@ -45,8 +46,10 @@ create_systemd_unit_file() {
 
   local SRC_FILE=$TTL_INSTALL_SRC_DIR/misc/service.service
   local TARGET_FILE=/lib/systemd/system/$TTL_SERVICE_NAME_WITH_SLICE.service
-  
+
   cp -f $SRC_FILE $TARGET_FILE
+  sed -i "s/{{USER_ID}}/${$TTL_SERVICE_NAME}/g" $TARGET_FILE
+
   chmod 644 $TARGET_FILE
   chown root.root $TARGET_FILE
   replace_env_vars $TARGET_FILE

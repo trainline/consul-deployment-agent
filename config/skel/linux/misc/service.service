@@ -1,4 +1,5 @@
 [Service]
+User={{USER_ID}}
 WorkingDirectory=/opt/{{TTL_SERVICE_NAME_WITH_SLICE}}/
 ExecStart=/opt/{{TTL_SERVICE_NAME_WITH_SLICE}}/start
 EnvironmentFile=/etc/{{TTL_SERVICE_NAME_WITH_SLICE}}.env
